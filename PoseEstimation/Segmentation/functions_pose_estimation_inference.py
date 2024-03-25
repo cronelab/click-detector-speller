@@ -5,31 +5,12 @@ import copy
 import numpy as np
 import os
 import pickle
-import shutil
 import tensorflow as tf
 import xarray as xr
 
 import matplotlib.pyplot as plt
 
 from pprint import pprint
-
-
-
-def save_script_backup():
-    
-    """
-    Automatically saving this entire script immediately when it's called.
-    """
-    
-    # Creating the original and target file directories.
-    original = r'/home/dan/Projects/PseudoOnlineTests_for_RTCoG/Scripts/Recent/PoseEstimation/functions_pose_estimation_inference.py'
-    target   = r'/mnt/shared/danprocessing/BACKUP/Projects/PseudoOnlineTests_for_RTCoG/Scripts/PoseEstimation/functions_pose_estimation_inference.py'
-
-    # Saving.
-    shutil.copyfile(original, target)
-    
-# Immediately saving script.   
-save_script_backup()
 
 
 

@@ -6,7 +6,6 @@ import numpy as np
 import os
 import pickle
 import seaborn as sns
-import shutil
 import tensorflow as tf
 import xarray as xr
 
@@ -23,26 +22,6 @@ from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
-
-#imp.reload(Useful_Functions_PseudoOnlinePrepRTCoG)
-
-
-
-def save_script_backup():
-    
-    """
-    Automatically saving this entire script immediately when it's called.
-    """
-    
-    # Creating the original and target file directories.
-    original = r'/home/dan/Projects/PseudoOnlineTests_for_RTCoG/Scripts/Recent/PoseEstimation/functions_pose_estimation_model_training.py'
-    target   = r'/mnt/shared/danprocessing/BACKUP/Projects/PseudoOnlineTests_for_RTCoG/Scripts/PoseEstimation/functions_pose_estimation_model_training.py'
-
-    # Saving.
-    shutil.copyfile(original, target)
-    
-# Immediately saving script.   
-save_script_backup()
 
 
 

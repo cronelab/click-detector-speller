@@ -405,7 +405,7 @@ if __name__ == '__main__':
 
 
         # Saving the click highlights for each detection.
-        dir_click_detections = dir_base + 'click_detections/' + date +'/Xarrays/' # DELETE IF NECESSARY
+        dir_click_detections = dir_base + 'click_detections/' + date +'/Xarrays/' 
 
         # Checking whether or not the directory for click detections exists. If it does not exist,  it is created here.
         dir_click_detections_exists = os.path.exists(dir_click_detections)
