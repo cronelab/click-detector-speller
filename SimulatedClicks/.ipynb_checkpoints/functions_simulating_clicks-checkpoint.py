@@ -7,7 +7,6 @@ import numpy as np
 import os
 import pickle
 import scipy.signal as signal
-import shutil
 import tensorflow as tf
 import time
 import xarray as xr
@@ -19,22 +18,6 @@ from tqdm import trange
 from scipy.io import loadmat, savemat
 
 import time
-
-def save_script_backup():
-    
-    """
-    Automatically saving this entire script immediately when it's called.
-    """
-    
-    # Creating the original and target file directories.
-    original = r'/home/dan/Projects/PseudoOnlineTests_for_RTCoG/Scripts/Recent/SpellerAnalysis/functions_speller_playback.py'
-    target   = r'/mnt/shared/danprocessing/BACKUP/Projects/PseudoOnlineTests_for_RTCoG/Scripts/SpellerAnalysis/functions_speller_playback.py'
-
-    # Saving.
-    shutil.copyfile(original, target)
-    
-# Immediately saving script.   
-save_script_backup()
 
 
 

@@ -4,28 +4,11 @@ import copy
 import numpy as np
 import os
 import pickle
-import shutil
 import xarray as xr
 
 from pprint import pprint
 
 import matplotlib.pyplot as plt
-
-def save_script_backup():
-    
-    """
-    Automatically saving this entire script immediately when it's called.
-    """
-    
-    # Creating the original and target file directories.
-    original = r'/home/dan/Projects/PseudoOnlineTests_for_RTCoG/Scripts/Recent/SpellerAnalysis/functions_curtailing_video_data.py'
-    target   = r'/mnt/shared/danprocessing/BACKUP/Projects/PseudoOnlineTests_for_RTCoG/Scripts/SpellerAnalysis/functions_curtailing_video_data.py'
-
-    # Saving.
-    shutil.copyfile(original, target)
-    
-# Immediately saving script.   
-save_script_backup()
 
 
 
