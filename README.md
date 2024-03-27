@@ -3,7 +3,7 @@
 ## Section 0: Conversion from .dat to .mat
 Use the convert-to-mat  file to convert the .dat file to a .mat file. The resulting .mat file is imported as a dictionary which has three keys: signal, states, and parameters. The signal key contains the time domain of all neural and analog channels, the states key contains the time domain of all state changes (cue presentations, clicks, etc.), and the parameters key contain all parameters from a block of data (sampling rate, number of channels, etc.).
 
-## Section 1: Model Training
+## Section 1:  Model Training
 Run **model_training.ipynb**. Training data was collected using a “Go” task, where the participant was instructed to perform a brief grasping movement every time “Go” appeared on a monitor. High gamma (HG, 70-110 Hz) spectral power was computed and used to train a rest vs. grasp classification model (LSTM). As our training pipeline assumes that the participant is in a completely locked-in state, the movement onset and offset were not used to inform training labels – rather the onsets and offsets of HG modulation were used instead. Affine warping was used to re-align power-trial rasters for more accurate labeling of trial-averaged HG onset and offset (doi: 10.1016/j.neuron.2019.10.020, https://github.com/ahwillia/affinewarp.git ). A confusion matrix showing the sample-by-sample confusion score from cross-validation is computed to estimate the classification model’ accuracy on unseen data.
 
 ## Section 2: Pose Estimation
