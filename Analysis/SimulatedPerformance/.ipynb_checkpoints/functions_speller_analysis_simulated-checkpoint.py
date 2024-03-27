@@ -12,24 +12,6 @@ from pprint import pprint
 
 
 
-def save_script_backup():
-    
-    """
-    Automatically saving this entire script immediately when it's called.
-    """
-    
-    # Creating the original and target file directories.
-    original = r'/home/dan/Projects/PseudoOnlineTests_for_RTCoG/Scripts/Recent/SpellerAnalysis/functions_speller_analysis_simulated.py'
-    target   = r'/mnt/shared/danprocessing/BACKUP/Projects/PseudoOnlineTests_for_RTCoG/Scripts/SpellerAnalysis/functions_speller_analysis_simulated.py'
-
-    # Saving.
-    shutil.copyfile(original, target)
-    
-# Immediately saving script.   
-save_script_backup()
-
-
-
 
 
 def computing_fp(movement, movement_onsetsoffsets, t_after_movement_limit, t_click_onsets):
