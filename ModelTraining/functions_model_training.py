@@ -1030,10 +1030,10 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
     """
     DESCRIPTION:
     Based on the experimenter-specified time history (t_history) and the time resolution (global variable sxx_shift),
-    the number of historical time points are calculated (t_history/sxx_shift). An xarray with dimensions (history, features, time)
-    is created, where each coordinate in the history dimension represents how much the features were shifted in time. For 
-    example, consider one coordinate in the feature array, and suppose a time length of 10 samples and a total time history 
-    of 3 samples. For this feature, the resulting xarray would look like:
+    the number of historical time points are calculated (t_history/sxx_shift). An xarray with dimensions 
+    (history, features, time) is created, where each coordinate in the history dimension represents how much the 
+    features were shifted in time. For example, consider one coordinate in the feature array, and suppose a time length
+    of 10 samples and a total time history of 3 samples. For this feature, the resulting xarray would look like:
 
     historical time shifts
          n=2 shifts      [[0.000, 0.000, 0.234, 0.523. 0.435, 0.982, 0.175, 0.759, 0.341, 0.101],
@@ -1044,16 +1044,16 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
     and the resulting dimensions of this array are (history=3, features=1, time=10).
     
     INPUT VARIABLES:
-    sxx_power_z_all_bands: [dictionary (Key: string (task ID); Value: xarray (features (chs x bands) x time samples) > floats (units: V^2/Hz))]; 
-                           Concatenated band power features across all power bands. 
+    sxx_power_z_all_bands: [dictionary (Key: string (task ID); Value: xarray (features (chs*bands) x time samples) > 
+                           floats (units: z-scores))]; Concatenated band power features across all power bands. 
     t_history:             [float (unit: s)]; Amount of time history used as features.
                            
     GLOBAL PARAMETERS: 
     sxx_shift: [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the time domain.
     
     OUTPUT VARIABLES:
-    sxx_power_z_all_history: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats (units: V^2/Hz))]; 
-                             Array of historical time features.
+    sxx_power_z_all_history: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > 
+                             floats (units: z-scores))]; Array of historical time features.
     """
     
     # COMPUTATION:
@@ -1064,8 +1064,8 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
     # Computing the total number of historical time features.
     n_history = int(t_history/sxx_shift)
     
-    # Extracting the number of features over all powerbands. Computing from the first task, as the number of features should be the 
-    # same across all tasks.
+    # Extracting the number of features over all powerbands. Computing from the first task, as the number of features 
+    # should be the same across all tasks.
     n_features = sxx_power_z_all_bands['task0'].feature.shape[0]
 
     # Iterating across all tasks.
@@ -1081,7 +1081,8 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
         # Initializing a feature array which will contain all historical time features.
         this_task_power_all_history = np.zeros((n_history, n_features, n_samples))
                 
-        # Iterating across all historical time shifts. The index, n, is the number of samples back in time that will be shifted.
+        # Iterating across all historical time shifts. The index, n, is the number of samples back in time that will be
+        # shifted.
         for n in range(n_history):
             
             # If currently extracting historical time features (time shift > 0)
@@ -1090,7 +1091,8 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
                 # Extracting the historical time features for the current time shift.
                 these_features_history = this_task_sxx_power_z[:,:-n]
                 
-                # Creating a zero-padded array to make up for the time curtailed from the beginning of the features array.
+                # Creating a zero-padded array to make up for the time curtailed from the beginning of the features
+                # array.
                 zero_padding = np.zeros((n_features, n))
                 
                 # Concatenating the features at the current historical time point with a zero-padded array.
@@ -1105,7 +1107,9 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
         
         # Converting the historical power features for this task to xarray.
         this_task_power_all_history = xr.DataArray(this_task_power_all_history, 
-                                                   coords={'history': np.arange(n_history), 'feature': np.arange(n_features), 'time': t_seconds}, 
+                                                   coords={'history': np.arange(n_history),\
+                                                           'feature': np.arange(n_features),\
+                                                           'time': t_seconds}, 
                                                    dims=["history", "feature", "time"])
         
         # Adding the historical time features for the current task to the dictionary.
@@ -1120,24 +1124,27 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
 def concatenating_power_bands(grasp_bandpower_dict):
     """
     DESCRIPTION:
-    For each task, features across all powerbands are concatenated into one feature dimension. For example, if a feature array
-    from one task has dimensions (chs: 128, powerbands: 3, time samples: 4500), the powerband concatenation will result in an
-    array of size: (chs x pwrbands: 384, time samples: 4500).
+    For each task, features across all powerbands are concatenated into one feature dimension. For example, if a feature
+    array from one task has dimensions (chs: 128, powerbands: 3, time samples: 4500), the powerband concatenation will
+    result in an array of size: (chs*pwrbands: 384, time samples: 4500).
     
     INPUT VARIABLES:
     grasp_bandpower_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:        [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                          the band power is computed for each channel across every time point.
-        sxx_power_z:      [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                          calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:       [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                          to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:   [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
+        sxx_power:        [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each frequency
+                          band, the band power is computed for each channel across every time samples. Time dimension is
+                          in units of seconds. 
+        sxx_power_z:      [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each standardized
+                          (to calibration) frequency band, the band power is computed for each channel across every time
+                          point. Time dimension is in units of seconds.
+        sxx_states:       [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                          downsampled to match time resolution of the signal spectral power. Time dimension is in units
+                          of seconds.
+        power_trials_z:   [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral 
                           information for each trial. Time dimension is in units of seconds.
                         
     OUTPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (features (chs x bands), time samples) > floats (units: V^2/Hz)]; 
-                   Concatenated band power features over all power bands. 
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (features (chs*bands), time samples) > 
+                   floats (units: z-scores)]; Concatenated band power features over all power bands. 
     """
     
     # COMPUTATION:
@@ -1161,7 +1168,8 @@ def concatenating_power_bands(grasp_bandpower_dict):
         
         # Converting the concatenated band features back into an xarray.
         this_task_power_all_bands = xr.DataArray(this_task_power_all_bands, 
-                                                 coords={'feature': np.arange(n_channels*n_bands), 'time': np.arange(n_samples)}, 
+                                                 coords={'feature': np.arange(n_channels*n_bands), 
+                                                         'time': np.arange(n_samples)}, 
                                                  dims=["feature", "time"])
         
         # Adding the array with concatenated power bands to the dictionary.
@@ -1231,31 +1239,35 @@ def confusion_matrix_display(cm, suppress_figs='No'):
 def creating_labels(aw_shifts, grasp_bandpower_dict, t_grasp_end_per_trial, t_grasp_start_per_trial):
     """
     DESCRIPTION:
-    For each task, each time sample is labeled as grasp or rest according to the experimenter-specified trial onset and offset 
-    and the per-trial shift.
+    For each task, each time sample is labeled as grasp or rest according to the experimenter-specified trial onset and
+    offset and the per-trial shift. The onset and offset are determined from the trial-averaged activity relative to the 
+    Go cue. These onset and offset are then applied to all trials relative to their respective cues.
     
     INPUT VARIABLES:
-    aw_shifts:               [dictionary (Key: string (Task ID); Value: dictionary (Key/Value pairs below)];
-        N (where N is an int): [int]; AW shift for the Nth trial in units of samples.
-    grasp_bandpower_dict:    [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:           [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                             the band power is computed for each channel across every time point.
-        sxx_power_z:         [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                             calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:          [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                             to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:      [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
-                             information for each trial. Time dimension is in units of seconds.
-    t_grasp_end_per_trial:   [float (units: s)]; Time of trial end relative to stimulus onset.
-    t_grasp_start_per_trial: [float (units: s)]; Time of trial start relative to stimulus onset.
+    aw_shifts:                 [dictionary (Key: string (Task ID); Value: dictionary (Key/Value pairs below)];
+    N (where N is an int):     [int]; AW shift for the Nth trial in units of samples.
+    grasp_bandpower_dict:      [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
+        sxx_power:             [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each 
+                               frequency band, the band power is computed for each channel across every time samples. 
+                               Time dimension is in units of seconds. 
+        sxx_power_z:           [xarray (channel, powerband, time samples] > floats (units:z-scores)]; For each 
+                               standardized (to calibration) frequency band, the band power is computed for each channel
+                               across every time point. Time dimension is in units of seconds.
+        sxx_states:            [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                               downsampled to match time resolution of the signal spectral power. Time dimension is in 
+                               units of seconds.
+        power_trials_z:        [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
+                               spectral information for each trial. Time dimension is in units of seconds.
+    t_grasp_end_per_trial:     [float (units: s)]; Time of trial end relative to stimulus onset.
+    t_grasp_start_per_trial:   [float (units: s)]; Time of trial start relative to stimulus onset.
     
     GLOBAL PARAMETERS:
     model_classes:  [list > strings]; List of all the classes to be used in the classifier.
     
     OUTPUT VARIABLES:
-    labels_dict: [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                 task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                 modulation as well as the per-trial shift from the AW model.
+    labels_dict: [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in
+                 each task, there exists a rest or grasp label depending on the experimenter-specified onset and offset
+                 of modulation as well as the per-trial shift from the AW model.
     """
     
     # COMPUTATION:
@@ -1433,15 +1445,15 @@ def creating_power_trial_rasters(grasp_bandpower_dict):
 def creating_features(grasp_bandpower_dict, t_history):
     """
     DESCRIPTION:
-    Power features across all powerbands are concatenated in one feature dimension. For example, if a feature array has
-    dimensions (chs: 128, powerbands: 3, time samples: 4500), the powerband concatenation will result in an array of size:
-    (chs x pwrbands: 384, time samples: 4500).
+    Power features across all powerbands are concatenated in one feature dimension. For example, if a feature array
+    has dimensions (chs: 128, powerbands: 3, time samples: 4500), the powerband concatenation will result in an array 
+    of size: (chs*powrrbands: 384, time samples: 4500).
 
-    Then, based on the experimenter-specified time history (t_history) and the time resolution (global variable sxx_shift),
-    the number of historical time points are calculated (t_history/sxx_shift). An xarray with dimensions (history, features, time)
-    is created, where each coordinate in the history dimension represents how much the features were shifted in time. For 
-    example, consider one coordinate in the feature array, and suppose a time length of 10 samples and a total time history 
-    of 3 samples. For this feature, the resulting xarray would look like:
+    Then, based on the experimenter-specified time history (t_history) and the time resolution (global variable 
+    sxx_shift), the number of historical time points are calculated (t_history/sxx_shift). An xarray with dimensions  
+    (history, features, time) is created, where each coordinate in the history dimension represents how much the 
+    features were shifted in time. For example, consider one coordinate in the feature array, and suppose a time length
+    of 10 samples and a total time history of 3 samples. For this feature, the resulting xarray would look like:
 
     historical time shifts
          n=2 shifts      [[0.000, 0.000, 0.234, 0.523. 0.435, 0.982, 0.175, 0.759, 0.341, 0.101],
@@ -1453,13 +1465,16 @@ def creating_features(grasp_bandpower_dict, t_history):
     
     INPUT VARIABLES:
     grasp_bandpower_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:        [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                          the band power is computed for each channel across every time point.
-        sxx_power_z:      [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                          calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:       [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                          to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:   [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
+        sxx_power:        [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each frequency
+                          band, the band power is computed for each channel across every time samples. Time dimension is
+                          in units of seconds. 
+        sxx_power_z:      [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each standardized
+                          (to calibration) frequency band, the band power is computed for each channel across every time
+                          point. Time dimension is in units of seconds.
+        sxx_states:       [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                          downsampled to match time resolution of the signal spectral power. Time dimension is in units
+                          of seconds.
+        power_trials_z:   [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral 
                           information for each trial. Time dimension is in units of seconds.
     t_history:            [float (unit: ms)]; Amount of feature time history.
     
@@ -1468,8 +1483,8 @@ def creating_features(grasp_bandpower_dict, t_history):
     concatenating_power_bands
     
     OUTPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                   (units: z-scores)]; Array of historical time features.
     """
     # COMPUTATION:
     
@@ -1626,35 +1641,35 @@ def equalizing_samples_per_class(features_dict, labels_dict):
     """
     DESCRIPTION:
     According to the label array, it is unlikely that there are an equal number of samples per class. For whichever
-    class there are more samples, the indices of this class will be extracted to create a smaller subset of 
-    indices in number equal to that of the underrepresented class. For example, consider the following labels array:
+    class there are more samples, the indices of this class will be extracted to create a smaller subset of indices in
+    number equal to that of the underrepresented class. For example, consider the following labels array:
 
     labels:  ['rest', 'rest', 'rest', 'rest', 'rest, 'grasp', 'grasp', 'grasp', 'rest', 'rest', 'rest', 'rest']
     indices:    0       1       2       3       4       5        6        7       8       9       10      11
 
     In the example, there are 3 samples with grasp labels, while there are 9 samples with rest labels. The indices
-    corresponding to the rest labels are: [0, 1, 2, 3, 4, 8, 9, 10, 11]. These indices will be randomly subsampled
-    such that they are equal in number to the grasp class. For example: [0, 1, 2] or [1, 4, 10] or [3, 9, 11]. As
-    such the downsampled labels (and corresponding features) will use the indices:
+    corresponding to the rest labels are: [0, 1, 2, 3, 4, 8, 9, 10, 11]. These indices will be randomly subsampled such
+    that they are equal in number to the grasp class. For example: [0, 1, 2] or [1, 4, 10] or [3, 9, 11]. As such, the 
+    downsampled labels (and corresponding features) will use the indices:
 
     labels downsampled:  ['rest', 'grasp', 'grasp', 'grasp', 'rest', 'rest']
     indices downsampled:    3        5        6        7       9       11
 
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features.
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                   task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                   modulation as well as the per-trial shift from the AW model.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                   (units: z-scores)]; Array of historical time features.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample
+                   in each task, there exists a rest or grasp label depending on the experimenter-specified onset and
+                   offset of modulation as well as the per-trial shift from the AW model.
 
     OUTPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features. Time samples reduced such that there are an equal number of features per
-                   class.
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                   task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                   modulation as well as the per-trial shift from the AW model. Time samples reduced such that there are an equal
-                   number of features per class.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                   (units: z-scores)]; Array of historical time features. Time samples reduced such that there are an
+                   equal number of features per class.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample
+                   in each task, there exists a rest or grasp label depending on the experimenter-specified onset and 
+                   offset of modulation as well as the per-trial shift from the AW model. Time samples reduced such that
+                   there are an equal number of features per class.
     """
     
     # COMPUTATION
@@ -1678,17 +1693,18 @@ def equalizing_samples_per_class(features_dict, labels_dict):
             # Counting the number of samples for the current label and appropriately updating the dictionary.
             samples_per_label[this_label] = sum(this_task_labels == this_label)
             
-        # Check if the neutral labels exists at all. If so, delete this dictionary key because these labels will not be used for
-        # training a model.
+        # Check if the neutral labels exists at all. If so, delete this dictionary key because these labels will not be
+        # used for training a model.
         if 'neutral' in samples_per_label:
             del samples_per_label['neutral']
                 
-        # Determining which class has the higher and lower number of samples (probably going to be rest and grasp, respectively).
+        # Determining which class has the higher and lower number of samples (probably going to be rest and grasp, 
+        # respectively).
         class_low_samples  = min(samples_per_label, key=samples_per_label.get)
         class_high_samples = max(samples_per_label, key=samples_per_label.get)
                 
-        # Extracting the number of samples of the underrespresented class. This will be used to determine how many samples 
-        # of the overrepresented class to randomly extract.
+        # Extracting the number of samples of the underrespresented class. This will be used to determine how many 
+        # samples of the overrepresented class to randomly extract.
         n_samples_class_under = samples_per_label[class_low_samples] 
         
         # Extracting the sample indices of the under and overrepresented class.
@@ -1706,18 +1722,22 @@ def equalizing_samples_per_class(features_dict, labels_dict):
         features_class_under = this_task_features[:,:,inds_class_under]
         labels_class_under   = this_task_labels[inds_class_under]
         
-        # Concatenating the downsampled overrepresented class features and labels with those from the underrepresented class.
+        # Concatenating the downsampled overrepresented class features and labels with those from the underrepresented 
+        # class.
         this_task_features_downsampled = np.concatenate((features_class_over_downsampled, features_class_under), axis=2)
         this_task_labels_downsampled   = np.concatenate((labels_class_over_downsampled, labels_class_under), axis=0)
         
-        # Extracting the number of historical time points, features, and samples from the resulting downsampled feature array.
+        # Extracting the number of historical time points, features, and samples from the resulting downsampled feature 
+        # array.
         n_history  = this_task_features_downsampled.shape[0]
         n_features = this_task_features_downsampled.shape[1]
         n_samples  = this_task_features_downsampled.shape[2]
         
         # Converting the features and labels arrays into xarrays.
         this_task_features_downsampled = xr.DataArray(this_task_features_downsampled, 
-                                                      coords={'history': np.arange(n_history), 'feature': np.arange(n_features), 'sample': np.arange(n_samples)}, 
+                                                      coords={'history': np.arange(n_history),\
+                                                              'feature': np.arange(n_features),\
+                                                              'sample': np.arange(n_samples)}, 
                                                       dims=["history", "feature", "sample"])
         
         this_task_labels_downsampled = xr.DataArray(this_task_labels_downsampled, 
@@ -2917,7 +2937,8 @@ def power_trial_raster_plotting(chs_exclude, fig_height, fig_width, powerband_id
                          information will not be shown.
     fig_height:          [int]; The height of the subplot figure showing the trial averaged spectrograms.
     fig_width:           [int]; The width of the subplot figure showing the trial averaged spectrograms.
-    powerband_id:        [string (powerband ID)]; The index of the powerband.              
+    powerband_id:        [string ('powerbandX')]; Name of the powerband that will be used for visualizing the power trial 
+                         rasters. X is an integer (0, 1, 2,...).         
     ptr_all_trials:      [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral
                          information for each trial (across all tasks). Time dimension is in units of seconds.
     upperlimb_or_speech: [string ('upperlimb'/'speech')]; Whether to plot the spectrograms of the upper-limb or speech
@@ -3647,9 +3668,9 @@ def string_state_maker(grasp_cont_dict, state_int2str):
 def time_history_sample_adjustment(features_dict, labels_dict, t_history):
     """
     DESCRIPTION:
-    Adjusting the time dimension of the labels and features. Due to the time history, the time-shifted rows of the features
-    arrays are zero padded. As such, all columns with leading zeros should be removed. If there are N time shfited columns,
-    this means that N-1 columns should be removed. For example, consider N = 3:
+    Adjusting the time dimension of the labels and features. Due to the time history, the time-shifted rows of the
+    features arrays are zero padded. As such, all columns with leading zeros should be removed. If there are N time 
+    shfited columns, this means that N-1 columns should be removed. For example, consider N = 3:
 
     Features array:
 
@@ -3675,24 +3696,24 @@ def time_history_sample_adjustment(features_dict, labels_dict, t_history):
 
 
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats (units: V^2/Hz))]
-                   Array of historical time features.
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                   task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                   modulation as well as the per-trial shift from the AW model.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                   (units: z-scores)]; Array of historical time features.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample
+                   in each task, there exists a rest or grasp label depending on the experimenter-specified onset and 
+                   offset of  modulation as well as the per-trial shift from the AW model.
     t_history:     [float (unit: s)]; Amount of feature time history.
 
     GLOBAL PARAMETERS: 
     sxx_shift: [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the time domain.
     
     OUTPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features. Number of time samples corresponding to time history are curtailed at the
-                   beginning of the time array.
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in a task,
-                   there exists a rest or grasp label depending on the experimenter-specified onset and offset of grasp modulation
-                   as well as the per-trial shift from the AW model. Number of time samples corresponding to time history are
-                   curtailed at the beginning of the time array.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                   (units: z-scores)]; Array of historical time features. Number of time samples equal to time history
+                   are curtailed at the beginning of the time array.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample
+                   in each task, there exists a rest or grasp label depending on the experimenter-specified onset and 
+                   offset of modulation as well as the per-trial shift from the AW model. Number of time samples equal
+                   to time history are curtailed at the beginning of the time array.
     """
     
     # COMPUTATION:
@@ -3853,34 +3874,158 @@ def training_fold_models(train_data_folds, train_labels_folds, valid_data_folds,
 
 
 
+# def training_validation_split(features_dict, labels_dict, train_folds_tasks, valid_folds_tasks):
+#     """
+#     DESCRIPTION:
+#     Splitting the data into training and validation blocks for building the fold-models. The validation folds will be tested
+#     on the models built on the corresponding training folds to confirm that the decoder is generalizable to unseen data. 
+
+#     INPUT VARIABLES:
+#     features_dict:     [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
+#                        Array of historical time features. Time samples reduced such that there are an equal number of features per
+#                        class.
+#     labels_dict:       [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
+#                        task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
+#                        modulation as well as the per-trial shift from the AW model. Time samples reduced such that there are an equal
+#                        number of features per class.
+#     train_folds_tasks  [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the training tasks
+#                        for each training fold.
+#     valid_folds_tasks: [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the validation tasks
+#                        for each validation fold.
+
+#     OUTPUT VARIABLES:
+#     train_data_folds:   [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
+#                         For each training fold, feature xarrays are concatenated in the sample dimension.
+#     train_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; For each training
+#                         fold, label xarrays are concatenated in the sample dimension.
+#     valid_data_folds:   [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
+#                         For each validation fold, feature xarrays are concatenated in the sample dimension.
+#     valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; For each validation
+#                         fold, label xarrays are concatenated in the sample dimension.
+#     """
+    
+#     # COMPUTATION:
+    
+#     # Initializing dictionaries of training and validation data and labels.
+#     train_data_folds   = {}
+#     train_labels_folds = {}
+#     valid_data_folds   = {}
+#     valid_labels_folds = {}
+
+#     # Extracting the fold list.
+#     fold_list = list(train_folds_tasks.keys())
+
+#     # Iterating across all folds.
+#     for fold_id in fold_list:
+
+#         # Extracting the training and validation task lists for the current fold.
+#         this_fold_training_tasks   = train_folds_tasks[fold_id]
+#         this_fold_validation_tasks = valid_folds_tasks[fold_id]
+
+#         # Initialize the training and validation task flags, which will help with initializing the arrays of 
+#         # training and validation data and labels for the current fold.
+#         training_task0_flag   = True
+#         validation_task0_flag = True
+        
+#         # Iterating across all training tasks for the current fold.
+#         for this_task in this_fold_training_tasks:
+
+#             # Extracting the training data and labels of the current task.
+#             this_task_data   = features_dict[this_task]
+#             this_task_labels = labels_dict[this_task]
+
+#             # If the training task flag is True, intiailize the training data and labels xarrays. If not, concatenate
+#             # them with data and labels from another task.
+#             if training_task0_flag:
+#                 these_training_data   = this_task_data
+#                 these_training_labels = this_task_labels
+
+#                 # Setting the flag to False to never enter this IF statement again.
+#                 training_task0_flag = False
+
+#             else:
+#                 these_training_data   = xr.concat([these_training_data, this_task_data], dim="sample")
+#                 these_training_labels = xr.concat([these_training_labels, this_task_labels], dim='sample')
+        
+#         # Iterating across all validatoin tasks for the current fold.
+#         for this_task in this_fold_validation_tasks:
+
+#             # Extracting the training data and labels of the current task.
+#             this_task_data   = features_dict[this_task]
+#             this_task_labels = labels_dict[this_task]
+
+#             # If the validation task flag is True, intiailize the validation data and labels xarrays. If not, concatenate
+#             # them with data and labels from another task.
+#             if validation_task0_flag:
+#                 these_validation_data   = this_task_data
+#                 these_validation_labels = this_task_labels
+
+#                 # Setting the flag to False to never enter this IF statement again.
+#                 validation_task0_flag = False
+
+#             else:
+#                 these_validation_data   = xr.concat([these_validation_data, this_task_data], dim="sample")
+#                 these_validation_labels = xr.concat([these_validation_labels, this_task_labels], dim='sample')
+                
+                
+#         # if this_fold_training_tasks:
+        
+#         # Reassigning the sample coordinates to the training data and labels xarrays.
+#         these_training_data     = these_training_data.assign_coords(sample=np.arange(these_training_data.sample.shape[0]))
+#         these_training_labels   = these_training_labels.assign_coords(sample=np.arange(these_training_labels.sample.shape[0]))
+
+#         # Updating the training data and labels dictionaries with the appropriate training information.
+#         train_data_folds[fold_id]   = these_training_data
+#         train_labels_folds[fold_id] = these_training_labels
+
+      
+#         # if this_fold_validation_tasks:
+            
+#         # Reassigning the sample coordinates to the validation data and labels xarrays.
+#         these_validation_data   = these_validation_data.assign_coords(sample=np.arange(these_validation_data.sample.shape[0]))
+#         these_validation_labels = these_validation_labels.assign_coords(sample=np.arange(these_validation_labels.sample.shape[0]))
+
+#         # Updating the validation data and labels dictionaries with the appropriate validation information.
+#         valid_data_folds[fold_id]   = these_validation_data
+#         valid_labels_folds[fold_id] = these_validation_labels
+        
+#     return train_data_folds, train_labels_folds, valid_data_folds, valid_labels_folds
+
+
+
+
+
 def training_validation_split(features_dict, labels_dict, train_folds_tasks, valid_folds_tasks):
     """
     DESCRIPTION:
-    Splitting the data into training and validation blocks for building the fold-models. The validation folds will be tested
-    on the models built on the corresponding training folds to confirm that the decoder is generalizable to unseen data. 
+    Splitting the data into training and validation blocks for building the fold-models. The validation folds will be 
+    tested on the models built on the corresponding training folds to confirm that the decoder is generalizable to 
+    unseen data. 
 
     INPUT VARIABLES:
-    features_dict:     [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                       Array of historical time features. Time samples reduced such that there are an equal number of features per
-                       class.
-    labels_dict:       [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                       task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                       modulation as well as the per-trial shift from the AW model. Time samples reduced such that there are an equal
-                       number of features per class.
+    features_dict:     [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                       (units: z-scores)]; Array of historical time features. Time samples reduced such that there are
+                       an equal number of features per class.
+    labels_dict:       [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time 
+                       sample in each task, there exists a rest or grasp label depending on the experimenter-specified
+                       onset and offset of modulation as well as the per-trial shift from the AW model. Time samples 
+                       reduced such that there are an equal number of features per class.
     train_folds_tasks  [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the training tasks
                        for each training fold.
-    valid_folds_tasks: [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the validation tasks
-                       for each validation fold.
+    valid_folds_tasks: [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the validation 
+                       tasks for each validation fold.
 
     OUTPUT VARIABLES:
-    train_data_folds:   [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                        For each training fold, feature xarrays are concatenated in the sample dimension.
-    train_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; For each training
-                        fold, label xarrays are concatenated in the sample dimension.
-    valid_data_folds:   [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                        For each validation fold, feature xarrays are concatenated in the sample dimension.
-    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; For each validation
-                        fold, label xarrays are concatenated in the sample dimension.
+    train_data_folds:   [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                        floats (units: z-scores))]; For each training fold, feature xarrays are concatenated in the 
+                        sample dimension.
+    train_labels_folds: [dict (key: string (fold ID); Value: xarray (time samples, ) > strings ('grasp'/'rest'))]; For 
+                        each training fold, label xarrays are concatenated in the sample dimension.
+    valid_data_folds:   [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                        floats (units: z-scores))]; For each validation fold, feature xarrays are concatenated in the
+                        sample dimension.
+    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (time samples, ) > strings ('grasp'/'rest'))]; For
+                        each validation fold, label xarrays are concatenated in the sample dimension.
     """
     
     # COMPUTATION:
@@ -3893,84 +4038,106 @@ def training_validation_split(features_dict, labels_dict, train_folds_tasks, val
 
     # Extracting the fold list.
     fold_list = list(train_folds_tasks.keys())
-
+        
     # Iterating across all folds.
     for fold_id in fold_list:
-
+        
         # Extracting the training and validation task lists for the current fold.
-        this_fold_training_tasks   = train_folds_tasks[fold_id]
-        this_fold_validation_tasks = valid_folds_tasks[fold_id]
+        this_fold_train_tasks   = train_folds_tasks[fold_id]
+        this_fold_valid_tasks = valid_folds_tasks[fold_id]
+        
+        # Computing the number of training samples in the current fold.
+        n_samples_this_train_fold = 0
+        for this_task in this_fold_train_tasks:
+            n_samples_this_train_task = labels_dict[this_task].sample.shape[0]
+            n_samples_this_train_fold += n_samples_this_train_task
+            
+        # Computing the number of validation samples in the current fold.
+        n_samples_this_valid_fold = 0
+        for this_task in this_fold_valid_tasks:
+            n_samples_this_valid_task = labels_dict[this_task].sample.shape[0]
+            n_samples_this_valid_fold += n_samples_this_valid_task
 
-        # Initialize the training and validation task flags, which will help with initializing the arrays of 
-        # training and validation data and labels for the current fold.
-        training_task0_flag   = True
-        validation_task0_flag = True
+        # Extracting the time history and number of features from task0.
+        n_history  = features_dict['task0'].values.shape[0]
+        n_features = features_dict['task0'].values.shape[1]
+        
+        # Initializing the xarray of training data and labels for the current fold.
+        this_fold_train_data = xr.DataArray(np.zeros((n_history, n_features, n_samples_this_train_fold)), 
+                                            coords={'history': np.arange(n_history),\
+                                                    'feature': np.arange(n_features),\
+                                                     'sample': np.arange(n_samples_this_train_fold)}, 
+                                            dims=["history", "feature", "sample"])
+        
+        this_fold_train_labels = xr.DataArray([None] * n_samples_this_train_fold, 
+                                              coords={'sample': np.arange(n_samples_this_train_fold)}, 
+                                              dims=["sample"])
+        
+        # Initializing the xarray of validation data and labels for the current fold.
+        this_fold_valid_data = xr.DataArray(np.zeros((n_history, n_features, n_samples_this_valid_fold)), 
+                                            coords={'history': np.arange(n_history),\
+                                                    'feature': np.arange(n_features),\
+                                                    'sample': np.arange(n_samples_this_valid_fold)}, 
+                                                 dims=["history", "feature", "sample"])
+        
+        this_fold_valid_labels = xr.DataArray([None] * n_samples_this_valid_fold, 
+                                              coords={'sample': np.arange(n_samples_this_valid_fold)}, 
+                                              dims=["sample"])
+        
+        # Initializing the training and validation indices.
+        train_inds   = np.zeros((2,))
+        valid_inds = np.zeros((2,))
         
         # Iterating across all training tasks for the current fold.
-        for this_task in this_fold_training_tasks:
-
-            # Extracting the training data and labels of the current task.
-            this_task_data   = features_dict[this_task]
-            this_task_labels = labels_dict[this_task]
-
-            # If the training task flag is True, intiailize the training data and labels xarrays. If not, concatenate
-            # them with data and labels from another task.
-            if training_task0_flag:
-                these_training_data   = this_task_data
-                these_training_labels = this_task_labels
-
-                # Setting the flag to False to never enter this IF statement again.
-                training_task0_flag = False
-
-            else:
-                these_training_data   = xr.concat([these_training_data, this_task_data], dim="sample")
-                these_training_labels = xr.concat([these_training_labels, this_task_labels], dim='sample')
-        
-        # Iterating across all validatoin tasks for the current fold.
-        for this_task in this_fold_validation_tasks:
-
-            # Extracting the training data and labels of the current task.
-            this_task_data   = features_dict[this_task]
-            this_task_labels = labels_dict[this_task]
-
-            # If the validation task flag is True, intiailize the validation data and labels xarrays. If not, concatenate
-            # them with data and labels from another task.
-            if validation_task0_flag:
-                these_validation_data   = this_task_data
-                these_validation_labels = this_task_labels
-
-                # Setting the flag to False to never enter this IF statement again.
-                validation_task0_flag = False
-
-            else:
-                these_validation_data   = xr.concat([these_validation_data, this_task_data], dim="sample")
-                these_validation_labels = xr.concat([these_validation_labels, this_task_labels], dim='sample')
-                
-                
-        # if this_fold_training_tasks:
-        
-        # Reassigning the sample coordinates to the training data and labels xarrays.
-        these_training_data     = these_training_data.assign_coords(sample=np.arange(these_training_data.sample.shape[0]))
-        these_training_labels   = these_training_labels.assign_coords(sample=np.arange(these_training_labels.sample.shape[0]))
-
-        # Updating the training data and labels dictionaries with the appropriate training information.
-        train_data_folds[fold_id]   = these_training_data
-        train_labels_folds[fold_id] = these_training_labels
-
-      
-        # if this_fold_validation_tasks:
+        for this_task in this_fold_train_tasks:
             
-        # Reassigning the sample coordinates to the validation data and labels xarrays.
-        these_validation_data   = these_validation_data.assign_coords(sample=np.arange(these_validation_data.sample.shape[0]))
-        these_validation_labels = these_validation_labels.assign_coords(sample=np.arange(these_validation_labels.sample.shape[0]))
-
-        # Updating the validation data and labels dictionaries with the appropriate validation information.
-        valid_data_folds[fold_id]   = these_validation_data
-        valid_labels_folds[fold_id] = these_validation_labels
+            # Extracting the training data and labels of the current task.
+            this_task_data   = features_dict[this_task].values
+            this_task_labels = labels_dict[this_task].values
+               
+            # Computing the number of samples in the current task.
+            n_samples_this_task = this_task_labels.shape[0]  
+            
+            # Updating the training indices for the current task.
+            train_inds = index_advancer(train_inds, n_samples_this_task)
+            
+            # Updating the training data and labels xarrays with the current task.
+            this_fold_train_data.loc[:,:,train_inds[0]:train_inds[1]-1] = this_task_data
+            this_fold_train_labels.loc[train_inds[0]:train_inds[1]-1]   = this_task_labels
         
-    return train_data_folds, train_labels_folds, valid_data_folds, valid_labels_folds
+        
+        # Iterating across all validation tasks for the current fold.
+        for this_task in this_fold_valid_tasks:
 
+            # Extracting the validation data and labels of the current task.
+            this_task_data   = features_dict[this_task].values
+            this_task_labels = labels_dict[this_task].values
+                
+            # Computing the number of samples in the current task.
+            n_samples_this_task = this_task_labels.shape[0]  
+            
+            # Updating the validation indices for the current task.
+            valid_inds = index_advancer(valid_inds, n_samples_this_task)
+                        
+            # Updating the validation data and labels xarrays with the current task.
+            this_fold_valid_data.loc[:,:,valid_inds[0]:valid_inds[1]-1] = this_task_data
+            this_fold_valid_labels.loc[valid_inds[0]:valid_inds[1]-1]   = this_task_labels
+      
+        # Reassigning the sample coordinates to the training and validation data and labels xarrays.
+        this_fold_train_data   = this_fold_train_data.assign_coords(sample=np.arange(n_samples_this_train_fold))
+        this_fold_train_labels = this_fold_train_labels.assign_coords(sample=np.arange(n_samples_this_train_fold))
+        this_fold_valid_data   = this_fold_valid_data.assign_coords(sample=np.arange(n_samples_this_valid_fold))
+        this_fold_valid_labels = this_fold_valid_labels.assign_coords(sample=np.arange(n_samples_this_valid_fold))
 
+        # Updating the training and validation data and labels dictionaries with the appropriate training information.
+        train_data_folds[fold_id]   = this_fold_train_data
+        train_labels_folds[fold_id] = this_fold_train_labels
+        valid_data_folds[fold_id]   = this_fold_valid_data
+        valid_labels_folds[fold_id] = this_fold_valid_labels
+        
+    return train_data_folds, train_labels_folds, valid_data_folds, valid_labels_folds  
+    
+    
     
     
     
@@ -3980,15 +4147,15 @@ def training_validation_split_tasks(features_dict):
     Creating dictionaries of training and validation folds where the tasks are split up per-fold.
 
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features. Time samples reduced such that there are an equal number of features per
-                   class.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                   (units: z-scores)]; Array of historical time features. Time samples reduced such that there are an
+                   equal number of features per class.
 
     OUTPUT VARIABLES:
-    training_folds_tasks    [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the training tasks
-                            for each training fold.
-    validation_folds_tasks: [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the validation tasks
-                            for each validation fold.
+    train_folds_tasks  [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the training tasks
+                       for each training fold.
+    valid_folds_tasks: [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the validation 
+                       tasks for each validation fold.
     """
     
     # COMPUTATION:
@@ -4107,8 +4274,8 @@ def visualizing_affinewarp_adjustment(powerband_id, ptr_all_trials, ptr_aligned_
     from before alignment.
     
     INPUT VARIABLES:
-    powerband_id:           [string (powerband#)]; The powerband whose power trial rasters and inter-trial correlations
-                            the experimenter wishes to compare.
+    powerband_id:           [string ('powerbandX')]; Name of the powerband that will be used for visualizing the power 
+                            trial rasters. X is an integer (0, 1, 2,...).   
     ptr_all_trials:         [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
                             spectral information for each trial (across all tasks). Time dimension is in units of 
                             seconds.
@@ -4220,11 +4387,13 @@ def visualizing_warping_channels_traces(chs_alignment, powerband_id, ptr_aligned
     The average aligned high gamma activity (across trials) is plotted for each of the channels used for affine warping. 
 
     INPUT VARIABLES:
-    chs_alignment:          [list > strings]; The list of channels which will be used for affine warp. Leave as [] if
-                            all channels will be used.
-    powerband_id:           [string]; The powerband whose average trials traces will be plotted.
-    ptr_aligned_all_trials: [xarray (trials x channels x powerbands x time samples) > floats (units: V^2/Hz)]; The spectral
-                            information for each aligned trial (across all tasks). Time dimension is in units of seconds.
+    chs_alignment:          [list > strings]; The list of channels which were used for affine warp. Left as [] if all
+                            channels were be used.
+    powerband_id:           [string ('powerbandX')]; Name of the powerband that will be used for visualizing the power
+                            trial rasters. X is an integer (0, 1, 2,...).      
+    ptr_aligned_all_trials: [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
+                            spectral information for each aligned trial (across all tasks). Time dimension is in units
+                            of seconds.
     """
     
     # COMPUTATION:
