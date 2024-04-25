@@ -20,6 +20,7 @@ decorator @ file:///opt/conda/conda-bld/decorator_1643638310831/work
 dPCA==1.0.5
 dtaidistance==2.3.6
 dtw-python==1.1.12
+et-xmlfile==1.1.0
 exceptiongroup @ file:///croot/exceptiongroup_1668714342571/work
 executing @ file:///opt/conda/conda-bld/executing_1646925071911/work
 flatbuffers==2.0
@@ -56,6 +57,7 @@ numpy==1.23.4
 oauthlib==3.2.2
 opencv-contrib-python==4.9.0.80
 opencv-python==4.6.0.66
+openpyxl==3.1.2
 opt-einsum==3.3.0
 packaging @ file:///croot/packaging_1693575174725/work
 pandas==1.4.4
