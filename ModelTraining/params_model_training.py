@@ -22,7 +22,7 @@ save_script_backup()
 
 ######################## PATIENT AND DATA INFORMATION #########################
 aw_model_type   = 'shift'
-car             = False
+car             = True
 calib_state_val = 1# 1
 f_power_max     = [170] # [45, 115, 170]
 f_power_min     = [110] # [15, 70, 125]
@@ -39,8 +39,8 @@ sxx_window      = 256
 
 """
 PARAMETERS:
-aw_model_type:   [string ('shift'/'piecewise')]; The type of affine warp transformation the experimenter wishes to perform. 
-                 Leave empty [] if no AW-alignment will occur.
+aw_model_type:   [string ('shift'/'piecewise')]; The type of affine warp transformation the experimenter wishes to 
+                 perform. Leave empty [] if no AW-alignment will occur.
 car:             [bool (True/False)] Whether or not CAR filtering will be performed.
 calib_state_val: [int]; The state value from where to extract the appropriate calibration data.
 f_power_max:     [list > int (units: Hz)]; For each frequency band, maximum power band frequency.
@@ -52,7 +52,7 @@ model_type:      [string ('SVM','LSTM')]; The model type that will be used to fi
 n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 'None' if percent_var_thr
                  is not 'None', or set to 'None' along with percent_var_thr if all of the variance will be used (no PC transform).
 patient_id:      [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-percent_var_thr: [float]; The percent variance which the user wishes to capture with the principal components. Will compute the number
+percent_var_thr: [float (between 0 and 1)]; The percent variance which the user wishes to capture with the principal components. Will compute the number
                  of principal components which capture this explained variance as close as possible, but will not surpass it. Set to 'None'
                  if n_pc_thr is not 'None', or set to 'None' along with n_pc_thr if all of the variance will be used (no PC transform).
 sampling_rate:   [int (samples/s)]; Sampling rate at which the data was recorded.
@@ -82,25 +82,27 @@ n_hidden_lstm: [int]; Number of hidden units in the LSTM.
 ########################## CHANNEL GRIDS ##########################
 
 # Creating the dictionary for the grid configuration.
-grid_config_dict = collections.defaultdict(dict)
+grid_config = collections.defaultdict(dict)
 
-grid_config_dict['CC01']['upperlimb'] = [["chan121", "chan122", "chan123", "chan124", "chan125", "chan126", "chan127", "chan128"],
-                                         ["chan113", "chan114", "chan115", "chan116", "chan117", "chan118", "chan119", "chan120"],
-                                         ["chan105", "chan106", "chan107", "chan108", "chan109", "chan110", "chan111", "chan112"],
-                                         ["chan97", "chan98", "chan99", "chan100", "chan101", "chan102", "chan103", "chan104"],
-                                         ["chan89", "chan90", "chan91", "chan92", "chan93", "chan94", "chan95", "chan96"],
-                                         ["chan81", "chan82", "chan83", "chan84", "chan85", "chan86", "chan87", "chan88"],
-                                         ["chan73", "chan74", "chan75", "chan76", "chan77", "chan78", "chan79", "chan80"],
-                                         ["chan65", "chan66", "chan67", "chan68", "chan69", "chan70", "chan71", "chan72"]]
+grid_config['CC01']\
+           ['upperlimb'] = [["chan121", "chan122", "chan123", "chan124", "chan125", "chan126", "chan127", "chan128"],
+                            ["chan113", "chan114", "chan115", "chan116", "chan117", "chan118", "chan119", "chan120"],
+                            ["chan105", "chan106", "chan107", "chan108", "chan109", "chan110", "chan111", "chan112"],
+                            ["chan97", "chan98", "chan99", "chan100", "chan101", "chan102", "chan103", "chan104"],
+                            ["chan89", "chan90", "chan91", "chan92", "chan93", "chan94", "chan95", "chan96"],
+                            ["chan81", "chan82", "chan83", "chan84", "chan85", "chan86", "chan87", "chan88"],
+                            ["chan73", "chan74", "chan75", "chan76", "chan77", "chan78", "chan79", "chan80"],
+                            ["chan65", "chan66", "chan67", "chan68", "chan69", "chan70", "chan71", "chan72"]]
 
-grid_config_dict['CC01']['speech'] = [["chan57", "chan58", "chan59", "chan60", "chan61", "chan62", "chan63", "chan64"],
-                                      ["chan49", "chan50", "chan51", "chan52", "chan53", "chan54", "chan55", "chan56"],
-                                      ["chan41", "chan42", "chan43", "chan44", "chan45", "chan46", "chan47", "chan48"],
-                                      ["chan33", "chan34", "chan35", "chan36", "chan37", "chan38", "chan39", "chan40"],
-                                      ["chan25", "chan26", "chan27", "chan28", "chan29", "chan30", "chan31", "chan32"],
-                                      ["chan17", "chan18", "chan19", "chan20", "chan21", "chan22", "chan23", "chan24"],
-                                      ["chan9", "chan10", "chan11", "chan12", "chan13", "chan14", "chan15", "chan16"],
-                                      ["chan1", "chan2", "chan3", "chan4", "chan5", "chan6", "chan7", "chan8"]]
+grid_config['CC01']\
+           ['speech'] = [["chan57", "chan58", "chan59", "chan60", "chan61", "chan62", "chan63", "chan64"],
+                         ["chan49", "chan50", "chan51", "chan52", "chan53", "chan54", "chan55", "chan56"],
+                         ["chan41", "chan42", "chan43", "chan44", "chan45", "chan46", "chan47", "chan48"],
+                         ["chan33", "chan34", "chan35", "chan36", "chan37", "chan38", "chan39", "chan40"],
+                         ["chan25", "chan26", "chan27", "chan28", "chan29", "chan30", "chan31", "chan32"],
+                         ["chan17", "chan18", "chan19", "chan20", "chan21", "chan22", "chan23", "chan24"],
+                         ["chan9", "chan10", "chan11", "chan12", "chan13", "chan14", "chan15", "chan16"],
+                         ["chan1", "chan2", "chan3", "chan4", "chan5", "chan6", "chan7", "chan8"]]
 
 
 
@@ -129,8 +131,8 @@ elim_channels['CC01'] = ['ainp1','ainp2','ainp3']
 
 """
 PARAMETERS:
-elim_channels: [dictionary (key: string (patient_id); Value: list > strings (bad channels))]; The list of
-               bad or non-neural channels to be exlucded from further analysis of the neural data.
+elim_channels: [dictionary (key: string (patient ID); Value: list > strings (bad channels))]; The list of bad or non-
+               neural channels to be exlucded from further analysis.
 """
 
 
@@ -141,16 +143,21 @@ elim_channels: [dictionary (key: string (patient_id); Value: list > strings (bad
 car_channels = {}
 
 # CC01
-car_channels['CC01'] = [['chan66', 'chan67', 'chan68', 'chan69', 'chan70', 'chan74', 'chan75', 'chan76', 'chan77', 'chan78', 'chan84', 'chan85', 'chan86', 'chan91', 'chan92',\
-                         'chan93', 'chan94', 'chan99', 'chan100', 'chan101', 'chan102', 'chan108', 'chan109', 'chan110', 'chan117', 'chan118', 'chan125', 'chan126', 'chan71',\
-                         'chan72', 'chan79', 'chan80', 'chan87', 'chan88', 'chan95', 'chan96', 'chan103', 'chan104', 'chan112', 'chan120', 'chan128', 'chan89', 'chan73', \
-                         'chan65', 'chan90', 'chan83', 'chan82', 'chan81', 'chan121', 'chan122', 'chan114', 'chan119', 'chan113', 'chan111', 'chan116', 'chan105', 'chan107',\
-                         'chan115', 'chan98', 'chan97', 'chan127', 'chan106', 'chan124', 'chan123'],\
-                        ['chan52', 'chan49', 'chan50', 'chan61', 'chan51', 'chan57', 'chan59', 'chan56', 'chan62', 'chan35', 'chan60', 'chan44', 'chan54', 'chan39', 'chan55',\
-                         'chan48', 'chan64', 'chan33', 'chan58', 'chan47', 'chan63', 'chan34', 'chan42', 'chan46', 'chan53', 'chan41', 'chan37', 'chan40', 'chan36', 'chan45',\
-                         'chan43', 'chan38', 'chan19', 'chan18', 'chan17', 'chan24', 'chan21', 'chan23', 'chan22', 'chan30', 'chan20', 'chan25', 'chan28', 'chan27', 'chan29',\
-                         'chan31', 'chan32', 'chan6', 'chan26', 'chan14', 'chan13', 'chan15', 'chan12', 'chan16', 'chan7', 'chan4', 'chan9', 'chan3', 'chan5', 'chan2', 'chan8',\
-                         'chan1', 'chan10', 'chan11']]
+car_channels['CC01'] = [['chan66', 'chan67', 'chan68', 'chan69', 'chan70', 'chan74', 'chan75', 'chan76', 'chan77',\
+                         'chan78', 'chan84', 'chan85', 'chan86', 'chan91', 'chan92', 'chan93', 'chan94', 'chan99',\
+                         'chan100', 'chan101', 'chan102', 'chan108', 'chan109', 'chan110', 'chan117', 'chan118',\
+                         'chan125', 'chan126', 'chan71', 'chan72', 'chan79', 'chan80', 'chan87', 'chan88', 'chan95',\
+                         'chan96', 'chan103', 'chan104', 'chan112', 'chan120', 'chan128', 'chan89', 'chan73', 'chan65',\
+                         'chan90', 'chan83', 'chan82', 'chan81', 'chan121', 'chan122', 'chan114', 'chan119', 'chan113',\
+                         'chan111', 'chan116', 'chan105', 'chan107', 'chan115', 'chan98', 'chan97', 'chan127',\
+                         'chan106', 'chan124', 'chan123'],\
+                        ['chan52', 'chan49', 'chan50', 'chan61', 'chan51', 'chan57', 'chan59', 'chan56', 'chan62',\
+                         'chan35', 'chan60', 'chan44', 'chan54', 'chan39', 'chan55', 'chan48', 'chan64', 'chan33',\
+                         'chan58', 'chan47', 'chan63', 'chan34', 'chan42', 'chan46', 'chan53', 'chan41', 'chan37',\
+                         'chan40', 'chan36', 'chan45', 'chan43', 'chan38', 'chan19', 'chan18', 'chan17', 'chan24',\
+                         'chan21', 'chan23', 'chan22', 'chan30', 'chan20', 'chan25', 'chan28', 'chan27', 'chan29',\
+                         'chan31', 'chan32', 'chan6', 'chan26', 'chan14', 'chan13', 'chan15', 'chan12', 'chan16',\
+                         'chan7', 'chan4', 'chan9', 'chan3', 'chan5', 'chan2', 'chan8', 'chan1', 'chan10', 'chan11']]
 
 
 

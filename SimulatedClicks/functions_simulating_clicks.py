@@ -321,6 +321,8 @@ def car_filter(signals):
     signals_car: Same as above, only the signals data may or may not be CAR filtered.
     """
   
+    # COMPUTATION:
+    
     # If CAR filtering will happen.
     if car:
         
