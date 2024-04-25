@@ -49,12 +49,14 @@ file_extension:  [string (hdf5/mat)]; The data file extension of the data.
 model_classes:   [list > strings]; List of all the classes to be used in the classifier.
 model_name:      [string]; Name that describes what data the model is trained on.
 model_type:      [string ('SVM','LSTM')]; The model type that will be used to fit the data.
-n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 'None' if percent_var_thr
-                 is not 'None', or set to 'None' along with percent_var_thr if all of the variance will be used (no PC transform).
+n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 
+                 'None' if percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the
+                 variance will be used (no PC transform).
 patient_id:      [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-percent_var_thr: [float (between 0 and 1)]; The percent variance which the user wishes to capture with the principal components. Will compute the number
-                 of principal components which capture this explained variance as close as possible, but will not surpass it. Set to 'None'
-                 if n_pc_thr is not 'None', or set to 'None' along with n_pc_thr if all of the variance will be used (no PC transform).
+percent_var_thr: [float (between 0 and 1)]; The percent variance which the user wishes to capture with the principa
+                 components. Will compute the number of principal components which capture this explained variance as
+                 close as possible, but will not surpass it. Set to 'None' if n_pc_thr is not 'None', or set to 'None'
+                 along with n_pc_thr if all of the variance will be used (no PC transform).
 sampling_rate:   [int (samples/s)]; Sampling rate at which the data was recorded.
 sxx_shift:       [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the time domain.
 sxx_window:      [int (units: ms)]; Time length of the window that computes the frequency power.

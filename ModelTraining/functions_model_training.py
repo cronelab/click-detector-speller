@@ -786,25 +786,26 @@ def computing_eigenvectors(data):
     2) Only keep the first n_pc_thr eigenvectors.
         
     INPUT VARIABLES:
-    data: [array (features x samples) > floats (units: V^2/Hz)];
+    data: [array (features, samples) > floats (units: z-scores)];
     
     GLOBAL PARAMETERS:
-    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 'None' if
-                     percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the variance will be used
-                     (no PC transform).
-    percent_var_thr: [float]; The percent variance which the user wishes to capture with the principal components. Will compute the
-                     number of principal components which capture this explained variance as close as possible, but will not surpass
-                     it. Set to 'None' if n_pc_thr is not 'None', or set to 'None' along with n_pc_thr if all of the variance will be
-                     used (no PC transform).
+    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 
+                     'None' if percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the
+                     variance will be used (no PC transform).
+    percent_var_thr: [float (between 0 and 1)]; The percent variance which the user wishes to capture with the 
+                     principal components. Will compute the number of principal components which capture this explained 
+                     variance as close as possible, but will not surpass it. Set to 'None' if n_pc_thr is not 'None', or
+                     set to 'None' along with n_pc_thr if all of the variance will be used (no PC transform).
+                     
     OUTPUT VARIABLES:
-    eigenvectors: [array (features x pc features) > floats]; Array in which columns consist of eigenvectors which explain the
-                  variance of the data in descending order. 
+    eigenvectors: [array (features, pc features) > floats]; Array in which columns consist of eigenvectors which explain
+                  the variance of the data in descending order. 
     """
     
     # COMPUTATION:
     
-    # Computing the PCs of the training data if the experimenter has entered a value for the expected percentage variance explained
-    # or for the number of PCs to be computed.
+    # Computing the PCs of the training data if the experimenter has entered a value for the expected percentage 
+    # variance explained or for the number of PCs to be computed.
     if (percent_var_thr != 'None') or  (n_pc_thr != 'None'):
         
         # Computing the number of samples in the data.
@@ -816,10 +817,11 @@ def computing_eigenvectors(data):
         # Computing the eigenvectors and eigenvalues of the covariance matrix. 
         [D,V] = np.linalg.eig(C)
         
-        # If there are more features than samples, curtail the the eigenvalues and eigenvectors to exclude the indices past 
-        # the number of samples. Due to Python's numerical approximation, when there are more features than samples, the 
-        # eigen-decomposition returns complex eigenvalues and eigenvectors. This shouldn't ever mathematically happen because
-        # the covariance matrix is symmetric, and therefore only has real eigenvalues and eigenvectors.
+        # If there are more features than samples, curtail the the eigenvalues and eigenvectors to exclude the indices
+        # past the number of samples. Due to Python's numerical approximation, when there are more features than 
+        # samples, the eigen-decomposition returns complex eigenvalues and eigenvectors. This should not ever 
+        # mathematically happen because the covariance matrix is symmetric, and therefore only has real eigenvalues and
+        # eigenvectors.
         D = D[:n_samples].real
         V = V[:,:n_samples].real
         
@@ -828,29 +830,31 @@ def computing_eigenvectors(data):
         eig_vals            = D[eig_values_dsc_inds]
         eig_vecs            = V[:,eig_values_dsc_inds]
         
-        # Calculating the percentage of variance explained from each eigenvector by cumulatively summing the eigenvalues.
+        # Calculating the percentage of variance explained from each eigenvector by cumulatively summing the 
+        # eigenvalues.
         percent_var = np.cumsum(eig_vals)/np.sum(eig_vals);
         
-        # Depending on the experimenter-input, the eigenvectors will be extracted based on the percent variance explained threshold
-        # or the number of principal components threshold. 
+        # Depending on the experimenter-input, the eigenvectors will be extracted based on the percent variance 
+        # explained threshold or the number of principal components threshold. 
         if percent_var_thr != 'None':
             eigenvectors = eig_vecs[:,percent_var <= percent_var_thr];
             
-            # If the size of the eigenvectors array is 0, this means that the first eigenvector explained more than the threshold
-            # percent variance, and so it wasn't captured. Manually setting the eigenvectors variable to only the first eigenvector.
+            # If the size of the eigenvectors array is 0, this means that the first eigenvector explained more than the
+            # threshold percent variance, and so it wasn't captured. Manually setting the eigenvectors variable to only
+            # the first eigenvector.
             if eigenvectors.size == 0:
                 eigenvectors = eig_vecs[:,0];
             
         if n_pc_thr != 'None':
             eigenvectors = eig_vecs[:,0:n_pc_thr];
-       
 
         # If there is only one eigenvector, the second dimension of the array must be expanded from nothing to 1.
         if len(list(eigenvectors.shape)) == 1:
             eigenvectors = np.expand_dims(eigenvectors[n],axis=1)   
             
-        # Enforcing the rule that the first element of each eigenvector should be positive, and if it is not, then the entire 
-        # eigenvector will be multiplied by a -1. This is to ensure eigenvector similarity across multiple data uploads.
+        # Enforcing the rule that the first element of each eigenvector should be positive, and if it is not, then the
+        # entire eigenvector will be multiplied by a -1. This is to ensure eigenvector similarity across multiple data
+        # uploads.
         n_eig = eigenvectors.shape[1]
         for n in range(n_eig):
             this_eigenvector  = eigenvectors[:,n]
@@ -891,17 +895,17 @@ def computing_eigenvectors(data):
 def computing_predicted_labels(fold_models, valid_data_folds, valid_labels_folds):
     """
     DESCRIPTION:
-    For each fold of validation data, the approrpirate fold model is used to determine the predicted label for each sample.
-    Predicted labels across all folds are then concatenated together in list. Corresponding true labels for each fold are
-    also concatenated together.
+    For each fold of validation data, the approrpirate fold model is used to determine the predicted label for each
+    sample. Predicted labels across all folds are then concatenated together in list. Corresponding true labels for each
+    fold are also concatenated together.
     
     INPUT VARIABLES:
     fold_models:        [dictionary (key: string (fold ID); Value: model)]; Models trained for each training fold.
-    valid_data_folds:   [dict (key: string (fold ID); Value: xarray (dimensions vary based on model type) > floats (units: V^2/Hz))];
-                        Data across all validation tasks per fold. Equal number of samples per class. PC features. Rearranged 
-                        according to the type of model that will be trained.
-    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; Labels across
-                        all validation tasks per fold. Equal number of labels per class.
+    valid_data_folds:   [dictionary (key: string (fold ID): Value xarray (dimensions vary based on model type) > 
+                        floats)]; Data across all validation tasks per fold. Equal number of samples per class. PC 
+                        features. Rearranged according to the type of model that will be trained.
+    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (time samples, ) > strings ('grasp'/'rest'))]; 
+                        Labels across all validation tasks per fold. Equal number of labels per class.
                     
     GLOBAL PARAMETERS:
     model_classes:  [list > strings]; List of all the classes to be used in the classifier.
@@ -938,8 +942,8 @@ def computing_predicted_labels(fold_models, valid_data_folds, valid_labels_folds
     # Iterating across all folds.
     for this_fold in valid_data_folds.keys():
         
-        # Extracting the validation data and labels from the current fold. Transforming data back into an array because tensorflow
-        # models produce warnings when given xarrays.
+        # Extracting the validation data and labels from the current fold. Transforming data back into an array because
+        # tensorflow models produce warnings when given xarrays.
         this_fold_validation_data   = np.asarray(valid_data_folds[this_fold])
         this_fold_validation_labels = valid_labels_folds[this_fold]
         
@@ -1187,7 +1191,7 @@ def confusion_matrix_display(cm, suppress_figs='No'):
     Given the experimenter-input confusion matrix array and corresponding labels, the confusion matrix is displayed.
 
     INPUT VARIABLES:
-    cm: [array > float]; Confusion matrix which contains the accuracy of the true (vertical axis) and predicted
+    cm: [array > ints]; Confusion matrix which contains the accuracy of the true (vertical axis) and predicted
         (horizontal axis) labels.
     
     GLOBAL PARAMETERS
@@ -1332,14 +1336,9 @@ def creating_labels(aw_shifts, grasp_bandpower_dict, t_grasp_end_per_trial, t_gr
             
             # Labeling the time between grasp onset and offset with grasp.
             this_task_labels[grasp_onset_ind:grasp_offset_ind] = [grasp_class]*n_diff_onset_offset
-            
-        # In case the labels for the current task end up surpassing the total number of time samples due to the affine
-        # warp shifting, curtail the task labels to this sample size.
-        # this_task_labels = this_task_labels[:n_samples] # This should never happen due to the two previous IF statements.
         
-        
-        # Where the state_ON and state_OFF labels remain, replace with the default class, rest. We are ignoring any possible
-        # neutral labels as those won't be used for training.
+        # Where the state_ON and state_OFF labels remain, replace with the default class, rest. We are ignoring any
+        # possible  neutral labels as those won't be used for training.
         remaining_state_on_inds  = np.squeeze(np.argwhere(this_task_labels.values == 'state_ON'))
         remaining_state_off_inds = np.squeeze(np.argwhere(this_task_labels.values == 'state_OFF'))        
         this_task_labels[remaining_state_on_inds]  = rest_class
@@ -1762,11 +1761,11 @@ def evaluating_model_accuracy(fold_models, valid_data_folds, valid_labels_folds)
     
     INPUT VARIABLES:
     fold_models:        [dictionary (key: string (fold ID); Value: model)]; Models trained for each training fold.
-    valid_data_folds:   [dict (key: string (fold ID); Value: xarray (dimensions vary based on model type) > floats (units: V^2/Hz))];
-                        Data across all validation tasks per fold. Equal number of samples per class. PC features. Rearranged 
-                        according to the type of model that will be trained.
-    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; Labels across
-                        all validation tasks per fold. Equal number of labels per class.
+    valid_data_folds:   [dictionary (key: string (fold ID): Value xarray (dimensions vary based on model type) > 
+                        floats)]; Data across all validation tasks per fold. Equal number of samples per class. PC 
+                        features. Rearranged according to the type of model that will be trained.
+    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (time samples, ) > strings ('grasp'/'rest'))]; 
+                        Labels across all validation tasks per fold. Equal number of labels per class.
                         
     GLOBAL PARAMETERS:
     model_classes:  [list > strings]; List of all the classes to be used in the classifier.
@@ -1791,42 +1790,42 @@ def evaluating_model_accuracy(fold_models, valid_data_folds, valid_labels_folds)
     
     
     
-def extract_data_pathways(data_info_dict):
-    """
-    DESCRIPTION:
-    Using the dictionary (grasp_info_dict or calib_info_dict) of dates and tasks, the appropriate data file pathways are 
-    extracted and stored in a list.
+# def extract_data_pathways(data_info_dict):
+#     """
+#     DESCRIPTION:
+#     Using the dictionary (grasp_info_dict or calib_info_dict) of dates and tasks, the appropriate data file pathways are 
+#     extracted and stored in a list.
     
-    INPUT VARIABLES:
-    data_info_dict: [dictionary (Key: string (date in YYYY_MM_DD format); Values: list > string (task names); Values and
-                    keys correspond to grasp/calibration tasks and dates on which those tasks were run.
+#     INPUT VARIABLES:
+#     data_info_dict: [dictionary (Key: string (date in YYYY_MM_DD format); Values: list > string (task names); Values and
+#                     keys correspond to grasp/calibration tasks and dates on which those tasks were run.
     
-    GLOBAL PARAMETERS:
-    file_extension: [string (hdf5/mat)]; The data file extension of the data.
-    patient_id:     [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
+#     GLOBAL PARAMETERS:
+#     file_extension: [string (hdf5/mat)]; The data file extension of the data.
+#     patient_id:     [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     
-    OUTPUT VARIABLES:
-    path_list: [list > strings (pathways)]; The list of file pathways from which the dataset(s) will be extracted.
-    """
+#     OUTPUT VARIABLES:
+#     path_list: [list > strings (pathways)]; The list of file pathways from which the dataset(s) will be extracted.
+#     """
     
-    # COMPUTATION:
+#     # COMPUTATION:
 
-    # Initializing a list of pathways in which the data from the data_info_dict is found.
-    path_list = []
+#     # Initializing a list of pathways in which the data from the data_info_dict is found.
+#     path_list = []
 
-    # Iterating across all dictionary items to extract the date and task.
-    for date, tasks in data_info_dict.items():
+#     # Iterating across all dictionary items to extract the date and task.
+#     for date, tasks in data_info_dict.items():
 
-        # Iterating across each task in the task list for the particular date.
-        for this_task in tasks:
+#         # Iterating across each task in the task list for the particular date.
+#         for this_task in tasks:
 
-            # Creating the path for the current date/task pair. Modify this variable as needed.
-            path = '/mnt/shared/ecog/' + patient_id + '/' + file_extension + '/' + date + '/' + this_task + '.' + file_extension
+#             # Creating the path for the current date/task pair. Modify this variable as needed.
+#             path = '/mnt/shared/ecog/' + patient_id + '/' + file_extension + '/' + date + '/' + this_task + '.' + file_extension
 
-            # Appending the datafile path list with the current datafile path.
-            path_list.append(path)
+#             # Appending the datafile path list with the current datafile path.
+#             path_list.append(path)
     
-    return path_list
+#     return path_list
 
 
 
@@ -1970,14 +1969,14 @@ def mean_centering(data, data_mean):
     Mean-centering all features at all historical time points by subtracting the data mean, averaged across time.
         
     INPUT VARIABLES:
-    data:      [xarray (history x features x time samples) > floats (units: V^2/Hz)]; Historical power features across time
-               samples. Time samples are in units of seconds.
-    data_mean: [xarray (history x features) > floats (units: V^2/Hz)]; Mean power of each feature of only the 0th time shift.
-               This array is repeated for each historical time point.
+    data:      [xarray (time history, features, time samples) > floats (units: z-scores)]; Historical power features 
+               across time samples.
+    data_mean: [xarray (history, features) > floats (units: z-scores)]; Mean power of each feature of only the 0th time
+               shift. This array is repeated for each historical time point.
     
     OUTPUT VARIABLES:
-    data_centered: [xarray (history x features x time samples) > floats (units: V^2/Hz)]; Mean-centered historical power features
-                   across time samples. Time samples are in units of seconds.
+    data_centered: [xarray (time history, features, time samples) > floats (units: z-scores)]; Mean-centered historical
+                   power features across time samples. Time samples are in units of seconds.
     """
     
     # COMPUTATION:
@@ -1994,7 +1993,9 @@ def mean_centering(data, data_mean):
     
     # Converting the data mean array back into an xarray
     data_mean = xr.DataArray(data_mean, 
-                             coords={'history': np.arange(n_history), 'feature': np.arange(n_features), 'sample': np.arange(n_samples)}, 
+                             coords={'history': np.arange(n_history),\
+                                     'feature': np.arange(n_features),\
+                                     'sample': np.arange(n_samples)}, 
                              dims=["history", "feature", "sample"])
     
     # Computing the mean-centered data.
@@ -2012,17 +2013,19 @@ def mean_centering_all_folds(data_folds, data_fold_means):
     Using the data mean to mean center the data at each fold.
 
     INPUT VARIABLES:
-    data_folds:      [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                     For each fold, feature xarrays are concatenated in the sample dimension.
-    data_fold_means: [dict (Key: string (fold ID); Value: xarray (time history x features) > floats (units: V^2/Hz))]; The mean,
-                     averaged across samples, for each fold. 
+    data_folds:      dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                     floats (units: z-scores))]; For each fold, feature xarrays are concatenated in the sample
+                     dimension.
+    data_fold_means: [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                     floats (units: z-scores))]; The mean, averaged across samples, for each fold. 
                      
     NECESSARY FUNCTIONS:
     mean_centering
 
     OUTPUT VARIABLES:
-    data_folds_centered: [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                         For each fold, the features are mean-centered according to means from the respective folds.
+    data_folds_centered: [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                         floats (units: z-scores))]; For each fold, the features are mean-centered according to means 
+                         from the respective folds.
     """
     
     # COMPUTATION:
@@ -2049,32 +2052,34 @@ def mean_centering_all_folds(data_folds, data_fold_means):
 def mean_compute(data):
     """
     DESCRIPTION:
-    Computing the mean across all time samples for each feature. Note that though the data array has a history dimension, 
-    only the first time history coordinate (time shift = 0) is used. As the mean is computed for potential PC reduction,
-    the PCs will only be based off of the non-shifted features.
+    Computing the mean across all time samples for each feature. Note that though the data array has a history
+    dimension, only the first time history coordinate (time shift = 0) is used. As the mean is computed for potential PC
+    reduction, the PCs will only be based off of the non-shifted features.
     
     INPUT VARIABLES:
-    data: [xarray (history x features x samples) > floats (units: V^2/Hz)]; Historical power features across time samples.
+    data: [xarray (time history, features, time samples) > floats (units: z-scores)]; Historical power features across
+          time samples.
     
     OUTPUT VARIABLES:
-    data_mean_history: [xarray (history x features) > floats (units: V^2/Hz)]; Mean power of each feature of only the 
+    data_mean_history: [xarray (history, features) > floats (units: z-scores)]; Mean power of each feature of only the 
                        0th time shift. This array is repeated for each historical time point.
     """
     # COMPUTATION:
     
-    # Extracting the number of historical time points and features from task0. These number are the same across all tasks.
+    # Extracting the number of historical time points and features from task0. These number are the same across all 
+    # tasks.
     n_features = data.feature.shape[0]
     n_history  = data.history.shape[0]
     
-    # Extracting only the first historical time feature (no time shift). Eventually, in PC reduction, only this slice will 
-    # be used to compute the eigenvectors.
+    # Extracting only the first historical time feature (no time shift). Eventually, in PC reduction, only this slice
+    # will be used to compute the eigenvectors.
     data = data.loc[0,:,:]
     
     # Computing the mean of the data across the time samples dimension.
     data_mean = np.asarray(data.mean(dim='sample'))
     
-    # Creating an array of concatenated rows where each row is the data mean for each feature. There are as many rows as there
-    # are historical time points. 
+    # Creating an array of concatenated rows where each row is the data mean for each feature. There are as many rows as
+    # there are historical time points. 
     data_mean_history = np.tile(data_mean, (n_history,1))
 
     # Converting the concatenated array into an xarray.
@@ -2092,20 +2097,20 @@ def mean_compute(data):
 def mean_compute_all_folds(data_folds):
     """
     DESCRIPTION:
-    Computing the mean across all dimensions of each fold. Note that only the mean of the first historical time point is computed
-    with the intent of only computing the PCs from those features. This mean will be repeated in an array for as many historical
-    time features that there are.
+    Computing the mean across all dimensions of each fold. Note that only the mean of the first historical time point is
+    computed with the intent of only computing the PCs from those features. This mean will be repeated in an array for 
+    as many historical time features that there are.
 
     INPUT VARIABLES:
-    data_folds: [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                For each fold, feature xarrays are concatenated in the sample dimension.
+    data_folds: [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                floats (units: z-scores))]]; For each fold, feature xarrays are concatenated in the sample dimension.
                 
     NECESSARY FUNCTIONS:
     mean_compute
 
     OUTPUT VARIABLES:
-    data_fold_means: [dict (Key: string (fold ID); Value xarray (time history x features) > floats (units: V^2/Hz))]; The mean,
-                     averaged across samples, for each fold. 
+    data_fold_means: [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                     floats (units: z-scores))]; The mean, averaged across samples, for each fold. 
     """
     
     # COMPUTATION:
@@ -2113,9 +2118,9 @@ def mean_compute_all_folds(data_folds):
     # Initializing a dictionary of time-averaged data for each fold.
     data_fold_means = {}
     
-    # Extracting the number of historical time points and features from task0. These numbers are the same across all tasks.
-    n_features = data_folds['fold0'].feature.shape[0]
-    n_history  = data_folds['fold0'].history.shape[0]
+    # Extracting the number of historical time points and features from task0. These numbers are the same across all 
+    # tasks.
+    # n_features = data_folds['fold0'].feature.shape[0]
     
     # Iterating across each fold.
     for this_fold in data_folds.keys():
@@ -2123,8 +2128,8 @@ def mean_compute_all_folds(data_folds):
         # Extracting the data from the current fold.
         this_data = data_folds[this_fold]
                 
-        # Computing the mean of the current fold's data. The resulting array has concatenated rows where each row is the data mean
-        # for each feature. There are as many rows as there are historical time points.
+        # Computing the mean of the current fold's data. The resulting array has concatenated rows where each row is the
+        # data mean for each feature. There are as many rows as there are historical time points.
         this_data_mean_history = mean_compute(this_data)
         
         # Computing the mean of the data across the time dimension.
@@ -2143,9 +2148,9 @@ def model_training_lstm(training_data, training_labels, validation_data, validat
     
     INPUT VARIABLES:
     training_data:     [xarray (history, features, training time samples] > floats (units: V^2/Hz)]; 
-    training_labels:   [xarray (1 x training samples) > strings ('grasp'/'rest')]
+    training_labels:   [xarray (training samples, ) > strings ('grasp'/'rest')]
     validation_data:   [xarray (history, features, validation time samples] > floats (units: V^2/Hz)]; 
-    validation_labels: [xarray (1 x validation samples) > strings ('grasp'/'rest')]
+    validation_labels: [xarray (validation samples, ) > strings ('grasp'/'rest')]
     
     GLOBAL PARAMETERS:
     model_classes: [list > strings]; List of all the classes to be used in the classifier.
@@ -2186,21 +2191,26 @@ def model_training_lstm(training_data, training_labels, validation_data, validat
     model       = Sequential()
     
     # Creating the model architecture
-    model.add(LSTM(n_hidden_lstm, input_shape = (n_time_history, n_features), activation = 'tanh', recurrent_activation = 'sigmoid',\
-                   kernel_initializer = initializer, dropout = dropout_rate, recurrent_dropout = dropout_rate, return_sequences = True,\
+    model.add(LSTM(n_hidden_lstm,\
+                   input_shape = (n_time_history, n_features),\
+                   activation = 'tanh',\
+                   recurrent_activation = 'sigmoid',\
+                   kernel_initializer = initializer,\
+                   dropout = dropout_rate,\
+                   recurrent_dropout = dropout_rate,\
+                   return_sequences = True,\
                    unroll = True))
     model.add(Flatten())
     model.add(Dense(10, activation = 'elu', kernel_initializer = initializer))
     model.add(Dropout(dropout_rate))
     model.add(Dense(n_model_classes, activation = 'softmax', kernel_initializer = initializer))
 
-    # Categorical cross-entropy for computing the error between true and predicted labels of each batch and updating the weights using
-    # adaptive moment optimization (Adam optimizer)
+    # Categorical cross-entropy for computing the error between true and predicted labels of each batch and updating the
+    # weights using adaptive moment optimization (Adam optimizer)
     opt     = Adam(learning_rate = alpha)
     loss_fn = 'categorical_crossentropy' 
     model.compile(loss = loss_fn, optimizer = opt, metrics = ['accuracy'])
     print(model.summary())
-        
     
     # Extracting the number of training and validation samples in this fold.
     n_training_samples   = training_labels.shape[0]
@@ -2264,16 +2274,17 @@ def model_training_lstm(training_data, training_labels, validation_data, validat
 def pc_transform(data, eigenvectors):
     """
     DESCRIPTION:
-    Transforming the data into PC space by multiplying the features at each historical time point by the same eigenvectors.
+    Transforming the data into PC space by multiplying the features at each historical time point by the same 
+    PC eigenvectors.
     
     INPUT VARIABLES:
-    data:         [xarray (features x time samples) > floats (units: V^2/Hz)];
-    eigenvectors: [array (features x pc features) > floats]; Array in which columns consist eigenvectors which explain the
-                  variance in features in descending order. Time samples are in units of seconds.
+    data:         [xarray (features, time samples) > floats (units: z-scores)];
+    eigenvectors: [array (features, pc features) > floats]; Array in which columns consist eigenvectors which explain
+                  the  variance in features in descending order. Time samples are in units of seconds.
     
     OUTPUT VARIABLES:
-    data_pc: [xarray (pc features x time samples) > floats (units: PC units)]; Reduced-dimensionality data. Time dimension is
-             in units of seconds.
+    data_pc: [xarray (pc features, time samples) > floats (units: PC units)]; Reduced-dimensionality data. Time
+             dimension is in units of seconds.
     """
     
     # COMPUTATION:
@@ -2287,7 +2298,9 @@ def pc_transform(data, eigenvectors):
     
     # Initializing an xarray of PC data.
     data_pc = xr.DataArray((np.zeros((n_history, n_features_pc, n_samples))),
-                            coords={'history': np.arange(n_history), 'feature': np.arange(n_features_pc), 'sample': np.arange(n_samples)},
+                            coords={'history': np.arange(n_history),\
+                                    'feature': np.arange(n_features_pc),\
+                                    'sample': np.arange(n_samples)},
                             dims=["history", "feature", "sample"])
     
     # Iterating across all historical time shifts and multiplying the data at each historical time shift by the same
@@ -2309,45 +2322,47 @@ def pc_transform(data, eigenvectors):
 def pc_transform_all_folds(train_data_folds, valid_data_folds):
     """
     DESCRIPTION: 
-    Transforming the training and validation data into PC space for each fold. The eigenvectors for the PC transformation
-    are computed from the 0th point in time history. For example consider an array of dimensions (h x f x t) where h, f
-    and t correspond to the historical time sequence, number of features and number of time samples, respectively. 
-    Using a historical time features of the last 1 second with 100 ms shifts, this means that h can be any integer from
-    0 to 9. The PCs are computed from the 0th time history coordinate of the data array: (0 x f x t). This can be 
-    dimensionally reduced to an array of dimensions (f x t). The resulting PCs of dimensions (p x t) where p <= f are
-    applied to the (f x t) array at each historical time point. 
-    
+    Transforming the training and validation data into PC space for each fold. The eigenvectors for the PC 
+    transformation are computed from the 0th point in time history. For example consider an array of dimensions 
+    (h, f, t) where h, f and t correspond to the historical time sequence, number of features and number of time 
+    samples, respectively. Using a historical time features of the last 1 second with 100 ms shifts, this means that h
+    can be any integer from 0 to 9. The PCs are computed from the 0th time history coordinate of the data array: 
+    (0, f, t). This can be dimensionally reduced to an array of dimensions (f, t). The resulting PCs of dimensions 
+    (p, t) where p <= f are applied to the (f, t) array at each historical time point. 
+
     The number of eigenvectors are selected based on one of two experimenter-specified criteria:
-    
+
     1) Only keep the first eiggenvectors that that in total explain less than or equal variance to percent_var_thr
-       ... or ... 
+    ... or ... 
     2) Only keep the first n_pc_thr eigenvectors.
-    
+
 
     INPUT VARIABLES:                        
-    train_data_folds: [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                      The training data across all training tasks for each fold. 
-    valid_data_folds: [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                      The validation data across all training tasks for each fold. 
-    
+    train_data_folds: [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                      floats (units: z-scores))]; For each training fold, feature xarrays are centered according to the 
+                      corresponding training fold mean.
+    valid_data_folds: [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                      floats (units: z-scores))]; For each validation fold, feature xarrays are centered according to 
+                      the corresponding training fold mean.
+
     GLOBAL PARAMETERS:
-    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 'None' if
-                     percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the variance will be used
-                     (no PC transform).
-    percent_var_thr: [float]; The percent variance which the user wishes to capture with the principal components. Will compute the
-                     number of principal components which capture this explained variance as close as possible, but will not surpass
-                     it. Set to 'None' if n_pc_thr is not 'None', or set to 'None' along with n_pc_thr if all of the variance will be
-                     used (no PC transform).
-    
+    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 
+                     'None' if percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the
+                     variance will be used (no PC transform).
+    percent_var_thr: [float (between 0 and 1)]; The percent variance which the user wishes to capture with the principal
+                     components. Will compute the number of principal components which capture this explained variance
+                     as close as possible, but will not surpass it. Set to 'None' if n_pc_thr is not 'None', or set to
+                     'None' along with n_pc_thr if all of the variance will be used (no PC transform).
+
     NECESSARY FUNCTIONS:
     computing_eigenvectors
     pc_transform
 
     OUTPUT VARIABLES: 
-    train_data_folds  [dict (Key: string (fold ID); Value: xarray (history x pc features x time samples) > floats (units: PC units)];
-                      Reduced dimensionality version of the training data arrays.
-    valid_data_folds: [dict (Key: string (fold ID); Value: xarray (history x pc features x time samples) > floats (units: PC units)];
-                      Reduced dimensionality version of the validation data arrays.
+    train_data_folds  [dict (Key: string (fold ID); Value: xarray (history, pc features, time samples) >
+                      floats (units: PC units)]; Reduced dimensionality version of the training data arrays.
+    valid_data_folds: [dict (Key: string (fold ID); Value: xarray (history, pc features, time samples) >
+                      floats (units: PC units)]; Reduced dimensionality version of the validation data arrays.
     """
     
     # COMPUTATION:
@@ -2362,7 +2377,8 @@ def pc_transform_all_folds(train_data_folds, valid_data_folds):
         # Extracting only the training data from this fold corresponding to the 0th historical time shift.
         train_data_history0 = np.asarray(this_fold_train_data.loc[0,:,:])
         
-        # Computing the eigenvectors for the current fold, using only the historical features corresponding to the 0th shift.
+        # Computing the eigenvectors for the current fold, using only the historical features corresponding to the 0th
+        # shift.
         this_fold_eigenvectors = computing_eigenvectors(train_data_history0)
         
         # Replacing the training and validation data with the PC transformed for the current fold.
@@ -3008,7 +3024,7 @@ def rearranging_features(data):
     Rearranging the data dimensions as necessary to fit the experimenter-determined model.
     
     INPUT VARIABLES:
-    data: [xarray (time history x features x time samples) > floats]; Array of historical time features.
+    data: [xarray (time history, features, time samples) > floats]; Array of historical time features.
     
     GLOBAL PARAMETERS:
     model_type: [string ('SVM','LSTM')]; The model type that will be used to fit the data.
@@ -3026,7 +3042,7 @@ def rearranging_features(data):
     # If the model type is a SVM.
     if model_type == 'SVM':
         
-        # NOTE: This script doesn't have a SVM model structure for training. Feel free to write one. The data is rearranged
+        # This script doesn't have a SVM model structure for training. Feel free to write one. The data is rearranged
         # for it.
 
         # Concatenating all the historical time features into one dimension.
@@ -3035,7 +3051,8 @@ def rearranging_features(data):
 
         # Converting the rearranged features back into an xarray.
         data_rearranged = xr.DataArray(data_rearranged, 
-                                       coords={'sample': np.arange(n_samples), 'feature': np.arange(n_history*n_features)}, 
+                                       coords={'sample': np.arange(n_samples),\
+                                               'feature': np.arange(n_history*n_features)}, 
                                        dims=["sample", "feature"])
 
     # If the model type is an LSTM.
@@ -3057,9 +3074,9 @@ def rearranging_features_all_folds(features_dict):
     dimensions required for model.fit() 
     
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (fold ID); Value: xarray (time history x features x time samples) > floats)]
-                   Array of historical time features. Time samples reduced such that there are an equal number of features
-                   per class.
+    features_dict: [dictionary (Key: string (fold ID); Value: xarray (time history, features, time samples) > floats)]
+                   Array of historical time features. Time samples reduced such that there are an equal number of
+                   features per class.
                    
     NECESSARY FUNCTIONS:
     rearranging_features
@@ -3818,16 +3835,16 @@ def training_fold_models(train_data_folds, train_labels_folds, valid_data_folds,
     the data.
 
     INPUT VARIABLES:
-    train_data_folds:   [dict (key: string (fold ID); Value: xarray (dimensions vary based on model type) > floats (units: V^2/Hz))];
-                        Data across all training tasks per fold. Equal number of samples per class. PC features. Rearranged 
-                        according to the type of model that will be trained.
-    train_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; Labels across
-                        all training tasks per fold. Equal number of labels per class.
-    valid_data_folds:   [dict (key: string (fold ID); Value: xarray (dimensions vary based on model type) > floats (units: V^2/Hz))];
-                        Data across all validation tasks per fold. Equal number of samples per class. PC features. Rearranged 
-                        according to the type of model that will be trained.
-    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; Labels across
-                        all validation tasks per fold. Equal number of labels per class.
+    train_data_folds:   [dictionary (key: string (fold ID): Value xarray (dimensions vary based on model type) >
+                        floats)];  Data across all training tasks per fold. Equal number of samples per class. PC 
+                        features. Rearranged according to the type of model that will be trained.
+    train_labels_folds: [dict (key: string (fold ID); Value: xarray (time samples, ) > strings ('grasp'/'rest'))]; 
+                        Labels across all training tasks per fold. Equal number of labels per class.
+    valid_data_folds:   [dictionary (key: string (fold ID): Value xarray (dimensions vary based on model type) > 
+                        floats)]; Data across all validation tasks per fold. Equal number of samples per class. PC 
+                        features. Rearranged according to the type of model that will be trained.
+    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (time samples, ) > strings ('grasp'/'rest'))];
+                        Labels across all validation tasks per fold. Equal number of labels per class.
                         
     GLOBAL PARAMETERS:
     model_type: [string ('SVM','LSTM')]; The model type that will be used to fit the data.
@@ -3853,8 +3870,8 @@ def training_fold_models(train_data_folds, train_labels_folds, valid_data_folds,
         this_fold_valid_data   = valid_data_folds[this_fold]
         this_fold_valid_labels = valid_labels_folds[this_fold]
         
-        # If the model type is na SVM. Currently code for training SVM does not exist. Feel free to write a model_training_svm
-        # function.
+        # If the model type is na SVM. Currently code for training SVM does not exist. Feel free to write a 
+        # model_training_svm function.
         if model_type == 'SVM':
             pass
         
