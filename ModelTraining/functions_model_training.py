@@ -44,8 +44,8 @@ def uploading_global_parameters():
     Importing all of the parameters which will become global to this script.
     
     GLOBAL PARAMETERS:
-    aw_model_type:   [string ('shift'/'piecewise')]; The type of affine warp transformation the experimenter wishes to perform. 
-                     Leave empty [] if no AW-alignment will occur.
+    aw_model_type:   [string ('shift'/'piecewise')]; The type of affine warp transformation the experimenter wishes to 
+                     perform. Leave empty [] if no AW-alignment will occur.
     car:             [bool (True/False)] Whether or not CAR filtering will be performed.
     calib_state_val: [int]; The state value from where to extract the appropriate calibration data.
     f_power_max:     [list > int (units: Hz)]; For each frequency band, maximum power band frequency.
@@ -54,14 +54,17 @@ def uploading_global_parameters():
     model_classes:   [list > strings]; List of all the classes to be used in the classifier.
     model_name:      [string]; Name that describes what data the model is trained on.
     model_type:      [string ('SVM','LSTM')]; The model type that will be used to fit the data.
-    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 'None' if percent_var_thr
-                     is not 'None', or set to 'None' along with percent_var_thr if all of the variance will be used (no PC transform).
+    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 
+                     'None' if percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the
+                     variance will be used (no PC transform).
     patient_id:      [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-    percent_var_thr: [float]; The percent variance which the user wishes to capture with the principal components. Will compute the number
-                     of principal components which capture this explained variance as close as possible, but will not surpass it. Set to 'None'
-                     if n_pc_thr is not 'None', or set to 'None' along with n_pc_thr if all of the variance will be used (no PC transform).
+    percent_var_thr: [float (between 0 and 1)]; The percent variance which the user wishes to capture with the principal
+                     components. Will compute the number of principal components which capture this explained variance
+                     as close as possible, but will not surpass it. Set to 'None' if n_pc_thr is not 'None', or set to
+                     'None' along with n_pc_thr if all of the variance will be used (no PC transform).
     sampling_rate:   [int (samples/s)]; Sampling rate at which the data was recorded.
-    sxx_shift:       [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the time domain.
+    sxx_shift:       [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the time 
+                     domain.
     sxx_window:      [int (units: ms)]; Time length of the window that computes the frequency power.
     """
     
@@ -135,12 +138,12 @@ def averaging_channel_importance_scores(ch_importance_per_sample):
     Averaging the mean saliency for each channel across all validation folds.
     
     INPUT VARIABLES:
-    ch_importance_per_sample: [dictionary (key: string (fold); Value: array (time samples x channels))]; For each validation fold,
-                              the importance score for each channel is computed for each sample of the experimenter-specified
-                              saliency class.
+    ch_importance_per_sample: [dictionary (key: string (fold); Value: array (time samples, channels))]; For each
+                              validation fold, the importance score for each channel is computed for each sample of the
+                              experimenter-specified saliency class.
     
     OUTPUT VARIABLES:
-    ch_importance_scores: [array (1 x channels) > floats]; Mean importance score for each channel, averaged across all
+    ch_importance_scores: [array (channels, ) > floats]; Mean importance score for each channel, averaged across all
                           time samples from all validation folds.
     """
     # COMPUTATION:
@@ -161,7 +164,8 @@ def averaging_channel_importance_scores(ch_importance_per_sample):
 
         # Otherwise, concatenate this array of channel importance scores.
         else:
-            ch_importance_all_folds = np.concatenate((ch_importance_all_folds, ch_importance_per_sample[this_fold]), axis=0)
+            ch_importance_all_folds = np.concatenate((ch_importance_all_folds, ch_importance_per_sample[this_fold]),\
+                                                      axis=0)
 
     # Taking the mean of all importance scores across all samples (over all validation folds).
     ch_importance_scores = np.mean(ch_importance_all_folds, axis=0)
@@ -582,8 +586,8 @@ def channel_selector(eeglabels):
 
 
 
-def computing_channel_importance(aw_shifts, chs_include, grasp_bandpower_dict, saliency_class, saliency_powerband, t_history,\
-                                 t_grasp_end_per_trial, t_grasp_start_per_trial):
+def computing_channel_importance(aw_shifts, chs_include, grasp_bandpower_dict, saliency_class, saliency_powerband,\
+                                 t_history, t_grasp_end_per_trial, t_grasp_start_per_trial):
     """
     DESCRIPTION:
     Computing the channel importance (saliency map) to a specific class (attemped movement) in a specified frequency 
@@ -596,27 +600,29 @@ def computing_channel_importance(aw_shifts, chs_include, grasp_bandpower_dict, s
         N (where N is an int): [int]; AW shift for the Nth trial in units of samples.
     chs_include:               [list > strings]; The list of channels to be included in further analysis.
     grasp_bandpower_dict:      [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:             [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                               the band power is computed for each channel across every time point.
-        sxx_power_z:           [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                               calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:            [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                               to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:        [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
-                               information for each trial. Time dimension is in units of seconds.
-    
+        sxx_power:             [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each
+                               frequency band, the band power is computed for each channel across every time samples. 
+                               Time dimension is in units of seconds. 
+        sxx_power_z:           [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each 
+                               standardized (to calibration) frequency band, the band power is computed for each channel
+                               across every time point. Time dimension is in units of seconds.
+        sxx_states:            [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                               downsampled to match time resolution of the signal spectral power. Time dimension is in
+                               units of seconds.
+        power_trials_z:        [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
+                               spectral information for each trial. Time dimension is in units of seconds.
     saliency_class:            [string]; The class for whose channel importance scores will be computed.
     saliency_powerband:        [string (powerbandX)]; The powerband for whose channel importances will be computed.
     t_grasp_end_per_trial:     [float (units: s)]; Time of trial end relative to stimulus onset.
     t_grasp_start_per_trial:   [float (units: s)]; Time of trial start relative to stimulus onset.
     t_history:                 [float (unit: ms)]; Amount of feature time history.
-    
+
     NECESSARY FUNCTIONS:
     averaging_channel_importance_scores
     computing_channel_importance_per_sample
     
     OUTPUT VARIABLES:
-    ch_importance_scores: [array (1 x channels) > floats]; Mean importance score for each channel, averaged across all
+    ch_importance_scores: [array (channels, ) > floats]; Mean importance score for each channel, averaged across all
                           time samples from all validation folds.
     """
     # COMPUTATION:
@@ -635,8 +641,9 @@ def computing_channel_importance(aw_shifts, chs_include, grasp_bandpower_dict, s
 
 
 
-def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpower_dict, saliency_class, saliency_powerband,\
-                                            t_history, t_tr_end_rel_stim_on, t_tr_start_rel_stim_on):
+def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpower_dict, saliency_class,\
+                                            saliency_powerband, t_history, t_tr_end_rel_stim_on,\
+                                            t_tr_start_rel_stim_on):
     """ 
     DESCRIPTION:
     Computing the channel importance (saliency maps) to a specific class (attempted movement) in a specified frequency
@@ -647,24 +654,30 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
         N (where N is an int): [int]; AW shift for the Nth trial in units of samples.
     chs_include:               [list > strings]; The list of channels to be included in further analysis.
     grasp_bandpower_dict:      [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:             [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                               the band power is computed for each channel across every time point.
-        sxx_power_z:           [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                               calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:            [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                               to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:        [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
-                               information for each trial. Time dimension is in units of seconds.
+        sxx_power:             [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each
+                               frequency band, the band power is computed for each channel across every time samples. 
+                               Time dimension is in units of seconds. 
+        sxx_power_z:           [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each 
+                               standardized (to calibration) frequency band, the band power is computed for each channel
+                               across every time point. Time dimension is in units of seconds.
+        sxx_states:            [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                               downsampled to match time resolution of the signal spectral power. Time dimension is in
+                               units of seconds.
+        power_trials_z:        [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
+                               spectral information for each trial. Time dimension is in units of seconds.
     saliency_class:            [string]; Class whose saliency maps will be computed.
     saliency_powerband:        [string ('powerbandX')]; ID of the powerband whose saliency map will be computed.
     t_history:                 [float (unit: ms)]; Amount of feature time history.
-    t_grasp_end_per_trial:     [float (units: s)]; Time of trial end relative to stimulus onset.
-    t_grasp_start_per_trial:   [float (units: s)]; Time of trial start relative to stimulus onset.
+    t_tr_end_rel_stim_on:      [float (units: s)]; Time of trial end relative to stimulus onset.
+    t_tr_start_rel_stim_on:    [float (units: s)]; Time of trial start relative to stimulus onset.
+    
+    NECESSARY FUNCTIONS:
+    extracting_saliencymap_powerband
     
     OUTPUT VARIABLES:
-    ch_importance_per_sample: [dictionary (key: string (fold); Value: array (time samples x channels))]; For each validation fold,
-                              the importance score for each channel is computed for each sample of the experimenter-specified
-                              saliency class.
+    ch_importance_per_sample: [dictionary (key: string (fold); Value: array (time samples, channels))]; For each 
+                              validation fold, the importance score for each channel is computed for each sample of the
+                              experimenter-specified saliency class.
     """
     
     # COMPUTATION:
@@ -680,12 +693,14 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
     grasp_bandpower_dict_saliencymap = extracting_saliencymap_powerband(grasp_bandpower_dict, saliency_powerband)
 
     # Assigning per-sample labels.
-    labels_dict = creating_labels(aw_shifts, grasp_bandpower_dict_saliencymap, t_tr_end_rel_stim_on, t_tr_start_rel_stim_on)
+    labels_dict = creating_labels(aw_shifts, grasp_bandpower_dict_saliencymap, t_tr_end_rel_stim_on,\
+                                  t_tr_start_rel_stim_on)
 
     # Creating feature array with concatentated power bands and historical time shifts.
     features_dict = creating_features(grasp_bandpower_dict_saliencymap, t_history)
 
-    # Adjusting the features and labels time dimensions to account for zero-padded features due to the historical features array. 
+    # Adjusting the features and labels time dimensions to account for zero-padded features due to the historical
+    # features array. 
     features_dict, labels_dict = time_history_sample_adjustment(features_dict, labels_dict, t_history)
 
     # Downsampling the labels and corresponding features of the overrepresented class.
@@ -698,7 +713,8 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
     training_data_folds,\
     training_labels_folds,\
     validation_data_folds,\
-    validation_labels_folds = training_validation_split(features_dict, labels_dict, training_folds_tasks, validation_folds_tasks)
+    validation_labels_folds = training_validation_split(features_dict, labels_dict, training_folds_tasks,\
+                                                        validation_folds_tasks)
 
     # Computing the means of the training folds.
     training_data_fold_means = mean_compute_all_folds(training_data_folds)
@@ -715,7 +731,8 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
     validation_data_folds = rearranging_features_all_folds(validation_data_folds)
 
     # Creating a model for each validation fold.
-    fold_models = training_fold_models(training_data_folds, training_labels_folds, validation_data_folds, validation_labels_folds)
+    fold_models = training_fold_models(training_data_folds, training_labels_folds, validation_data_folds,\
+                                       validation_labels_folds)
 
     # Iterating across all the folds.
     for this_fold in fold_models.keys():
@@ -723,7 +740,9 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
         # Initializing baseline parameters for attribution mask..
         name_baseline_tensors = {
                                  "Baseline Image: Black": tf.zeros(shape=(n_history, n_channels)),
-                                 "Baseline Image: Random": tf.random.uniform( shape=(n_history, n_channels), minval=0.0, maxval=1.0),
+                                 "Baseline Image: Random": tf.random.uniform(shape=(n_history, n_channels),\
+                                                                             minval=0.0,\
+                                                                             maxval=1.0),
                                  "Baseline Image: White": tf.ones(shape=(n_history, n_channels)),
                                 }
 
@@ -753,7 +772,7 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
 
             # Creating the attribution mask for the current sample.
             this_sample_importance = saliency_mapping_suite.plot_img_attributions(
-                                                                                  model=this_fold_model,    # model_final[0] or model_final_real @ at 1:57 AM, just used model_final[0]
+                                                                                  model=this_fold_model,    
                                                                                   img=this_sample.astype('float32'),
                                                                                   baseline=name_baseline_tensors["Baseline Image: Black"],
                                                                                   target_class_idx=0,
@@ -772,6 +791,8 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
         ch_importance_per_sample[this_fold] = this_fold_importance_l2
     
     return ch_importance_per_sample
+
+
 
 
 
@@ -982,17 +1003,19 @@ def concatenating_all_data_and_labels(features_dict, labels_dict):
     Concatenating features and labels across all tasks in the sample dimension.
     
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features. 
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                   task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                   modulation as well as the per-trial shift from the AW model. 
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time samples) > floats 
+                   (units: z-scores)]; Array of historical time features. Time samples reduced such that there are an
+                   equal number of features per class.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample
+                   in each task, there exists a rest or grasp label depending on the experimenter-specified onset and 
+                   offset of modulation as well as the per-trial shift from the AW model. Time samples reduced such that
+                   there are an equal number of features per class.
                    
     OUTPUT VARIABLES:
-    training_data:   [xarray (dimensions vary based on model type) > floats (units: V^2/Hz)]; For each task, feature xarrays are 
-                     concatenated in the sample dimension.
-    training_labels: [xarray (1 x time samples) > strings ('grasp'/'rest')]; For each task, label xarrays are concatenated in the
-                     sample dimension.
+    training_data:   [xarray (time history, features, time samples) > floats (units: z-scores)]; For each task, feature
+                     xarrays are concatenated in the sample dimension.
+    training_labels: [xarray (time samples, ) > strings ('grasp'/'rest')]; For each task, label xarrays are concatenated
+                     in the sample dimension.
     """
     
     # COMPUTATION:
@@ -1787,47 +1810,6 @@ def evaluating_model_accuracy(fold_models, valid_data_folds, valid_labels_folds)
     confusion_matrix_display(this_confusion_matrix)
 
 
-    
-    
-    
-# def extract_data_pathways(data_info_dict):
-#     """
-#     DESCRIPTION:
-#     Using the dictionary (grasp_info_dict or calib_info_dict) of dates and tasks, the appropriate data file pathways are 
-#     extracted and stored in a list.
-    
-#     INPUT VARIABLES:
-#     data_info_dict: [dictionary (Key: string (date in YYYY_MM_DD format); Values: list > string (task names); Values and
-#                     keys correspond to grasp/calibration tasks and dates on which those tasks were run.
-    
-#     GLOBAL PARAMETERS:
-#     file_extension: [string (hdf5/mat)]; The data file extension of the data.
-#     patient_id:     [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-    
-#     OUTPUT VARIABLES:
-#     path_list: [list > strings (pathways)]; The list of file pathways from which the dataset(s) will be extracted.
-#     """
-    
-#     # COMPUTATION:
-
-#     # Initializing a list of pathways in which the data from the data_info_dict is found.
-#     path_list = []
-
-#     # Iterating across all dictionary items to extract the date and task.
-#     for date, tasks in data_info_dict.items():
-
-#         # Iterating across each task in the task list for the particular date.
-#         for this_task in tasks:
-
-#             # Creating the path for the current date/task pair. Modify this variable as needed.
-#             path = '/mnt/shared/ecog/' + patient_id + '/' + file_extension + '/' + date + '/' + this_task + '.' + file_extension
-
-#             # Appending the datafile path list with the current datafile path.
-#             path_list.append(path)
-    
-#     return path_list
-
-
 
 
 
@@ -1838,19 +1820,22 @@ def extracting_saliencymap_powerband(grasp_bandpower_dict, saliency_powerband):
     
     INPUT VARIABLES:
     grasp_bandpower_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:        [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                          the band power is computed for each channel across every time point.
-        sxx_power_z:      [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                          calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:       [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                          to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:   [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
+        sxx_power:        [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each frequency 
+                          band, the band power is computed for each channel across every time samples. Time dimension is
+                          in units of seconds. 
+        sxx_power_z:      [xarray (channel, powerband, time samples] > floats (units:z-scores)]; For each standardized 
+                          (to calibration) frequency band, the band power is computed for each channel across every time
+                          point. Time dimension is in units of seconds.
+        sxx_states:       [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                          downsampled to match time resolution of the signal spectral power. Time dimension is in units
+                          of seconds.
+        power_trials_z:   [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral 
                           information for each trial. Time dimension is in units of seconds.
     saliency_powerband:   [string ('powerbandX', where X is an int)]; Powerband ID for saliency map plotting.
     
     OUTPUT VARIABLES:
-    grasp_bandpower_dict_saliencymap: Same as grasp_bandpower_dict with the only difference being that only the powerband for
-                                      saliency mapping is included.
+    grasp_bandpower_dict_saliencymap: Same as grasp_bandpower_dict with the only difference being that only the
+                                      powerband for saliency mapping is included.
     """
     
     # COMPUTATION:
@@ -2394,9 +2379,9 @@ def pc_transform_all_folds(train_data_folds, valid_data_folds):
 def plotting_channel_contributions(ch_importance_scores, chs_exclude, chs_include, marker_color):
     """
     DESCRIPTION:
-    Mapping the channel importance scores at the coordinates of each electrode on an image of the research participant's.
-    brain. Size and opaqueness of the markers on the image are proportional to that channel's importance in the neural
-    network for classifying the experimenter-specified class. Channel importance scores are normalized between 0 and 1.
+    Mapping the channel importance scores at the coordinates of each electrode on an image of the participant's brain.
+    Size and opaqueness of the markers on the image are proportional to that channel's importance in the neural network
+    for classifying the experimenter-specified class. Channel importance scores are normalized between 0 and 1.
     
     INPUT VARIABLES:
     ch_importance_scores: [array (1 x channels) > floats]; Mean importance score for each channel, averaged across all
@@ -2447,7 +2432,8 @@ def plotting_channel_contributions(ch_importance_scores, chs_exclude, chs_includ
     # Initializing a dictionary containing all the normalized channel contributions.
     ch_importance_scores_norm = {}
         
-    # Computing the normalized channel importance scores based on the only the maximum importance score from all channels.
+    # Computing the normalized channel importance scores based on the only the maximum importance score from all
+    # channels.
     for this_channel in chs_include:
         
         # Extracting the channel index from chs_include list for pulling out the corresponding importance score from
@@ -3765,13 +3751,13 @@ def training_final_model(features_dict, labels_dict):
     Concatenating the data and labels from all tasks and training the final model on these concatenated arrays.
     
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features. Time samples reduced such that there are an equal number of features per
-                   class.
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                   task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                   modulation as well as the per-trial shift from the AW model. Time samples reduced such that there are an equal
-                   number of features per class.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time samples) > floats 
+                   (units: z-scores)]; Array of historical time features. Time samples reduced such that there are an
+                   equal number of features per class.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample
+                   in each task, there exists a rest or grasp label depending on the experimenter-specified onset and
+                   offset of modulation as well as the per-trial shift from the AW model. Time samples reduced such that
+                   there are an equal number of features per class.
                    
     NECESSARY FUNCTIONS:
     computing_eigenvectors
@@ -3783,11 +3769,11 @@ def training_final_model(features_dict, labels_dict):
     rearranging_features
     
     OUTPUT VARIABLES:
-    eigenvectors_final: [array (features x pc features) > floats]; Array in which columns consist of eigenvectors which explain
-                        the variance of the data in descending order. 
+    eigenvectors_final: [array (features, pc features) > floats]; Array in which columns consist of eigenvectors which
+                        explain the variance of the data in descending order. 
     final_model:        [classification model]; Model trained with data from all tasks.
-    training_data_mean: [xarray (history x features) > floats (units: V^2/Hz)]; Mean power of each feature of only the 0th time 
-                        shift.  This array is repeated for each historical time point.
+    training_data_mean: [xarray (history, features) > floats (units: z-scores)]; Mean power of each feature of only the
+                        0th time shift. This array is repeated for each historical time point.
     """
     
     # COMPUTATION:
@@ -4225,18 +4211,19 @@ def unique_value_index_finder(stepwise_sequence):
     OUTPUT VARIABLES:
     unique_vals:     [list > (ints/strings)] Individual values (at different "heights") of all the steps in the vector. 
                      For example, the unique_vals of 
-                     ex_stepwise_sequence = ['a','a','a','a','b','b','b','b','a','a','a','a','c','c','c','c','a','a','a','a'] 
+                     ex_stepwise_sequence = ['a','a','a','a','b','b','b','b','a','a','a','a','c','c','c','c','a','a'] 
                      would be [a,b,c]
     n_steps_per_val: [dictionary (Key: ints/strings (step names); Value: ints (number of occurrence per step name)]; The 
-                     number of steps for each unique value. For example n_steps_per_val of ex_stepwise_sequence would be:
+                     number of steps for each unique value. For example n_steps_per_val of ex_stepwise_sequence would be
                      {a: 3, b: 1, c: 1} because the "a" step occurs 3 times, whereas "b" and "c" steps occur only once.
-    unique_val_inds: [dictionary (Key: ints/strings (step names); Value: list > ints (array indices))]; All the indices within 
-                     the stepwise_sequence list of where a specific step occurs. For example, the unique_vals_inds of 
-                     ex_stepwise_sequence would be {a: [0,1,2,3,8,9,10,11,16,17,18,19], b: [4,5,6,7], c: [12,13,14,15]}.
-
-    start_end_inds:  [dictionary (Key: ints/strings (step names); Value: list > list > ints (array indices))]; The indices 
-                     within the stepwise_sequence list where individual steps start and end. For exaple, the start_end_inds of
-                     ex_stepwise_sequence would be {a: [[0,3],[8,11],[16,19]], b: [[4,7]], c: [[12,15]]}.
+    unique_val_inds: [dictionary (Key: ints/strings (step names); Value: list > ints (array indices))]; All the indices
+                     within the stepwise_sequence list of where a specific step occurs. For example, the 
+                     unique_vals_inds of ex_stepwise_sequence would be:
+                     {a: [0,1,2,3,8,9,10,11,16,17], b: [4,5,6,7], c: [12,13,14,15]}.
+    start_end_inds:  [dictionary (Key: ints/strings (step names); Value: list > list > ints (array indices))]; The
+                     indices  within the stepwise_sequence list where individual steps start and end. For exaple, the
+                     start_end_inds of ex_stepwise_sequence would be:
+                     {a: [[0,3],[8,11],[16,17]], b: [[4,7]], c: [[12,15]]}.
     """
         
     # COMPUTATION:

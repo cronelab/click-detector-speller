@@ -3,23 +3,6 @@ import collections
 import shutil
 
 
-################################### SAVE SELF ###################################
-def save_script_backup():
-    """
-    Automatically saving this entire script immediately when it's called.
-    """
-    
-    # Creating the original and target file directories.
-    original = r'/home/dan/Projects/PseudoOnlineTests_for_RTCoG/Scripts/Recent/OfflineTraining_BrainClick/params_model_training_visual_labeling.py'
-    target   = r'/mnt/shared/danprocessing/BACKUP/Projects/PseudoOnlineTests_for_RTCoG/Scripts/OfflineTraining_BrainClick/params_model_training_visual_labeling.py'
-
-    # Saving.
-    shutil.copyfile(original, target)
-    
-# Immediately saving script.   
-save_script_backup()
-
-
 ######################## PATIENT AND DATA INFORMATION #########################
 aw_model_type   = 'shift'
 car             = True
@@ -53,7 +36,7 @@ n_pc_thr:        [int]; The number of principal components to which the user wis
                  'None' if percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the
                  variance will be used (no PC transform).
 patient_id:      [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-percent_var_thr: [float (between 0 and 1)]; The percent variance which the user wishes to capture with the principa
+percent_var_thr: [float (between 0 and 1)]; The percent variance which the user wishes to capture with the principal
                  components. Will compute the number of principal components which capture this explained variance as
                  close as possible, but will not surpass it. Set to 'None' if n_pc_thr is not 'None', or set to 'None'
                  along with n_pc_thr if all of the variance will be used (no PC transform).
@@ -75,7 +58,8 @@ n_hidden_lstm = 25
 PARAMETERS:
 alpha:         [float]; Learning rate for gradient descent
 batch_size:    [int]; Number of samples on which the LSTM is trained with each step.
-dropout:       [float (between 0 and 1)]; Percentage of all hidden layers to be excluded from update during one backprop step.
+dropout:       [float (between 0 and 1)]; Percentage of all hidden layers to be excluded from update during one backprop
+               step.
 epochs:        [int]; Number of steps that are taken to train the LSTM.
 n_hidden_lstm: [int]; Number of hidden units in the LSTM.
 """
@@ -112,7 +96,8 @@ grid_config['CC01']\
 
 ############################# EXCLUDED CHANNELS #############################
 
-# Initializing the dictionary for channels to be eliminated from future analysis. These are in addition to previously recorded bad channels. 
+# Initializing the dictionary for channels to be eliminated from future analysis. These are in addition to previously
+# recorded bad channels. 
 elim_channels = {}
 elim_channels['CC01'] = ['ainp1','ainp2','ainp3']
 # elim_channels['CC01'] = ['chan19','chan38','chan48','chan52','ainp1','ainp2','ainp3']
