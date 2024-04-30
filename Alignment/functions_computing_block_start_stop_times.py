@@ -10,14 +10,14 @@ def extract_start_stop_times_from_txt(block_id, date, dir_intermediates, fps, pa
     """
     DESCRIPTION:
     Importing the starting an ending points of the video that show only the truly relevant movement information for the
-    experimenter-specified spelling block. By looking at the video recording from that block, these starting and ending times 
-    are determined according to when the participant starts and ends making task-related hand movements.
+    experimenter-specified spelling block. By looking at the video recording from that block, these starting and ending 
+    times are determined according to when the participant starts and ends making task-related hand movements.
     
     INPUT VARIABLES:
     block_id:          [String (BlockX, where X is an int)]; Block ID of the task that was run.
     date:              [string (YYYY_MM_DD)]; Date on which the current block was run.
     dir_intermediates: [string]; [string]; Intermediates directory where relevant information is stored.
-    fps:               [int (30 or 60)]; Frames per second of of the video feed. Note that 30 FPS was from Aug 2022 - Jan 2023.
+    fps:               [int (30 or 60)]; Frames per second of of the video recording.
     patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     
     OUTPUT VARIABLES:
@@ -28,13 +28,14 @@ def extract_start_stop_times_from_txt(block_id, date, dir_intermediates, fps, pa
     """
     # COMPUTATION:
     
-    # Creating the pathway for the .txt file from which the starting and ending points of the current block are imported.
+    # Creating the pathway for the .txt file from which the starting and ending points of the current block are 
+    # imported.
     this_directory = dir_intermediates + patient_id + '/Speller/BlocksStartAndStops/' + date + '/' 
     this_filename  = date + '_' + block_id + '_StartStop.txt'
     path_startstop = this_directory + this_filename
     
-    # Opening up the start-stop text file from the pathway and reading contents. For an un-appended .txt file, only the first
-    # three lines (Lines 0-2) should have information.
+    # Opening up the start-stop text file from the pathway and reading contents. For an un-appended .txt file, only the
+    # first three lines (Lines 0-2) should have information.
     txt_file_start_stop = open(path_startstop)        
     text_file_lines = txt_file_start_stop.readlines()
 
@@ -61,9 +62,9 @@ def extract_start_stop_times_from_txt(block_id, date, dir_intermediates, fps, pa
     fr_end     = int(frame_end)
 
     # Converting the times to frames.
-    hours_to_frames = lambda dd: dd * 24 * 60 * 60 * fps # hours x 24 hrs/hour x 60 min/hr x 60 s/min x 30 frames/s = frames
-    mins_to_frames  = lambda mm: mm * 60 * fps           # minutes x 60 s/min x 30 frames/s = frames
-    secs_to_frames  = lambda ss: ss * fps                # seconds x 30 frames/s = frames
+    hours_to_frames = lambda dd: dd * 24 * 60 * 60 * fps # d x 24 hrs/d x 60 min/hr x 60 s/min x 30 frames/s = frames
+    mins_to_frames  = lambda mm: mm * 60 * fps           # min x 60 s/min x 30 frames/s = frames
+    secs_to_frames  = lambda ss: ss * fps                # s x 30 frames/s = frames
 
     # Computing the starting and ending frames of the block.
     frame_block_start = hours_to_frames(hour_start) + mins_to_frames(min_start) + secs_to_frames(sec_start) + fr_start
@@ -83,7 +84,8 @@ def extract_start_stop_times_from_txt(block_id, date, dir_intermediates, fps, pa
 
 
 
-def writing_to_text_file(block_id, date, dir_intermediates, frame_block_start, frame_block_end, patient_id, t_block_start, t_block_end):
+def writing_to_text_file(block_id, date, dir_intermediates, frame_block_start, frame_block_end, patient_id,\
+                         t_block_start, t_block_end):
     """
     DESCRIPTION:
     Writing the block start and stop times in units of seconds and frames back to the text file.
@@ -106,8 +108,8 @@ def writing_to_text_file(block_id, date, dir_intermediates, frame_block_start, f
     this_filename  = date + '_' + block_id + '_StartStop.txt'
     path_startstop = this_directory + this_filename
 
-    # Opening up the start-stop text file from the pathway and reading contents. For an un-appended .txt file, only the first
-    # three lines (Lines 0-2) should have information.
+    # Opening up the start-stop text file from the pathway and reading contents. For an un-appended .txt file, only the
+    # first three lines (Lines 0-2) should have information.
     txt_file_start_stop = open(path_startstop)        
     text_file_lines = txt_file_start_stop.readlines()
 

@@ -292,6 +292,10 @@ def calib_signals_relevant(calib_state_str, data_calib_dict):
     # Extracting only signals of the state value indices.
     signals_calib = signals[:,state_str_inds]
     
+    # Applying CAR filter if necessary:
+    if car:
+        signals_calib = car_filter(signals_calib)
+    
     return signals_calib
 
 
@@ -321,6 +325,8 @@ def car_filter(signals):
     signals_car: Same as above, only the signals data may or may not be CAR filtered.
     """
   
+    # COMPUTATION:
+    
     # If CAR filtering will happen.
     if car:
         

@@ -17,19 +17,21 @@ import matplotlib.pyplot as plt
 def curtailing(click_info, hand_trajectories, t_start, t_stop):
     """
     DESCRIPTION:
-    Curtailing the hand trajectories and the click information according to the block start and stop times. For reference see 
-    computing_block_start_stop_times.ipynb.
-    
+    Curtailing the hand trajectories and the click information according to the block start and stop times. For 
+    reference see computing_block_start_stop_times.ipynb.
+
     INPUT VARIABLES:
     click_info:        [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-        data:          [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there is a 'no_click'
-                       string or a click-string specific to that xarray. For example, the 'backspace' key of the dictionary has an
-                       array where each element is a string named either 'no_click' or 'backspace_click'. The 'backspace_click' 
-                       elements do not occur consecutively and describe the instance a click on the backspace key occured. For the
-                       'keyboard' and 'stimcolumn' keys, similar rules apply. Time dimension is in units of s.
+        data:          [xarray (time samples, ) > strings];  At each time sample (element) of the array corresponding to
+                       any of the keys ('backspace','keyboard', 'stimcolumn') there exists a string that is either 
+                       'no_click' or a key- specific string. For example, the 'backspace' key of the dictionary has an 
+                       array where each element is a string named either 'no_click' or 'backspace_click'. Note that the
+                       'backspace_click' elements do not occur consecutively and describe the instance a click on the 
+                       backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar rules apply. Time
+                       dimension is in units of s.
         plotcolor:     [string]; Color corresponding to the type of click for plotting.
-    hand_trajectories: [xarray (landmarks x time samples) > floats]; The trajectories of the x- and y-coordinates
-                       for each landmark. The time domain is in units of seconds. 
+    hand_trajectories: [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each 
+                       landmark. The time domain is in units of seconds. 
     t_start:           [float (units: s)]; True starting time of the block.
     t_stop:            [float (units: s)]; True ending time of the block.
                                 
@@ -38,10 +40,10 @@ def curtailing(click_info, hand_trajectories, t_start, t_stop):
     curtailing_hand_trajectories
     
     OUTPUT VARIABLES:
-    click_info_curt:        [dict (key: string ('backspace','keyboard','stimcolumn'); Values: data, plotcolor)]; Same as click_info, but 
-                            all xarrays are curtailed within the start and stop times.
-    hand_trajectories_curt: [xarray (landmarks x time samples) > floats]; Same as above but curtailed within the start and
-                            stop times.                   
+    click_info_curt:        [dict (key: string ('backspace','keyboard','stimcolumn'); Values: data, plotcolor)]; Same as 
+                            click_info, but all xarrays are curtailed according to the start and stop times.
+    hand_trajectories_curt: [xarray (landmarks, time samples) > floats]; Same as above but curtailed within the start
+                            and stop times.    
     """
     
     # COMPUTATION:
@@ -64,19 +66,20 @@ def curtailing_click_info(click_info, t_start, t_stop):
     Curtailing all the data xarrays containing 'no_click' or click strings according to the block start and stop times.
     
     INPUT VARIABLES:
-    click_info: [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-        data:      [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there is a 'no_click'
-                   string or a click-string specific to that xarray. For example, the 'backspace' key of the dictionary has an
-                   array where each element is a string named either 'no_click' or 'backspace_click'. The 'backspace_click' 
-                   elements do not occur consecutively and describe the instance a click on the backspace key occured. For the
-                   'keyboard' and 'stimcolumn' keys, similar rules apply. Time dimension is in units of s.
+    click_info:    [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
+        data:      [xarray (time samples, ) > strings];  At each time sample (element) of the array corresponding to any
+                   of the keys ('backspace','keyboard', 'stimcolumn') there exists a string that is either 'no_click' or
+                   a key-specific string. For example, the 'backspace' key of the dictionary has an array where each 
+                   element is a string named either 'no_click' or 'backspace_click'. Note that the 'backspace_click' 
+                   elements do not occur consecutively and describe the instance a click on the backspace key occured. 
+                   For the 'keyboard' and 'stimcolumn' keys, similar rules apply. Time dimension is in units of s.
         plotcolor: [string]; Color corresponding to the type of click for plotting.
     t_start:    [float (units: s)]; True starting time of the block.
     t_stop:     [float (units: s)]; True ending time of the block.
     
     OUTPUT VARIABLES:
-    click_info_curt: [dict (key: string ('backspace','keyboard','stimcolumn'); Values: data, plotcolor)]; Same as click_info, but 
-                     all xarrays are curtailed within the start and stop times.
+    click_info_curt: [dict (key: string ('backspace','keyboard','stimcolumn'); Values: data, plotcolor)]; Same as 
+                     click_info, but all xarrays are curtailed according to the start and stop times.
     """
     
     # COMPUTATION:
@@ -98,9 +101,7 @@ def curtailing_click_info(click_info, t_start, t_stop):
         
         # Curtailing the data xarray according to the boolean array
         this_click_type_data_curt = this_click_type_data[curt_bool]
-        
-        print(this_click_type_data_curt.time_seconds.values)
-        
+                
         # Updating the curtailed click information.
         click_info_curt[this_click_type]['data'] = this_click_type_data_curt
     
@@ -116,31 +117,27 @@ def curtailing_hand_trajectories(hand_trajectories, t_start, t_stop):
     Curtailing the hand trajectories according to the block start and stop times.
     
     INPUT VARIABLES:
-    hand_trajectories: [xarray (landmarks x time samples) > floats]; The trajectories of the x- and y-coordinates
-                       for each landmark. The time domain is in units of seconds. 
+    hand_trajectories: [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each 
+                       landmark. The time domain is in units of seconds. 
     t_start:           [float (units: s)]; True starting time of the block.
     t_stop:            [float (units: s)]; True ending time of the block.
                        
     OUTPUT VARIABLES:
-    hand_trajectories_curt: [xarray (landmarks x time samples) > floats]; Same as above but curtailed within the start and
-                            stop times. 
+    hand_trajectories_curt: [xarray (landmarks, time samples) > floats]; Same as above but curtailed within the start
+                            and stop times.    
     """
     
     # COMPUTATION:
     
     # Extracting the time array of the xarray.
     time_seconds = hand_trajectories.time_seconds
-    
-    print(time_seconds[0])
-    
+        
     # Creating the boolean array of time points between the starting and stopping times.
     curt_bool = np.logical_and(time_seconds >= t_start, time_seconds <= t_stop)
     
     # Creating the curtailed hand trajectories xarray.
     hand_trajectories_curt = hand_trajectories[:,curt_bool]
-    
-    print(hand_trajectories_curt.time_seconds.values)
-    
+        
     return hand_trajectories_curt
 
 
@@ -161,13 +158,13 @@ def load_click_information(block_id, date, dir_intermediates, patient_id, task):
     
     OUTPUT VARIABLES:
     click_info: [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-        data:       [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there
-                    is a 'no_click' string or a click-string specific to that xarray. For example, the 'backspace'
-                    key of the dictionary has an array where each element is a string named either 'no_click' or 
-                    'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
-                    instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
-                    rules apply. Time dimension is in units of s.
-        plotcolor:  [string]; Color corresponding to the type of click for plotting.
+        data:      [xarray (time samples, ) > strings];  At each time sample (element) of the array corresponding to any
+                   of the keys ('backspace','keyboard', 'stimcolumn') there exists a string that is either 'no_click' or
+                   a key- specific string. For example, the 'backspace' key of the dictionary has an array where each 
+                   element is a string named either 'no_click' or 'backspace_click'. Note that the 'backspace_click' 
+                   elements do not occur consecutively and describe the instance a click on the backspace key occured.
+                   For the 'keyboard' and 'stimcolumn' keys, similar rules apply. Time dimension is in units of s.
+        plotcolor: [string]; Color corresponding to the type of click for plotting.
     """
     
     # COMPUTATION:
@@ -201,8 +198,8 @@ def load_hand_trajectories(block_id, date, dir_intermediates, patient_id, task):
     task:              [string]; Type of task that was run.
     
     OUTPUT VARIABLES:
-    hand_trajectories: [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                       for each landmark. The time domain is in units of seconds. 
+    hand_trajectories: [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each
+                       landmark. The time domain is in units of seconds. 
     """
     
     # COMPUTATION:
@@ -280,20 +277,22 @@ def load_start_stop_times(block_id, date, dir_intermediates, patient_id):
 def plotting_landmarks_and_clicks(click_info, hand_trajectories, landmark_trajectories_plotting):
     """
     DESCRIPTION:
-    Plotting the experimenter-specified hand landmarks and the click information across the entirety of
-    the spelling block.
+    Plotting the experimenter-specified hand landmarks and the click information across the entirety of the spelling 
+    block.
     
     INPUT VARIABLES:
     click_info:                     [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-        data:                       [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there
-                                    is a 'no_click' string or a click-string specific to that xarray. For example, the 'backspace'
-                                    key of the dictionary has an array where each element is a string named either 'no_click' or 
-                                    'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
-                                    instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
-                                    rules apply. Time dimension is in units of s.
-        plotcolor:                  [string]; Color corresponding to the type of click for plotting.
-    hand_trajectories:              [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                                    for each landmark. The time domain is in units of seconds. 
+            data:                   [xarray (time samples, ) > strings];  At each time sample (element) of the array 
+                                    corresponding to any of the keys ('backspace','keyboard', 'stimcolumn') there exists
+                                    a string that is either 'no_click' or a key- specific string. For example, the 
+                                    'backspace' key of the dictionary has an array where each element is a string named
+                                    either 'no_click' or 'backspace_click'. Note that the 'backspace_click' elements do
+                                    not occur consecutively and describe the instance a click on the backspace key 
+                                    occured. For the 'keyboard' and 'stimcolumn' keys, similar rules apply. Time 
+                                    dimension is in units of s.
+            plotcolor:              [string]; Color corresponding to the type of click for plotting.
+    hand_trajectories:              [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-
+                                    coordinates for each landmark. The time domain is in units of seconds. 
     landmark_trajectories_plotting: [list > strings]; Possible landmarks to display.
     """
     
@@ -358,17 +357,18 @@ def saving_curtailed_info(block_id, click_info_curt, date, dir_intermediates, ha
     INPUT VARIABLES:
     block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
     click_info:        [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-        data:          [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there is a 'no_click'
-                       string or a click-string specific to that xarray. For example, the 'backspace' key of the dictionary has an
-                       array where each element is a string named either 'no_click' or 'backspace_click'. The 'backspace_click' 
-                       elements do not occur consecutively and describe the instance a click on the backspace key occured. For the
-                       'keyboard' and 'stimcolumn' keys, similar rules apply. All xarrays are curtailed between the startng and 
-                       stopping times. Time dimension is in units of s. 
+        data:          [xarray (time samples, ) > strings];  At each time sample (element) of the array corresponding to
+                       any of the keys ('backspace','keyboard', 'stimcolumn') there exists a string that is either 
+                       'no_click' or a key- specific string. For example, the 'backspace' key of the dictionary has an 
+                       array where each element is a string named either 'no_click' or 'backspace_click'. Note that the
+                       'backspace_click' elements do not occur consecutively and describe the instance a click on the 
+                       backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar rules apply. Time
+                       dimension is in units of s.
         plotcolor:     [string]; Color corresponding to the type of click for plotting.
     date:              [string (YYYY_MM_DD)]; Date on which the block was run.
     dir_intermediates: [string]; Intermediates directory where relevant information is stored.
-    hand_trajectories: [xarray (landmarks x time samples) > floats]; The trajectories of the x- and y-coordinates
-                       for each landmark. Curtailed between the starting and stopping times. The time domain is in units of seconds. 
+    hand_trajectories: [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each 
+                       landmark. The time domain is in units of seconds. 
     patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     task:              [string]; Type of task that was run.
     """
@@ -380,21 +380,21 @@ def saving_curtailed_info(block_id, click_info_curt, date, dir_intermediates, ha
     filename_clickinfo = date + '_' + block_id + '_click_highlights'
 
     # Creating the directory and filename for the curtailed hand trajectories.
-    dir_handtrajectories      = dir_intermediates + patient_id + '/' + task + '/HandTrajectories/'  + date + '/Curtailed/'
-    filename_handtrajectories = date + '_' + block_id + '_hand_trajectories.nc'
+    dir_trajectories      = dir_intermediates + patient_id + '/' + task + '/HandTrajectories/' + date + '/Curtailed/'
+    filename_trajectories = date + '_' + block_id + '_hand_trajectories.nc'
 
     # Pathway for the hand trajectories click detections.
-    path_handtrajectories = dir_handtrajectories + filename_handtrajectories
-    path_clickinfo        = dir_clickinfo + filename_clickinfo
+    path_trajectories = dir_trajectories + filename_trajectories
+    path_clickinfo    = dir_clickinfo + filename_clickinfo
     
-    # If an xarray for the curtailed hand trajectories already exists in the file pathway, it must first be deleted before 
-    # writing a new one to that location. This has to do with some property of netCDF4.
-    path_handtrajectories_exists = os.path.exists(path_handtrajectories)
-    if path_handtrajectories_exists:
-        os.remove(path_handtrajectories)
+    # If an xarray for the curtailed hand trajectories already exists in the file pathway, it must first be deleted
+    # before writing a new one to that location. This has to do with some property of netCDF4.
+    path_trajectories_exists = os.path.exists(path_trajectories)
+    if path_trajectories_exists:
+        os.remove(path_trajectories)
 
     # Saving the curtailed hand trajectories.
-    hand_trajectories_curt.to_netcdf(path_handtrajectories) 
+    hand_trajectories_curt.to_netcdf(path_trajectories) 
 
     # Saving the curtailed click highlights.
     with open(path_clickinfo, "wb") as fp: pickle.dump(click_info_curt, fp)
