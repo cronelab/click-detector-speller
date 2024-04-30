@@ -18,19 +18,21 @@ from scipy.io import wavfile
 def aligning_bci2000_audio_and_click(audio_from_bci2k, t_lag):
     """
     DESCRIPTION:
-    Aligning the BCI2000 audio array with the video audio array according to the time lag of the video audio relative to the BCI2000
-    audio. 
+    Aligning the BCI2000 audio array with the video audio array according to the time lag of the video audio relative to
+    the BCI2000 audio. 
 
     INPUT VARIABLES:
-    audio_from_bci2k: [xarray > floats]; Audio signal recorded from BCI2000. Time dimension is in units of s.
-    t_lag:            [float (units: ms)]; The time lag between the audio from BCI2000 and the video audio. In other words, t_lag is the
-                      amount of time that the BCI2000 audio signal is leading the video audio signal. If t_lag = 150 ms, this means that
-                      BCI2000 audio is ahead of the video audio by 150 ms. For example, an audio event registered by the video to be at
-                      3.0 s would actually be registered at 3.15 s by BCI2000. 
+    audio_from_bci2k: [xarray (timesamples,) > floats]; Audio signal recorded from BCI2000. Time dimension is in units
+                      of s.
+    t_lag:            [float (units: ms)]; The time lag between the audio from BCI2000 and the video audio. In other 
+                      words, t_lag is the amount of time that the BCI2000 audio signal is leading the video audio 
+                      signal. If t_lag = 150 ms, this means that BCI2000 audio is ahead of the video audio by 150 ms.
+                      For example, an audio event registered by the video to be at 3.0 s would actually be registered at
+                      3.15 s by BCI2000. 
 
     OUTPUT VARIABLES:
-    audio_from_bci2k_aligned: [xarray > floats]; Aligned audio from BCI2000 accounting for the relative time lag of the video audio.
-                              Time array is in units of s at BCI2000 sampling rate.
+    audio_from_bci2k_aligned: [xarray (timesamples,)> floats]; Aligned audio from BCI2000 accounting for the relative
+                              time lag of the video audio. Time array is in units of s at BCI2000 sampling rate.
     """
     
     # COMPUTATION:
@@ -63,29 +65,31 @@ def aligning_bci2000_audio_and_click(audio_from_bci2k, t_lag):
 def cross_corr_audio(audio_from_bci2k, audio_from_video, sampling_rate_audio_from_bci2k, t_end_xcorr, t_start_xcorr):
     """
     DESCRIPTION:
-    Cross correlating the audio signals from BCI2000 and the OBS video feed to find how much the Video's audio lags behind 
-    the audio from BCI2000.
+    Cross correlating the audio signals from BCI2000 and the OBS video feed to find how much the Video's audio lags
+    behind the audio from BCI2000.
     
-    audio_from_bci2k:               [xarray > floats]; Audio signal recorded from BCI2000. Time dimension is in units of s.
-    audio_from_video:               [xarray > int]; Downsampled video audio signal array that matches the sampling rate of 
-                                    the BCI2000 analog input. Time dimension is in units of s.
+    INPUT VARIABLES:
+    audio_from_bci2k:               [xarray (timesamples,) > floats]; Audio signal recorded from BCI2000. Time dimension
+                                    is in units of s.
+    audio_from_video:               [xarray (timesamples,) > int]; Downsampled video audio signal array that matches the 
+                                    sampling rate of the BCI2000 analog input. Time dimension is in units of s.
     sampling_rate_audio_from_bci2k: [int (units: Hz)]; The sampling rate of the audio signal from BCI2000.
-    t_corr_end:                     [int (units: s)]; Describes the ending time point of the audio signal segment that will
-                                    be cross correlated.
-    t_corr_start:                   [int (units: s)]; Describes the starting time point of the audio signal segment that
+    t_xcorr_end:                    [int (units: s)]; Describes the ending time point of the audio signal segment that 
+                                    will be cross correlated.
+    t_xcorr_start:                  [int (units: s)]; Describes the starting time point of the audio signal segment that
                                     will be cross correlated.
 
     OUTPUT VARIABLES:
-    t_lag: [float (units: ms)]; The time lag between the audio from BCI2000 and the video audio. In other words, t_lag is the
-           amount of time that the BCI2000 audio signal is leading the video audio signal. If t_lag = 150 ms, this means that
-           BCI2000 audio is ahead of the video audio by 150 ms. For example, an audio event registered by the video to be at
-           3.0 s would actually be registered at 3.15 s by BCI2000. 
+    t_lag: [float (units: ms)]; The time lag between the audio from BCI2000 and the video audio. In other words, t_lag
+           is the amount of time that the BCI2000 audio signal is leading the video audio signal. If t_lag = 150 ms, 
+           this means that BCI2000 audio is ahead of the video audio by 150 ms. For example, an audio event registered
+           by the video to be at 3.0 s would actually be registered at 3.15 s by BCI2000. 
     """
     # COMPUTATION:
     
     # Computing starting and ending samples describing time segment for cross correlation.
-    samples_start_xcorr = int(t_start_xcorr*sampling_rate_audio_from_bci2k) # s * sample/s = sa
-    samples_end_xcorr   = int(t_end_xcorr*sampling_rate_audio_from_bci2k)   # s * sample/s = sa
+    samples_start_xcorr = int(t_start_xcorr*sampling_rate_audio_from_bci2k) # s * sa/s = sa
+    samples_end_xcorr   = int(t_end_xcorr*sampling_rate_audio_from_bci2k)   # s * sa/s = sa
     
     # Extracting the audio segments from BCI2000 and from the Video feed that will be used for cross correlation.
     audio_from_bci2k_xcorr = audio_from_bci2k[samples_start_xcorr:samples_end_xcorr]
@@ -103,10 +107,10 @@ def cross_corr_audio(audio_from_bci2k, audio_from_video, sampling_rate_audio_fro
     idx_max_corr = np.argmax(corr) 
     idx_lag      = corr_lags[idx_max_corr]
         
-    # By using the maximum correlation lag index, computing the time lag (units: ms) that BCI2000 audio is ahead of the audio
-    # from the video file.
-    factor = sampling_rate_audio_from_bci2k/1000 # samples/ms
-    t_lag  = int(idx_lag/factor)      # samples x (ms/samples) = ms
+    # By using the maximum correlation lag index, computing the time lag (units: ms) that BCI2000 audio is ahead of the
+    # audio from the video file.
+    factor = sampling_rate_audio_from_bci2k/1000 # sa/ms
+    t_lag  = int(idx_lag/factor)                 # sa x ms/sa = ms
     
     # Printing
     print('Time lag (ms): ', t_lag)
@@ -124,18 +128,20 @@ def downsample_video_audio_to_bci2k(audio_from_video, sampling_rate_audio_from_b
     from BCI2000.
 
     INPUT VARIABLES:
-    audio_from_video:               [array > floats]; Audio signal recorded from the video feed. Time dimension is in units of s.
+    audio_from_video:               [xarray (timesamples,) > floats]; Audio signal recorded from the video feed. Time 
+                                    dimension is in units of s.
     sampling_rate_audio_from_bci2k: [int (units: Hz)]; The sampling rate of the audio signal from BCI2000.
     sampling_rate_audio_from_video: [int (units: Hz)]; The sampling rate of the audio signal from the video file.
 
     OUTPUT VARIABLES:
-    audio_from_video_downsampled: [xarray > int]; Downsampled video audio signal array that matches the sampling rate of the
-                                  BCI2000 analog input. Time dimension is in units of s.
+    audio_from_video_downsampled: [xarray (timesamples,) > int]; Downsampled video audio signal array that matches the
+                                  sampling rate of the BCI2000 analog input. Time dimension is in units of s.
     """
     
     # COMPUTATION:
     
-    # Computing the ratio of the audio sampling rate from the video file as compared to the audio sampling rate from BCI2000. 
+    # Computing the ratio of the audio sampling rate from the video file as compared to the audio sampling rate from 
+    # BCI2000. 
     audio_ratio = int(sampling_rate_audio_from_video/sampling_rate_audio_from_bci2k)
         
     # Downsampling the audio signal from the video file using the audio ratio.    
@@ -173,9 +179,11 @@ def extract_audio_from_bci2k(ainp, block_id, date, file_extension, patient_id, t
     # COMPUTATION:
     
     # Creating the path for the current date/task pair.
-    audio_signal_path = '/mnt/shared/ecog/' + patient_id + '/' + file_extension + '/' + date + '/' + task + '_' + block_id + '.' + file_extension
+    audio_signal_path = '/mnt/shared/ecog/' + patient_id + '/' + file_extension + '/' + date + '/' + task + '_' + \
+                        block_id + '.' + file_extension
     
-    # Extracting all eeg signals and sampling rate from the audio pathway based on if the file extension is .hdf5 or .mat.
+    # Extracting all eeg signals and sampling rate from the audio pathway based on if the file extension is .hdf5 or
+    # .mat.
     if file_extension == 'hdf5':
         
         # Extracting the current date's .hdf5 data.
@@ -232,7 +240,8 @@ def extract_audio_from_video(block_id, date, dir_intermediates, patient_id, task
     task:              [string]; Type of task that was run.
     
     OUTPUT VARIABLES:
-    audio_signal:  [array > floats]; Audio signal recorded from the video feed. Time dimension is in units of s.
+    audio_signal:  [xarray (timesamples, )> floats]; Audio signal recorded from the video feed. Time dimension is in 
+                   units of s.
     sampling_rate: [int (units: Hz)]; The sampling rate of the audio signal from the video file.
     """
     
@@ -286,9 +295,10 @@ def plotting_audio_signals(audio_from_bci2k, audio_from_video, t_view_end, t_vie
     Plotting the audio signals recorded from the video camera and by BCI2000 prior to alignment.
     
     INPUT VARIABLES:
-    audio_from_bci2k: [xarray > floats]; Audio signal recorded from BCI2000. Time dimension is in units of sec.
-    audio_from_video: [xarray > int]; Downsampled video audio signal array that matches the sampling rate of the BCI2000 analog
-                      input. Time dimension is in units of s.
+    audio_from_bci2k: [xarray (timesamples,) > floats]; Audio signal recorded from BCI2000. Time dimension is in units
+                      of s.
+    audio_from_video: [xarray (timesamples,) > int]; Downsampled video audio signal array that matches the sampling rate
+                      of the BCI2000 analog input. Time dimension is in units of s.
     t_view_end:       [float (units: s)]; End of viewing window.
     t_view_start:     [float (units: s)]; Start of viewing window.
     """
@@ -299,9 +309,12 @@ def plotting_audio_signals(audio_from_bci2k, audio_from_video, t_view_end, t_vie
     t_seconds_audio_from_bci2k = audio_from_bci2k.time_seconds
     t_seconds_audio_from_video = audio_from_video.time_seconds
 
-    # Creating boolean arrays that will be used to show the audio clips only within the user specified start and end viewing times.
-    zoom_bool_audio_from_bci2k = np.logical_and(t_seconds_audio_from_bci2k > t_view_start, t_seconds_audio_from_bci2k < t_view_end)
-    zoom_bool_audio_from_video = np.logical_and(t_seconds_audio_from_video > t_view_start, t_seconds_audio_from_video < t_view_end)
+    # Creating boolean arrays that will be used to show the audio clips only within the user specified start and end 
+    # viewing times.
+    zoom_bool_audio_from_bci2k = np.logical_and(t_seconds_audio_from_bci2k > t_view_start,\
+                                                t_seconds_audio_from_bci2k < t_view_end)
+    zoom_bool_audio_from_video = np.logical_and(t_seconds_audio_from_video > t_view_start,\
+                                                t_seconds_audio_from_video < t_view_end)
 
     # Extracting the zoomed-in versions of the audio signal and corresponding time signal.
     audio_from_bci2k_zoom           = audio_from_bci2k[zoom_bool_audio_from_bci2k]
@@ -332,17 +345,19 @@ def save_time_lag(block_id, date, dir_intermediates, patient_id, t_lag, task):
     date:              [string (YYYY_MM_DD)]; Date on which the block was run.
     dir_intermediates: [string]; [string]; Base directory where relevant information is stored.
     patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-    t_lag:             [float (units: ms)]; The time lag between the audio from BCI2000 and the video audio. In other words, t_lag is the
-                       amount of time that the BCI2000 audio signal is leading the video audio signal. If t_lag = 150 ms, this means that
-                       BCI2000 audio is ahead of the video audio by 150 ms. For example, an audio event registered by the video to be at
-                       3.0 s would actually be registered at 3.15 s by BCI2000. 
+    t_lag:             [float (units: ms)]; The time lag between the audio from BCI2000 and the video audio. In other
+                       words, t_lag is the amount of time that the BCI2000 audio signal is leading the video audio
+                       signal. If t_lag = 150 ms, this means that BCI2000 audio is ahead of the video audio by 150 ms. 
+                       For example, an audio event registered by the video to be at 3.0 s would actually be registered
+                       at 3.15 s by BCI2000. 
     task:              [string]; Type of task that was run. 
     """
     
     # COMPUTATION:
     
     # Creating the base path and filename for the time lags.
-    dir_lag      = dir_intermediates + patient_id + '/' + task + '/' + 'LagsBetweenVideoAndBCI2000/' + date + '/' + block_id + '/'
+    dir_lag      = dir_intermediates + patient_id + '/' + task + '/' + 'LagsBetweenVideoAndBCI2000/' + date + '/' +\
+                   block_id + '/'
     filename_lag = date + '_' + block_id + '.txt'
 
     # Check to see if the directory for the lag exists.

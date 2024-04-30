@@ -17,7 +17,7 @@ def creating_time_array(bci2000_data):
     bci2000_data: [dictionary]; Contains all experimentally-related signals, states, and parameters.
     
     OUTPUT VARIABLES:
-    t_seconds: [array (1 x time samples) > floats (units: s)]; Time array for the recorded data block.
+    t_seconds: [array (time samples,) > floats (units: s)]; Time array for the recorded data block.
     """
     
     # COMPUTATION:
@@ -29,8 +29,8 @@ def creating_time_array(bci2000_data):
     sampling_rate_string = bci2000_data['parameters']['SamplingRate']['Value']
     sampling_rate        = int(re.sub("[^0-9]", "", sampling_rate_string))
     
-    # Creating the time array. Note that the first time sample is not 0 s, because the first recorded
-    # signal sample does not correspond to a time at 0 s.
+    # Creating the time array. Note that the first time sample is not 0 s, because the first recorded signal sample does
+    # not correspond to a time at 0 s.
     t_seconds = (np.arange(n_samples) + 1)/sampling_rate
     
     return t_seconds
@@ -46,25 +46,25 @@ def curtail_bci2000_data_by_block_start_stop_times(signals, states_dict, t_secon
     corresponding to time samples between the block start and stop times remain. 
     
     INPUT VARIABLES:
-    signals:     [array (time samples x channels) > floats (units: uV)]; Array of signals for each neural and
-                 analog channel at each time point. Time samples are curtailed according to the time lag. 
-    states_dict: [dictionary (Key: string (state); Value: array (1 x time samples) > ints)]; For each key, there
-                 exists an array of integer values describing the state at each time sample. For each array, 
-                 time samples are curtailed according to the time lag. 
-    t_seconds:   [array (1 x time samples) > floats (units: s)]; Time array for the recorded data block. Shifted
-                 by the time lag and curtailed such that the resulting negative times are deleted.
+    signals:     [array (time samples, channels) > floats (units: uV)]; Array of signals for each neural and analog 
+                 channel at each time point. Time samples are curtailed according to the time lag. 
+    states_dict: [dictionary (Key: string (state); Value: array (time samples,) > ints)]; For each key, there exists an 
+                 array of integer values describing the state at each time sample. For each array, time samples are 
+                 curtailed according to the time lag. 
+    t_seconds:   [array (time samples,) > floats (units: s)]; Time array for the recorded data block. Shifted by the
+                 time lag and curtailed such that the resulting negative times are deleted.
     t_start:     [float (units: s)]; True starting time of the block.
     t_stop:      [float (units: s)]; True ending time of the block.
                 
     OUTPUT VARIABLES:
-    signals:     [array (time samples x channels) > floats (units: uV)]; Array of signals for each neural and
-                 analog channel at each time point. Time samples are curtailed according to the block start and 
-                 stop times.
-    states_dict: [dictionary (Key: string (state); Value: array (1 x time samples) > ints)]; For each key, there
-                 exists an array of integer values describing the state at each time sample. For each array, 
-                 time samples are curtailed according to the block start and stop times. 
-    t_seconds:   [array (1 x time samples) > floats (units: s)]; Time array for the recorded data block. Time 
-                 samples are curtailed according to the block start and stop times.
+    signals:     [array (time samples, channels) > floats (units: uV)]; Array of signals for each neural and analog 
+                 channel at each time point. Time samples are curtailed according to the time lag. Time samples are
+                 curtailed  according to the block start and stop times.
+    states_dict: [dictionary (Key: string (state); Value: array (time samples,) > ints)]; For each key, there exists an 
+                 array of integer values describing the state at each time sample. For each array, time samples are 
+                 curtailed according to the block start and stop times. 
+    t_seconds:   [array (time samples,) > floats (units: s)]; Time array for the recorded data block. Time samples are
+                 curtailed according to the block start and stop times.
     """
     
     # COMPUTATION:
@@ -100,27 +100,26 @@ def curtail_bci2000_data_by_block_start_stop_times(signals, states_dict, t_secon
 def curtail_bci2000_data_by_time_lag(bci2000_data, t_lag_seconds, t_seconds):
     """
     DESCRIPTION:
-    Shifting the time array by the time lag and deleting the part of the resulting array that contains 
-    negative time values. Deleting the corresponding parts of the signals array and each array in the 
-    states dictionary.
+    Shifting the time array by the time lag and deleting the part of the resulting array that contains negative time
+    values. Deleting the corresponding parts of the signals array and each array in the states dictionary.
     
     INPUT VARIABLES:
     bci2000_data:   [dictionary]; Contains all experimentally-related signals, states, and parameters.
-    t_lag_seconds:  [float (units: s)]; The time lag between the audio from BCI2000 and the video audio.
-                    In other words, t_lag is the amount of time that the BCI2000 audio signal is leading
-                    the video audio signal. If t_lag = 150 ms, this means that BCI2000 audio is ahead of
-                    the video audio by 150 ms. For example, an audio event registered by the video to be
-                    at 3.0 s would actually be registered at 3.15 s by BCI2000. 
-    t_seconds:      [array (1 x time samples) > floats (units: s)]; Time array for the recorded data block.
-    
+    t_lag_seconds:  [float (units: s)]; The time lag between the audio from BCI2000 and the video audio. In other words, 
+                    t_lag is the amount of time that the BCI2000 audio signal is leading the video audio signal. If 
+                    t_lag = 150 ms, this means that BCI2000 audio is ahead of the video audio by 150 ms. For example, an
+                    audio event registered by the video to be at 3.0 s would actually be registered at 3.15 s by 
+                    BCI2000. 
+    t_seconds:      [array (time samples,) > floats (units: s)]; Time array for the recorded data block.
+
     OUTPUT VARIABLES:
-    signals:     [array (time samples x channels) > floats (units: uV)]; Array of signals for each neural and
-                 analog channel at each time point. Time samples are curtailed according to the time lag. 
-    states_dict: [dictionary (Key: string (state); Value: array (1 x time samples) > ints)]; For each key, there
-                 exists an array of integer values describing the state at each time sample. For each array, 
-                 time samples are curtailed according to the time lag. 
-    t_seconds:   [array (1 x time samples) > floats (units: s)]; Time array for the recorded data block. Shifted
-                 by the time lag and curtailed such that the resulting negative times are deleted.
+    signals:     [array (time samples, channels) > floats (units: uV)]; Array of signals for each neural and analog 
+                 channel at each time point. Time samples are curtailed according to the time lag. 
+    states_dict: [dictionary (Key: string (state); Value: array (time samples,) > ints)]; For each key, there exists an 
+                 array of integer values describing the state at each time sample. For each array, time samples are 
+                 curtailed according to the time lag. 
+    t_seconds:   [array (time samples,) > floats (units: s)]; Time array for the recorded data block. Shifted by the
+                 time lag and curtailed such that the resulting negative times are deleted.
     """
     
     # COMPUTATION:
@@ -160,7 +159,7 @@ def curtail_bci2000_data_by_time_lag(bci2000_data, t_lag_seconds, t_seconds):
 
 
 
-def load_bci2000_data(block_id, date, dir_bci2000_data, dir_intermediates, patient_id, task):
+def load_bci2000_data(block_id, date, dir_bci2000_data, patient_id, task):
     """
     DESCRIPTION:
     Loading the matlab file whose data (signals and states) we will align and crop.
@@ -169,7 +168,6 @@ def load_bci2000_data(block_id, date, dir_bci2000_data, dir_intermediates, patie
     block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
     date:              [string (YYYY_MM_DD)]; Date on which the block was run.
     dir_bci2000_data:  [string]; Directory where the BCI2000 data is stored.
-    dir_intermediates: [string]; Intermediates directory where relevant information is stored.
     patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     task:              [string]; Type of task that was run.
 
@@ -253,17 +251,18 @@ def load_time_lag(block_id, date, dir_intermediates, patient_id, task):
     task:              [string]; Type of task that was run. 
     
     OUTPUT VARIABLES:
-    t_lag_seconds:  [float (units: s)]; The time lag between the audio from BCI2000 and the video audio.
-                    In other words, t_lag is the amount of time that the BCI2000 audio signal is leading
-                    the video audio signal. If t_lag = 150 ms, this means that BCI2000 audio is ahead of
-                    the video audio by 150 ms. For example, an audio event registered by the video to be
-                    at 3.0 s would actually be registered at 3.15 s by BCI2000. 
+    t_lag_seconds: [float (units: s)]; The time lag between the audio from BCI2000 and the video audio. In other words, 
+                   t_lag is the amount of time that the BCI2000 audio signal is leading the video audio signal. If 
+                   t_lag =  150 ms, this means that BCI2000 audio is ahead of the video audio by 150 ms. For example, 
+                   an audio event registered by the video to be at 3.0 s would actually be registered at 3.15 s by
+                   BCI2000. 
     """
     
     # COMPUTATION:
     
     # Creating the base path and filename for the time lags.
-    dir_lag      = dir_intermediates + patient_id + '/' + task + '/' + 'LagsBetweenVideoAndBCI2000/' + date + '/' + block_id + '/'
+    dir_lag      = dir_intermediates + patient_id + '/' + task + '/' + 'LagsBetweenVideoAndBCI2000/' + date + '/' +\
+                   block_id + '/'
     filename_lag = date + '_' + block_id + '.txt'
     
     # Creating the pathway for the lag for the current date+block pair.
@@ -290,7 +289,8 @@ def load_time_lag(block_id, date, dir_intermediates, patient_id, task):
 
 
 
-def save_curtailed_BCI2000_data(bci2000_data, block_id, date, dir_bci2000_data, patient_id, signals, states_dict, t_seconds, task):
+def save_curtailed_BCI2000_data(bci2000_data, block_id, date, dir_bci2000_data, patient_id, signals, states_dict,\
+                                t_seconds, task):
     """
     DESCRIPTION:
     Overwriting the signals and states values in the BCI2000 data dictionary. Also adding a 'time' key to which holds
@@ -302,14 +302,14 @@ def save_curtailed_BCI2000_data(bci2000_data, block_id, date, dir_bci2000_data, 
     date:             [string (YYYY_MM_DD)]; Date on which the block was run.
     dir_bci2000_data: [string]; Directory where the BCI2000 data is stored.
     patient_id:       [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-    signals:          [array (time samples x channels) > floats (units: uV)]; Array of signals for each neural and
-                      analog channel at each time point. Time samples are curtailed according to the block start and 
-                      stop times.
-    states_dict:      [dictionary (Key: string (state); Value: array (1 x time samples) > ints)]; For each key, there
-                      exists an array of integer values describing the state at each time sample. For each array, 
-                      time samples are curtailed according to the block start and stop times.
-    t_seconds:        [array (1 x time samples) > floats (units: s)]; Time array for the recorded data block. Time 
-                      samples are curtailed according to the block start and stop times.
+    signals:          [array (time samples, channels) > floats (units: uV)]; Array of signals for each neural and analog 
+                      channel at each time point. Time samples are curtailed according to the time lag. Time samples are
+                      curtailed  according to the block start and stop times.
+    states_dict:      [dictionary (Key: string (state); Value: array (time samples,) > ints)]; For each key, there 
+                      exists an array of integer values describing the state at each time sample. For each array, time 
+                      samples are curtailed according to the block start and stop times. 
+    t_seconds:        [array (time samples,) > floats (units: s)]; Time array for the recorded data block. Time samples
+                      are curtailed according to the block start and stop times.
     task:             [string]; Type of task that was run.
     """
     
