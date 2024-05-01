@@ -24,22 +24,23 @@ def add_movement_onsetoffset_pair(block_id, date, dir_intermediates, hand_trajec
     the movement onset and offset times.
     
     INPUT VARIABLES:
-    block_id:                   [String (BlockX, where X is an int))]; Block ID of the task that was run.
-    date:                       [string (YYYY_MM_DD)]; Date on which the block was run.
-    dir_intermediates:          [string]; [string]; Intermediates directory where relevant information is stored.
-    hand_trajectories_relevant: [dictionary (Key: string (movement type); Value: xarray (relevant landmarks x time samples)
-                                > floats]; For each movement type, only the relevant hand trajectories are stored. The time
-                                dimension of each xarray is in units of s.
-    movement_onsetsoffsets:     [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats)]; The 
-                                dictionary containing all movement onset and offset times for each movement type.
-    patient_id:                 [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-    task:                       [string]; Type of task that was run.
+    block_id:               [String (BlockX, where X is an int))]; Block ID of the task that was run.
+    date:                   [string (YYYY_MM_DD)]; Date on which the block was run.
+    dir_intermediates:      [string]; Intermediates directory where relevant information is stored.
+    hand_trajectories_rel:  [dictionary (Key: string (movement type); Value: xarray (relevant landmarks, time samples) > 
+                            floats]; For each movement type, only the relevant hand trajectories are stored. The time
+                            dimension of each xarray is in units of s.
+    movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats 
+                            (units: s))]; The dictionary containing all movement onset and offset times for each
+                            movement type.
+    patient_id:             [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
+    task:                   [string]; Type of task that was run.
     """
     
     # COMPUTATION:
     
-    # Extracting the time array from the relevant hand trajectories list. Using the time array from the 
-    # first key, but it doesn't matter since all keys share the same time array.
+    # Extracting the time array from the relevant hand trajectories list. Using the time array from the first key, but
+    # it doesn't matter since all keys share the same time array.
     t_seconds = hand_trajectories_relevant[list(hand_trajectories_relevant.keys())[0]].time_seconds.values
 
     # Extracting the list movement types from the dictionary.
@@ -51,8 +52,8 @@ def add_movement_onsetoffset_pair(block_id, date, dir_intermediates, hand_trajec
     # Prompt the experimenter to enter for which movement an onset/offset time will be added.
     movement_add = input('For which movement would you like to add onset/offset times?')
 
-    # Initializing the logical flag for the while loop to ensure that the experimenter does not enter
-    # an invalid movement type.
+    # Initializing the logical flag for the while loop to ensure that the experimenter does not enter an invalid 
+    # movement type.
     move_flag = True
 
     # While loop to ensure experimenter does not enter an invalid movement type.
@@ -80,12 +81,12 @@ def add_movement_onsetoffset_pair(block_id, date, dir_intermediates, hand_trajec
     t_onset        = t_seconds[onset_idx_min]
     t_offset       = t_seconds[offset_idx_min]
 
-    # Initializing the logical flag for the while loop to ensure that the experimenter does not enter
-    # an onset time greater than the offset time.
+    # Initializing the logical flag for the while loop to ensure that the experimenter does not enter an onset time 
+    # greater than the offset time.
     onoff_flag = True
 
-    # While loop to ensure that the experimenter does not enter a movement onset time greater than the
-    # movement offset time.
+    # While loop to ensure that the experimenter does not enter a movement onset time greater than the movement offset
+    # time.
     while onoff_flag:
 
         # Only exit the loop if the offset time is greater than the onset time.
@@ -122,12 +123,12 @@ def add_movement_onsetoffset_pair(block_id, date, dir_intermediates, hand_trajec
     onset_times.sort()
 
     # Sorting the movement onset/offset time pairs in increasing order based on the onset times.
-    this_movement_onsetoffsets_sorted = [tuple for x in onset_times for tuple in this_movement_onsetsoffsets if tuple[0] == x]
+    this_movement_onsetoffsets_sorted = [tuple for x in onset_times for tuple in this_movement_onsetsoffsets if\
+                                         tuple[0] == x]
 
-    # Updating the dictionary with the movement onset/offset times for the selected movement with the
-    # onset/offset times that were just added.
+    # Updating the dictionary with the movement onset/offset times for the selected movement with the onset/offset times
+    # that were just added.
     movement_onsetsoffsets[movement_add] = this_movement_onsetoffsets_sorted
-
 
     # SAVING:
 
@@ -150,18 +151,18 @@ def add_movement_onsetoffset_pair(block_id, date, dir_intermediates, hand_trajec
 def delete_movement_onsetoffset_pair(block_id, date, dir_intermediates, movement_onsetsoffsets, patient_id, task):
     """
     DESCRIPTION:
-    The experimenter may delete a movement onset/offset time pair. This could be done if, by looking at the 
-    zoomed-in relevant hand trajectories above, the experimenter determines that the movement onset/offset pair
-    is not in the correct location. The experimenter will be prompted which movement type to delete, and will
-    then be prompted to input the index number of that movement within the list onset/offset pairs of that 
-    particular movement.
+    The experimenter may delete a movement onset/offset time pair. This could be done if, by looking at the zoomed-in 
+    relevant hand trajectories above, the experimenter determines that the movement onset/offset pair is not in the 
+    correct location. The experimenter will be prompted which movement type to delete, and will then be prompted to 
+    input the index number of that movement within the list onset/offset pairs of that particular movement.
     
     INPUT VARIABLES:
     block_id:               [String (BlockX, where X is an int))]; Block ID of the task that was run.
     date:                   [string (YYYY_MM_DD)]; Date on which the block was run.
     dir_intermediates:      [string]; [string]; Intermediates directory where relevant information is stored.
-    movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats)]; The 
-                            dictionary containing all movement onset and offset times for each movement type.
+    movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats 
+                            (units: s))]; The dictionary containing all movement onset and offset times for each
+                            movement type.
     patient_id:             [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     task:                   [string]; Type of task that was run.
     """
@@ -190,32 +191,33 @@ def delete_movement_onsetoffset_pair(block_id, date, dir_intermediates, movement
 
         # If the movement type was not entered correctly, prompt the experimenter to enter it again.
         if movement_delete not in movement_types:
-            movement_delete = input('Invalid entry. For which movement would you like to delete an onset/offset time pair?')
+            movement_delete = input('Invalid entry. For which movement would you like to delete an onset/offset time\
+                                    pair?')
 
-    # Extracting the movement onset/offset times for the selected movement and computing the total 
-    # number of movements.
+    # Extracting the movement onset/offset times for the selected movement and computing the total number of movements.
     this_movement_onsetsoffsets = movement_onsetsoffsets[movement_delete]
     n_onsets_offsets            = len(this_movement_onsetsoffsets)
 
-    # Prompting the experimenter to enter the index of the movement onset/offset pair to be deleted
-    # based on the output of the figure in the zoomed-in plot.
+    # Prompting the experimenter to enter the index of the movement onset/offset pair to be deleted based on the output
+    # of the figure in the zoomed-in plot.
     delete_ind = input('Please enter the onset/offset time index within the list of movement indices.')
 
     # Converting the string input to a int.
     delete_ind = int(delete_ind)
 
-    # Initializing the logical flag for the while loop to ensure that the experimenter does not enter
-    # an invalid movement index.
+    # Initializing the logical flag for the while loop to ensure that the experimenter does not enter an invalid 
+    # movement index.
     ind_flag = True
 
-    # While loop to ensure that the experimenter does not enter an index that's outside the total
-    # number of indices for the selected movement.
+    # While loop to ensure that the experimenter does not enter an index that's outside the total number of indices for
+    # the selected movement.
     while ind_flag:
 
         # If the experimenter entered an index that's larger than the total number of indices for the
         # selected movement, the experimenter must re-enter the value.
         if delete_ind >= n_onsets_offsets:
-            delete_ind = input('You entered an index greater than the total number of onset/offset pairs. Please re-enter: ')
+            delete_ind = input('You entered an index greater than the total number of onset/offset pairs. Please \
+                               re-enter: ')
             delete_ind = int(delete_ind)
 
         # Only exit the loop if the index is within the total number of onset/offset indices.
@@ -226,8 +228,8 @@ def delete_movement_onsetoffset_pair(block_id, date, dir_intermediates, movement
     del this_movement_onsetsoffsets[delete_ind]    
 
 
-    # Updating the dictionary with the movement onset/offset times for the selected movement without
-    # the onset/offset times that were just removed.
+    # Updating the dictionary with the movement onset/offset times for the selected movement without the onset/offset 
+    # times that were just removed.
     movement_onsetsoffsets[movement_delete] = this_movement_onsetsoffsets
 
 
@@ -253,29 +255,29 @@ def extracting_relevant_trajectories(hand_trajectories_ref, relevant_hand_landma
     """
     DESCRIPTION:
     For each movement type, the experimenter enters the most relevant hand landmarks for visualization. The experimenter
-    creates a relevant_hand_landmarks dictionary where the keys of the dictionary are the possible movement classes and
+    creates a relevant_hand_landmarks dictionary where the keys of the dictionary are the possible movement classes and 
     the value for each key is a list of the most relevant hand landmarks to that class. The plotting cells above should
-    be used to determine these landmarks. Then for each movement type a dictionary, hand_trajectories_relevant is created
-    where for each movement, only the relevant hand trajectories are stored.
+    be used to determine these landmarks. Then for each movement type a dictionary, hand_trajectories_relevant is 
+    created where for each movement, only the relevant hand trajectories are stored.
 
     INPUT VARIABLES:
-    hand_trajectories_ref:   [xarray (landmarks x time samples) > floats]; The trajectories of the x- and y-coordinates
-                             for each landmark. These are referenced in the x- and y-dimensions according to the reference
-                             landmarks. The time dimension is in units of seconds. 
+    hand_trajectories_ref:   [xarray (landmarks, time samples) > floats]; The trajectories of the x- and y- coordinates
+                             for each landmark. These are referenced in the x- and y-dimensions according to the 
+                             reference landmarks. The time domain is in units of seconds. 
     relevant_hand_landmarks: [dictionary (key: string (movement type); Value: list > strings (hand landmarks))]; Each
                              movement holds a list of the most useful landmarks used to detect the corresponding 
                              movement type.
     
     OUTPUT VARIABLES:
-    hand_trajectories_relevant: [dictionary (Key: string (movement type); Value: xarray (relevant landmarks x time samples)
-                                > floats]; For each movement type, only the relevant hand trajectories are stored. The time
-                                dimension of each xarray is in units of s.
+    hand_trajectories_rel: [dictionary (Key: string (movement type); Value: xarray (relevant landmarks, time samples) > 
+                           floats]; For each movement type, only the relevant hand trajectories are stored. The time
+                           dimension of each xarray is in units of s.
     """
     
     # COMPUTATION:
     
     # Initializing the dictionary of relevant hand trajectories per movement.
-    hand_trajectories_relevant = {}
+    hand_trajectories_rel = {}
 
     # Iterating across all movement types:
     for this_movement in relevant_hand_landmarks.keys():
@@ -287,9 +289,9 @@ def extracting_relevant_trajectories(hand_trajectories_ref, relevant_hand_landma
         this_movement_hand_trajectories = hand_trajectories_ref.loc[this_movement_relevant_landmarks,:]
 
         # Assigning the hand trajectorires specific to this movement to the dictionary.
-        hand_trajectories_relevant[this_movement] = this_movement_hand_trajectories
+        hand_trajectories_rel[this_movement] = this_movement_hand_trajectories
     
-    return hand_trajectories_relevant
+    return hand_trajectories_rel
 
 
 
@@ -298,25 +300,25 @@ def extracting_relevant_trajectories(hand_trajectories_ref, relevant_hand_landma
 def load_click_information(block_id, date, dir_intermediates, patient_id, task):
     """
     DESCRIPTION:
-    Loading the click information dictionary. Note that the click information is curtailed between the block
-    start and stop times.
+    Loading the click information dictionary. Note that the click information is curtailed between the block start and
+    stop times.
     
     INPUT VARIABLES:
     block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
     date:              [string (YYYY_MM_DD)]; Date on which the block was run.
-    dir_intermediates: [string]; [string]; Intermediates directory where relevant information is stored.
+    dir_intermediates: [string]; Intermediates directory where relevant information is stored.
     patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     task:              [string]; Type of task that was run.
     
     OUTPUT VARIABLES:
-     click_info: [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-        data:       [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there
-                    is a 'no_click' string or a click-string specific to that xarray. For example, the 'backspace'
-                    key of the dictionary has an array where each element is a string named either 'no_click' or 
-                    'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
-                    instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
-                    rules apply. Time dimension is in units of s.
-        plotcolor:  [string]; Color corresponding to the type of click for plotting.
+     click_info:   [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
+        data:      [xarray (time samples,) > strings]; For each time sample of the array of each key there is a
+                   'no_click' string or a click-string specific to that xarray. For example, the 'backspace' key of the
+                   dictionary has an array where each element is a string named either 'no_click' or 'backspace_click'.
+                   The 'backspace_click' elements do not occur consecutively and describe the instance a click on the 
+                   backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar rules apply. Time dimension
+                   is in units of s.
+        plotcolor: [string]; Color corresponding to the type of click for plotting.
     """
     
     # COMPUTATION:
@@ -340,25 +342,26 @@ def load_click_information(block_id, date, dir_intermediates, patient_id, task):
 def load_hand_trajectories(block_id, date, dir_intermediates, patient_id, task):
     """
     DESCRIPTION:
-    Importing the xarray of hand trajectories. Note that these hand trajectories are curtailed between the 
-    block start and stop times.
+    Importing the xarray of hand trajectories. Note that these hand trajectories are curtailed between the block start
+    and stop times.
     
     INPUT VARIABLES:
     block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
     date:              [string (YYYY_MM_DD)]; Date on which the block was run.
-    dir_intermediates: [string]; [string]; Intermediates directory where relevant information is stored.
+    dir_intermediates: [string]; Intermediates directory where relevant information is stored.
     patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     task:              [string]; Type of task that was run.
     
     OUTPUT VARIABLES:
-    hand_trajectories: [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                       for each landmark. The time domain is in units of seconds. 
+    hand_trajectories: [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each
+                       landmark. The time domain is in units of seconds. 
     """
     
     # COMPUTATION:
     
     # Creating the directory and filename for the hand trajectories.
-    dir_handtrajectories      = dir_intermediates + patient_id + '/' + task + '/HandTrajectories/'  + date + '/Curtailed/'
+    dir_handtrajectories      = dir_intermediates + patient_id + '/' + task + '/HandTrajectories/'  + date +\
+                                '/Curtailed/'
     filename_handtrajectories = date + '_' + block_id + '_hand_trajectories.nc'
     
     # Pathway for uploading the hand trajectories.
@@ -385,11 +388,11 @@ def load_hand_trajectories(block_id, date, dir_intermediates, patient_id, task):
 def referencing_hand_trajectories(hand_trajectories, ref1_x, ref2_x, refa_y, refb_y):
     """
     DESCRIPTION:
-    Each hand landmark is referenced according to experimenter-specified landmarks. Make sure that the landmarks that are
-    selected will not be used for further analysis as they will get normalized out to 0.
+    Each hand landmark is referenced according to experimenter-specified landmarks. Make sure that the landmarks that 
+    are selected will not be used for further analysis as they will get normalized out to 0.
     
     INPUT VARIABLES:
-    hand_trajectories: [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates for each
+    hand_trajectories: [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each 
                        landmark. The time domain is in units of seconds. 
     ref1_x:            [string]; First horizontal reference landmark
     ref2_x:            [string]; Second horizontal reference landmark
@@ -397,15 +400,14 @@ def referencing_hand_trajectories(hand_trajectories, ref1_x, ref2_x, refa_y, ref
     refb_y:            [string]; Second vertical reference landmark
     
     OUTPUT VARIABLES:
-    hand_trajectories_ref: [xarray (landmarks x time samples) > floats]; The trajectories of the x- and y-coordinates for each
-                           landmark. These are referenced in the x- and y-dimensions according to the reference landmarks. The
-                           time domain is in units of seconds. 
+    hand_trajectories_ref: [xarray (landmarks, time samples) > floats]; The trajectories of the x- and y-coordinates for 
+                           each landmark. These are referenced in the x- and y-dimensions according to the reference
+                           landmarks. The time domain is in units of seconds. 
     """
     
     # COMPUTATION:
     
-    # Initializing the xarray that holds the normalized hand trajectories. Just deep-copying the 
-    # un-normalized version.
+    # Initializing the xarray that holds the normalized hand trajectories. Just deep-copying the un-normalized version.
     hand_trajectories_norm = copy.deepcopy(hand_trajectories)
     
     # Extracting the hand landmark trajectories of the reference landmarks.
@@ -457,27 +459,28 @@ def referencing_hand_trajectories(hand_trajectories, ref1_x, ref2_x, refa_y, ref
 def plotting_landmarks_and_clicks(click_info, hand_trajectories, landmark_trajectories_plotting):
     """
     DESCRIPTION:
-    Plotting the experimenter-specified hand landmarks and the click information across the entirety of
-    the spelling block.
+    Plotting the experimenter-specified hand landmarks and the click information across the entirety of the spelling 
+    block.
     
     INPUT VARIABLES:
     click_info:                     [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-        data:                       [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there
-                                    is a 'no_click' string or a click-string specific to that xarray. For example, the 'backspace'
-                                    key of the dictionary has an array where each element is a string named either 'no_click' or 
-                                    'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
-                                    instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
-                                    rules apply. Time dimension is in units of s.
+        data:                       [xarray (time samples,) > strings]; For each time sample of the array of each key 
+                                    there is a 'no_click' string or a click-string specific to that xarray. For example,
+                                    the 'backspace' key of the dictionary has an array where each element is a string
+                                    named either 'no_click' or 'backspace_click'. The 'backspace_click' elements do not 
+                                    occur consecutively and describe the instance a click on the backspace key occured. 
+                                    For the 'keyboard' and 'stimcolumn' keys, similar rules apply. Time dimension is in
+                                    units of s.
         plotcolor:                  [string]; Color corresponding to the type of click for plotting.
-    hand_trajectories:              [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                                    for each landmark. The time domain is in units of seconds. 
+    hand_trajectories:              [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-
+                                    coordinates for each landmark. The time domain is in units of seconds. 
     landmark_trajectories_plotting: [list > strings]; Possible landmarks to display.
     """
     
     # PLOTTING
 
     # Initializing the figure.
-    fig, ax = plt.subplots(2,1, figsize = (20,7.5))
+    _, ax = plt.subplots(2,1, figsize = (20,7.5))
 
     
     # Plotting Landmark Trajectories.
@@ -527,7 +530,7 @@ def plotting_landmarks_and_clicks(click_info, hand_trajectories, landmark_trajec
 
 
 
-def upload_movement_onsetsoffsets(block_id, date, dir_intermediates, patient_id, task):
+def upload_movement_onsetsoffsets(block_id, date, dir_intermediates, patient_id, relevant_hand_landmarks, task):
     """
     DESCRIPTION:
     The dictionary containing the movement onset and offset times for each movement type will be uploaded if it exists. 
@@ -536,15 +539,19 @@ def upload_movement_onsetsoffsets(block_id, date, dir_intermediates, patient_id,
     saved for current and future inputting of onset/offset times.
     
     INPUT VARIABLES:
-    block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
-    date:              [string (YYYY_MM_DD)]; Date on which the block was run.
-    dir_intermediates: [string]; [string]; Intermediates directory where relevant information is stored.
-    patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-    task:              [string]; Type of task that was run.
+    block_id:                [String (BlockX, where X is an int))]; Block ID of the task that was run.
+    date:                    [string (YYYY_MM_DD)]; Date on which the block was run.
+    dir_intermediates:       [string]; Intermediates directory where relevant information is stored.
+    patient_id:              [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
+    relevant_hand_landmarks: [dictionary (key: string (movement type); Value: list > strings (hand landmarks))]; Each
+                             movement holds a list of the most useful landmarks used to detect the corresponding 
+                             movement type.
+    task:                    [string]; Type of task that was run.
 
     OUTPUT VARIABLES:
-    movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats)]; The 
-                            dictionary containing all movement onset and offset times for each movement type.
+    movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats 
+                            (units: s))]; The dictionary containing all movement onset and offset times for each
+                            movement type.
     """
     
     # COMPUTATION:
@@ -578,7 +585,8 @@ def upload_movement_onsetsoffsets(block_id, date, dir_intermediates, patient_id,
         # Iterate across each movement.
         for movement in relevant_hand_landmarks.keys():
             
-            # Initializing a dictionary key for each movement, which will store all corresponding movement onset/offset times.
+            # Initializing a dictionary key for each movement, which will store all corresponding movement onset/offset
+            # times.
             movement_onsetsoffsets[movement] = []
     
     return movement_onsetsoffsets
@@ -590,42 +598,43 @@ def upload_movement_onsetsoffsets(block_id, date, dir_intermediates, patient_id,
 def zooming_in(click_info, hand_trajectories_relevant, movement_colors, movement_onsetsoffsets, t_end_zoom, t_start_zoom):
     """
     DESCRIPTION:
-    The experimenter inputs a start and an end time between which to zoom in to view the relevant hand trajectories
-    for each movement and click information. The hand landmark trajectories are shown for each movement in a 
-    separate plot and should be used to inform determining the movement onset and offset times. If there already
-    exists in the movement onset/offset times dictionary onset and offset times within the zoomed-in region for a 
-    particular movement, these will also be displayed as well as their numerical cardinality (as a list).
+    The experimenter inputs a start and an end time between which to zoom in to view the relevant hand trajectories for
+    each movement and click information. The hand landmark trajectories are shown for each movement in a separate plot
+    and should be used to inform determining the movement onset and offset times. If there already exists in the 
+    movement onset/offset times dictionary onset and offset times within the zoomed-in region for a particular movement,
+    these will also be displayed as well as their numerical cardinality (as a list).
     
     INPUT VARIABLES:
-    click_info:                 [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-        data:                   [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there
-                                is a 'no_click' string or a click-string specific to that xarray. For example, the 'backspace'
-                                key of the dictionary has an array where each element is a string named either 'no_click' or 
-                                'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
-                                instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
-                                rules apply. Time dimension is in units of s.
-        plotcolor:              [string]; Color corresponding to the type of click for plotting.
-    hand_trajectories_relevant: [dictionary (Key: string (movement type); Value: xarray (relevant landmarks x time samples)
-                                > floats]; For each movement type, only the relevant hand trajectories are stored. The time
-                                dimension of each xarray is in units of s.
-    movement_colors:            [dictionary (key: string (movement); Value: string (color))]; There is a color associated
-                                with each movement for plotting.
-    movement_onsetsoffsets:     [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats)]; The 
-                                dictionary containing all movement onset and offset times for each movement type.
-    t_end_zoom:                 [int (units: s)]; The ending time point for the zoomed in window. To set as the last time
-                                point, leave as empty list [].
-    t_start_zoom:               [int (units: s)]; The starting time point for the zoomed in window. To set as the first
-                                time point, leave as empty list [].    
+    click_info:             [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
+        data:               [xarray (time samples,) > strings]; For each time sample of the array of each key there is a 
+                            'no_click' string or a click-string specific to that xarray. For example, the 'backspace' 
+                            key of the dictionary has an array where each element is a string named either 'no_click' or 
+                            'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe 
+                            the instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys,
+                            similar rules apply. Time dimension is in units of s.
+        plotcolor:          [string]; Color corresponding to the type of click for plotting.
+    hand_trajectories_rel:  [dictionary (Key: string (movement type); Value: xarray (relevant landmarks, time samples) > 
+                            floats]; For each movement type, only the relevant hand trajectories are stored. The time
+                            dimension of each xarray is in units of s.
+    movement_colors:        [dictionary (key: string (movement); Value: string (color))]; There is a color associated 
+                            with each movement for plotting.
+    movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats 
+                            (units: s))]; The dictionary containing all movement onset and offset times for each
+                            movement type.
+    t_end_zoom:             [int (units: s)]; The ending time point for the zoomed in window. To set as the last time
+                            point, leave as empty list [].
+    t_start_zoom:           [int (units: s)]; The starting time point for the zoomed in window. To set as the first 
+                            time point, leave as empty list [].    
     """
     
     # COMPUTATION:
     
-    # Extracting the time array from the first key of the relevant hand trajectories dictikonary. This is
-    # the same time array that is used for the click information.
+    # Extracting the time array from the first key of the relevant hand trajectories dictikonary. This is the same time 
+    # array that is used for the click information.
     t_seconds = hand_trajectories_relevant[list(hand_trajectories_relevant.keys())[0]].time_seconds.values
 
-    # Defaulting to the first and last time points if the experimenter-specified starting and ending time
-    # points are left empty ( [] ).
+    # Defaulting to the first and last time points if the experimenter-specified starting and ending time points are 
+    # left empty ( [] ).
     if not t_start_zoom:
         t_start_zoom = t_seconds[0]
     if not t_end_zoom:
@@ -647,8 +656,8 @@ def zooming_in(click_info, hand_trajectories_relevant, movement_colors, movement
         # Extracting the onset and offsets times for the current movement.
         this_movement_onsets_offset_times = movement_onsetsoffsets[this_movement]
 
-        # Initializing lists of movement onset and offset times as well as correspnding indices that fall
-        # within the zoomed-in period.
+        # Initializing lists of movement onset and offset times as well as correspnding indices that fall within the 
+        # zoomed-in period.
         move_onset_times  = []
         move_offset_times = []
         move_onset_inds   = []
@@ -668,11 +677,13 @@ def zooming_in(click_info, hand_trajectories_relevant, movement_colors, movement
                 move_onset_times.append(this_onset_time)
 
                 # Find the index location for the current movement onset time.
-                this_onset_location = ["{} {}".format(ind1,ind2) for (ind1,val1) in enumerate(this_movement_onsets_offset_times) for (ind2,val2) in enumerate(val1) if val2 == this_onset_time]
+                this_onset_location = ["{} {}".format(ind1,ind2) for (ind1,val1) in\
+                                      enumerate(this_movement_onsets_offset_times) for (ind2,val2) in enumerate(val1)\
+                                      if val2 == this_onset_time]
                 this_onset_location = this_onset_location[0].split()
 
-                # Add the index of the current movement onset time to the list of movement onsets indices within
-                # the zoomed-in period.
+                # Add the index of the current movement onset time to the list of movement onsets indices within the 
+                # zoomed-in period.
                 move_onset_inds.append(int(this_onset_location[0]))
 
             # The current movement offset time falls within the zoomed-in period.
@@ -682,15 +693,17 @@ def zooming_in(click_info, hand_trajectories_relevant, movement_colors, movement
                 move_offset_times.append(this_offset_time)
 
                 # Find the index location for the current movement offset time.
-                this_offset_location = ["{} {}".format(ind1,ind2) for (ind1,val1) in enumerate(this_movement_onsets_offset_times) for (ind2,val2) in enumerate(val1) if val2 == this_offset_time]
+                this_offset_location = ["{} {}".format(ind1,ind2) for (ind1,val1) in\
+                                       enumerate(this_movement_onsets_offset_times) for (ind2,val2) in enumerate(val1)\
+                                       if val2 == this_offset_time]
                 this_offset_location = this_offset_location[0].split()
 
-                # Add the index of the current movement offset time to the list of movement offsets indices within
-                # the zoomed-in period.
+                # Add the index of the current movement offset time to the list of movement offsets indices within the 
+                # zoomed-in period.
                 move_offset_inds.append(int(this_offset_location[0]))
 
-        # Printing movement times that fall in the zoomed-in region as well as the cardinality of the onset/offset
-        # pairs within the zoomed-in region.
+        # Printing movement times that fall in the zoomed-in region as well as the cardinality of the onset/offset pairs
+        # within the zoomed-in region.
         print('Movement: ', this_movement)
         print('\nMovement Onset Times: ', move_onset_times)
         print('Movement Onset Inds: ', move_onset_inds)
@@ -700,7 +713,7 @@ def zooming_in(click_info, hand_trajectories_relevant, movement_colors, movement
         
         # For the current movement, initializing a plot the movement onsets and offsets as well as the 
         # click information.
-        fig, ax1 = plt.subplots(figsize=(20,2.5))
+        _, ax1 = plt.subplots(figsize=(20,2.5))
         ax2 = ax1.twinx()
 
         # Defining the color for the current movement.
@@ -729,11 +742,9 @@ def zooming_in(click_info, hand_trajectories_relevant, movement_colors, movement
             stems_offsets = np.ones((len(move_offset_times),))
             ax2.stem(move_offset_times, stems_offsets, basefmt = 'black', linefmt = 'gray');
 
-
         ax1.set_xlabel("Time (s)", fontsize = 14)
         ax1.set_ylabel("Amplitude", fontsize = 14, color = this_movement_color)
         ax1.tick_params(axis = "y", colors = this_movement_color)
-        # ax1.set_title(this_movement + ' trajectories')
         ax1.set_title('Grasp Traces')
         ax1.grid()
         ax2.set_ylabel("Click Type",fontsize = 14, color = "black")
