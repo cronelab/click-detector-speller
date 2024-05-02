@@ -20,9 +20,10 @@ def concatenating_historical_features(features_no_history, fps):
     """
     DESCRIPTION:
     Based on the experimenter-specified time history (t_history) the number of historical time points are calculated. An
-    xarray with dimensions (history, features, time) is created, where each coordinate in the history dimension represents
-    how much the features were shifted in time. For example, consider one coordinate in the feature array, and suppose a
-    time length of 10 samples and a total time history of 3 samples. For this feature, the resulting xarray would look like:
+    xarray with dimensions (history, features, time samples) is created, where each coordinate in the history dimension 
+    represents how much the features were shifted in time. For example, consider one coordinate in the feature array, 
+    and suppose a time length of 10 samples and a total time history of 3 samples. For this feature, the resulting 
+    xarray would look like:
 
     historical time shifts
          n=2 shifts      [[0.000, 0.000, 0.234, 0.523. 0.435, 0.982, 0.175, 0.759, 0.341, 0.101],
@@ -33,15 +34,15 @@ def concatenating_historical_features(features_no_history, fps):
     and the resulting dimensions of this array are (history=3, features=1, time=10).
     
     INPUT VARIABLES:
-    features_no_history: [dictionary (Key: string (task ID); Value: xarray (landmarks x time samples) > floats)]; The time 
-                         traces of the x- and y-coordinates for each landmark.
+    features_no_history: [dictionary (Key: string (task ID); Value: xarray (landmarks, time samples) > floats)]; The 
+                         time traces of the x- and y-coordinates for each landmark.
     fps:                 [int (30 or 60)]; Frames per second of of the video feed.
     
     GLOBAL PARAMETERS:
     t_history: [float (unit: s)]; Amount of time history used as features.
                            
     OUTPUT VARIABLES:
-    features_all_history: [xarray (time history, features, time) > floats]; Array of historical time features.
+    features_all_history: [xarray (time history, features, time samples) > floats]; Array of historical time features.
     """
     
     # COMPUTATION:
@@ -62,7 +63,8 @@ def concatenating_historical_features(features_no_history, fps):
     # Initializing a feature array which will contain all historical time features.
     features_all_history = np.zeros((n_history, n_features, n_samples))
 
-    # Iterating across all historical time shifts. The index, n, is the number of samples back in time that will be shifted.
+    # Iterating across all historical time shifts. The index, n, is the number of samples back in time that will be
+    # shifted.
     for n in range(n_history):
 
         # If currently extracting historical time features (time shift > 0)
@@ -86,7 +88,9 @@ def concatenating_historical_features(features_no_history, fps):
 
     # Converting the historical trajectory features for this task to xarray.
     features_all_history = xr.DataArray(features_all_history, 
-                                        coords={'history': np.arange(n_history), 'feature': np.arange(n_features), 'time_seconds': t_seconds}, 
+                                        coords={'history': np.arange(n_history),\
+                                                'feature': np.arange(n_features),\
+                                                 'time_seconds': t_seconds}, 
                                         dims=["history", "feature", "time_seconds"])
 
     return features_all_history
@@ -101,15 +105,16 @@ def creating_onsetoffset_dictionary(predictions):
     Creating the dictionary of attempted movement onsets and offsets times.
     
     INPUT VARIABLES:
-    predictions: [xarray > strings (1 x samples)]; The xarray of most likely outputs for each sample. The time 
+    predictions: [xarray > strings (time samples,)]; The xarray of most likely outputs for each sample. The time 
                  dimension is in units of seconds.
                  
     NECESSARY FUNCTIONS:
     unique_value_index_finder
     
     OUTPUT VARIABLES:
-    movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats)]; The 
-                            dictionary containing all movement onset and offset times for each movement type.
+    movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats 
+                            (units: s))]; The dictionary containing all movement onset and offset times for each
+                            movement type.
     """
     
     # COMPUTATION:
@@ -163,7 +168,7 @@ def creating_onsetoffset_dictionary(predictions):
 def data_upload(block_id, date, dir_intermediates, patient_id, task):
     """
     DESCRIPTION:
-    Uploading the click information hand trajectories from the experimenter-specified date and block.
+    Uploading the click information and hand trajectories from the experimenter-specified date and block.
     
     INPUT VARIABLES:
     block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
@@ -177,17 +182,17 @@ def data_upload(block_id, date, dir_intermediates, patient_id, task):
     load_hand_trajectories
     
     OUTPUT VARIABLES:
-    data_dict: [dictionary (key/value pairs below)];
-        click_info: [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-            data:      [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there
-                       is a 'no_click' string or a click-string specific to that xarray. For example, the 'backspace'
-                       key of the dictionary has an array where each element is a string named either 'no_click' or 
+    data_dict:         [dictionary (key: string (date+block ID); value: below)];
+        click_info:    [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
+            data:      [xarray (time samples,) > strings]; For each time sample of the array of each key there is a 
+                       'no_click' string or a click-string specific to that xarray. For example, the 'backspace' key of
+                       the dictionary has an array where each element is a string named either 'no_click' or 
                        'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
                        instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
                        rules apply. Time dimension is in units of s.
             plotcolor: [string]; Color corresponding to the type of click for plotting.
-        trajectories:  [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                       for each landmark. The time domain is in units of seconds. 
+        trajectories:  [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each
+                       landmark. The time domain is in units of seconds. 
     """
     # COMPUTATION:
     
@@ -248,8 +253,8 @@ def index_advancer(indices, shift):
 def load_click_information(block_id, date, dir_intermediates, patient_id, task):
     """
     DESCRIPTION:
-    Loading the click information dictionary. Note that the click information is curtailed between the block
-    start and stop times.
+    Loading the click information dictionary. Note that the click information is curtailed between the block start and
+    stop times.
     
     INPUT VARIABLES:
     block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
@@ -259,14 +264,14 @@ def load_click_information(block_id, date, dir_intermediates, patient_id, task):
     task:              [string]; Type of task that was run.
     
     OUTPUT VARIABLES:
-     click_info: [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-        data:       [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there
-                    is a 'no_click' string or a click-string specific to that xarray. For example, the 'backspace'
-                    key of the dictionary has an array where each element is a string named either 'no_click' or 
-                    'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
-                    instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
-                    rules apply. Time dimension is in units of s.
-        plotcolor:  [string]; Color corresponding to the type of click for plotting.
+    click_info:    [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
+        data:      [xarray (time samples,) > strings]; For each time sample of the array of each key there is a 
+                   'no_click' string or a click-string specific to that xarray. For example, the 'backspace' key of the
+                   dictionary has an array where each element is a string named either 'no_click' or 'backspace_click'.
+                   The 'backspace_click' elements do not occur consecutively and describe the instance a click on the 
+                   backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar rules apply. Time dimension
+                   is in units of s.
+        plotcolor: [string]; Color corresponding to the type of click for plotting.
     """
     
     # COMPUTATION:
@@ -301,14 +306,15 @@ def load_hand_trajectories(block_id, date, dir_intermediates, patient_id, task):
     task:              [string]; Type of task that was run.
     
     OUTPUT VARIABLES:
-    hand_trajectories: [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                       for each landmark. The time domain is in units of seconds. 
+    hand_trajectories: [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each
+                       landmark. The time domain is in units of seconds. 
     """
     
     # COMPUTATION:
     
     # Creating the directory and filename for the hand trajectories.
-    dir_handtrajectories      = dir_intermediates + patient_id + '/' + task + '/HandTrajectories/'  + date + '/Curtailed/'
+    dir_handtrajectories      = dir_intermediates + patient_id + '/' + task + '/HandTrajectories/'  + date +\
+                                '/Curtailed/'
     filename_handtrajectories = date + '_' + block_id + '_hand_trajectories.nc'
     
     # Pathway for uploading the hand trajectories.
@@ -399,7 +405,7 @@ def loading_model_params(foldername_model_params, path_params):
     
     PARAMETERS:
     model_classes: [list > strings]; List of all the classes to be used in the classifier.
-    model_type:    [string ('SVM','LSTM')]; The model type that will be used for classification.
+    model_type:    [string ('SVM','LSTM')]; The model type that will be used to fit the data.
     """
     
     # Making each of the following parameters global variables.
@@ -428,10 +434,10 @@ def loading_pc_params(foldername_pc_params, path_params):
     Loading parameters related to principal component dimensionality reduction.
     
     PARAMETERS:
-    eigenvectors:       [array (features x pc features) > floats]; Array in which columns consist eigenvectors 
-                        which explain the variance in features in descending fashion. 
-    training_data_mean: [xarray (history x features) > floats]; Mean power of each feature of  only the 0th time
-                        shift. This array is repeated for each historical time point.
+    eigenvectors:       [array (features, pc features) > floats]; Array in which columns consist of eigenvectors which
+                        explain the variance of the data in descending order. 
+    training_data_mean: [xarray (history, features) > floats ]; Mean power of each feature of only the 0th time shift. 
+                        This array is repeated for each historical time point.
     """
     
     # Making each of the following parameters global variables.
@@ -450,85 +456,20 @@ def loading_pc_params(foldername_pc_params, path_params):
 
 
 
-def lstm_arrange_data(data, time_history):
-    """
-    DESCRIPTION:
-    Rearrange the data so that each training sample's features from the time domain are organized into another dimension for LSTM use.
-
-    INPUT VARIABLES:
-    data:         [array (samples x features) > floats]; Training or testing data which will be rearranged.
-    time_history: [list > int (units: ms)]; Historical time points which will be included during classification of each data sample. Specifically, if
-                  time_history = [0,50,100], then the classification at time point t will occur with features from times t, t-50ms and t-100ms. If
-                  no time history will be used, set time_history as an empty list []. Note: Do not make this time history list at higher resolution
-                  than the spectral window shift.
-
-    NECESSARY FUNCTIONS:
-    index_advancer
-
-    OUTPUT VARIABLES:
-    data_lstm: [array (samples x time points x features) > floats]; Rearranged data fit for the LSTM.
-    """
-    
-    # COMPUTATION:
-    
-    # Extracting the number of time points, training samples, and features from the current fold to organize the features in 
-    # preparation for the LSTM.
-    N_time_history = len(time_history)
-    if N_time_history == 0:
-        N_time_history = 1
-        
-    # Computing the number of samples and features.
-    N_samples        = data.shape[0]
-    N_features_all_t = data.shape[1]
-    
-    # Computing the number of features per historical time point.
-    N_features_no_t = int(N_features_all_t / N_time_history)
-    
-    # Initializing the re-arranged data array. 
-    data_lstm = np.zeros((N_samples, N_time_history, N_features_no_t))
-    
-    # Iterating across all time samples.
-    for n in range(N_samples):
-        
-        # Extracting the current training sample.
-        this_sample = data[n, :]
-        
-        # Initializing the time samples x feature array for the current time sample.
-        this_sample_time_vs_feat = np.zeros((N_time_history, N_features_no_t))
-        
-        # Iterating across all time points.
-        ind = np.zeros((2,))
-        for t in range(N_time_history):
-            
-            # Extracting the indices of the current time feature.
-            ind = index_advancer(ind, N_features_no_t)
-            
-            # Populating the time vs feature array with the features of the current time point.
-            this_sample_time_vs_feat[t,:] = this_sample[ind[0]:ind[1]]
-
-        # Populating the LSTM data with the current sample's rearranged temporal information.
-        data_lstm[n,:,:] = this_sample_time_vs_feat
-
-    return data_lstm
-
-
-
-
-
 def mean_centering(data, data_mean):
     """
     DESCRIPTION:
     Mean-centering all features at all historical time points by subtracting the data mean, averaged across time.
         
     INPUT VARIABLES:
-    data:      [xarray (history x features x time samples) > floats ]; Historical power features across time
-               samples. Time samples are in units of seconds.
-    data_mean: [xarray (history x features) > floats ]; Mean power of each feature of only the 0th time shift.
-               This array is repeated for each historical time point.
+    data:      [xarray (history, features, time samples) > floats ]; Historical power features across time samples. Time
+               samples are in units of seconds.
+    data_mean: [xarray (history, features) > floats ]; Mean power of each feature of only the 0th time shift. This array
+               is repeated for each historical time point.
     
     OUTPUT VARIABLES:
-    data_centered: [xarray (history x features x time samples) > floats]; Mean-centered historical power features
-                   across time samples. Time samples are in units of seconds.
+    data_centered: [xarray (history, features, time samples) > floats]; Mean-centered historical power features across 
+                   time samples. Time samples are in units of seconds.
     """
     
     # COMPUTATION:
@@ -548,7 +489,9 @@ def mean_centering(data, data_mean):
     
     # Converting the data mean array back into an xarray
     data_mean = xr.DataArray(data_mean, 
-                             coords={'history': np.arange(n_history), 'feature': np.arange(n_features), 'time_seconds': t_seconds}, 
+                             coords={'history': np.arange(n_history),\
+                                     'feature': np.arange(n_features),\
+                                     'time_seconds': t_seconds}, 
                              dims=["history", "feature", "time_seconds"])
     
     # Computing the mean-centered data.
@@ -566,8 +509,8 @@ def model_inference(trajectories_processed):
     Classification of the trajectory features for each sample. 
     
     INPUT VARIABLES:
-    trajectories_processed: [xarray (time samples x history x features) > floats]; The processed hand trajectories.
-                            The time dimension is in units of seconds.
+    trajectories_processed: [xarray (time samples, history, features) > floats]; The processed hand trajectories. The 
+                            time dimension is in units of seconds.
                             
     GLOBAL PARAMETERS:
     model:         [classification model]; The classification model.
@@ -575,7 +518,7 @@ def model_inference(trajectories_processed):
     model_type:    [string ('SVM','LSTM')]; The model type that will be used for classification.
     
     OUTPUT VARIABLES:
-    predictions: [xarray > strings (1 x samples)]; The xarray of most likely outputs for each sample. The time 
+    predictions: [xarray > strings (time samples,)]; The xarray of most likely outputs for each sample. The time 
                  dimension is in units of seconds.
     """
     
@@ -622,16 +565,17 @@ def model_inference(trajectories_processed):
 def pc_transform(data, eigenvectors):
     """
     DESCRIPTION:
-    Transforming the data into PC space by multiplying the features at each historical time point by the same eigenvectors.
+    Transforming the data into PC space by multiplying the features at each historical time point by the same 
+    eigenvectors.
     
     INPUT VARIABLES:
-    data:         [xarray (features x time samples) > floats];
-    eigenvectors: [array (features x pc features) > floats]; Array in which columns consist eigenvectors which explain the
-                  variance in features in descending order. Time samples are in units of seconds.
+    data:         [xarray (features, time samples) > floats];
+    eigenvectors: [array (features, pc features) > floats]; Array in which columns consist eigenvectors which explain
+                  the variance in features in descending order. Time samples are in units of seconds.
     
     OUTPUT VARIABLES:
-    data_pc: [xarray (pc features x time samples) > floats (units: PC units)]; Reduced-dimensionality data. Time dimension is
-             in units of seconds.
+    data_pc: [xarray (pc features, time samples) > floats (units: PC units)]; Reduced-dimensionality data. Time 
+             dimension is in units of seconds.
     """
     
     # COMPUTATION:
@@ -648,7 +592,9 @@ def pc_transform(data, eigenvectors):
     
     # Initializing an xarray of PC data.
     data_pc = xr.DataArray((np.zeros((n_history, n_features_pc, n_samples))),
-                            coords={'history': np.arange(n_history), 'feature': np.arange(n_features_pc), 'time_seconds': t_seconds},
+                            coords={'history': np.arange(n_history),\
+                                    'feature': np.arange(n_features_pc),\
+                                    'time_seconds': t_seconds},
                             dims=["history", "feature", "time_seconds"])
     
     # Iterating across all historical time shifts and multiplying the data at each historical time shift by the same
@@ -667,25 +613,25 @@ def pc_transform(data, eigenvectors):
 
 
 
-def plotting_landmarks_and_clicks(data_dict, landmark_trajectories_plotting):
+def plotting_landmarks_and_clicks(data_dict, landmarks_plotting):
     """
     DESCRIPTION:
-    Plotting the experimenter-specified hand landmarks and the click information across the entirety of
-    experimenter-specified date and block.
+    Plotting the experimenter-specified hand landmarks and the click information across the entirety of experimenter-
+    specified date and block.
     
     INPUT VARIABLES:
-    data_dict: [dictionary (key/value pairs below)];
-        click_info: [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-            data:      [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there
-                       is a 'no_click' string or a click-string specific to that xarray. For example, the 'backspace'
-                       key of the dictionary has an array where each element is a string named either 'no_click' or 
-                       'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
-                       instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
-                       rules apply. Time dimension is in units of s.
-            plotcolor: [string]; Color corresponding to the type of click for plotting.
-        trajectories:  [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                       for each landmark. The time domain is in units of seconds. 
-    landmark_trajectories_plotting: [list > strings]; Possible landmarks to display.
+    data_dict:          [dictionary (key: string (date+block ID); value: below)];
+        click_info:     [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
+            data:       [xarray (time samples,) > strings]; For each time sample of the array of each key there is a 
+                        'no_click' string or a click-string specific to that xarray. For example, the 'backspace' key of
+                        the dictionary has an array where each element is a string named either 'no_click' or
+                        'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
+                        instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
+                        rules apply. Time dimension is in units of s.
+            plotcolor:  [string]; Color corresponding to the type of click for plotting.
+        trajectories:   [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for
+                        each landmark. The time domain is in units of seconds. 
+    landmarks_plotting: [list > strings]; Possible landmarks to display.
     """
     
     # PLOTTING
@@ -700,7 +646,7 @@ def plotting_landmarks_and_clicks(data_dict, landmark_trajectories_plotting):
     # Plotting Landmark Trajectories.
 
     # Iterating across each landmark trajectory that will be plotted.
-    for this_landmark in landmark_trajectories_plotting:
+    for this_landmark in landmarks_plotting:
 
         # Extracting the trajectory for the current landmark.
         this_landmark_trajectory = hand_trajectories.loc[this_landmark]
@@ -749,15 +695,16 @@ def preprocessing_features(trajectories, fps):
     Preprocessing the trajectories for classification.
     
     INPUT VARIABLES:
-    trajectories: [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                  for each landmark. The time domain is in units of seconds. 
+    trajectories: [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates for each 
+                  landmark. The time domain is in units of seconds. These are referenced in the x- and y-dimensions 
+                  according to the reference landmarks. The time domain is in units of seconds.  
                   
     GLOBAL PARAMETERS:
-    eigenvectors:       [array (features x pc features) > floats]; Array in which columns consist eigenvectors 
-                        which explain the variance in features in descending fashion. 
+    eigenvectors:       [array (features, pc features) > floats]; Array in which columns consist of eigenvectors which
+                        explain the variance of the data in descending order. 
     model_type:         [string ('SVM','LSTM')]; The model type that will be used for classification.
-    training_data_mean: [xarray (history x features) > floats]; Mean power of each feature of  only the 0th time
-                        shift. This array is repeated for each historical time point.
+    training_data_mean: [xarray (history, features) > floats ]; Mean power of each feature of only the 0th time shift.
+                        This array is repeated for each historical time point.
                    
     NECESSARY FUNCTIONS:
     concatenating_historical_features
@@ -766,8 +713,8 @@ def preprocessing_features(trajectories, fps):
     rearranging_features
     
     OUTPUT VARIABLES:
-    trajectories_processed: [xarray (time samples x history x features) > floats]; The processed hand trajectories.
-                            The time dimension is in units of seconds.
+    trajectories_processed: [xarray (time samples, history, features) > floats]; The processed hand trajectories. The
+                            time dimension is in units of seconds.
     """
     
     # COMPUTATION:
@@ -796,7 +743,7 @@ def rearranging_features(data, model_type):
     Rearranging the data dimensions as necessary to fit the experimenter-determined model.
     
     INPUT VARIABLES:
-    data:       [xarray (time history x features x time samples) > floats]; Array of historical time features.
+    data:       [xarray (history, features, time samples) > floats]; Array of historical time features.
     model_type: [string ('SVM','LSTM')]; The model type that will be used to fit the data.
     
     OUTPUT VARIABLES:
@@ -814,9 +761,6 @@ def rearranging_features(data, model_type):
     
     # If the model type is a SVM.
     if model_type == 'SVM':
-        
-        # NOTE: This script doesn't have a SVM model structure for training. Feel free to write one. The data is rearranged
-        # for it.
 
         # Concatenating all the historical time features into one dimension.
         data_rearranged = np.asarray(data).reshape(n_history*n_features, n_samples)
@@ -842,22 +786,23 @@ def rearranging_features(data, model_type):
 def referencing_hand_trajectories(data_dict, ref1_x, ref2_x, refa_y, refb_y):
     """
     DESCRIPTION:
-    Each hand landmark is referenced according to experimenter-specified landmarks. Make sure that the landmarks that are
-    selected will not be used for further analysis as they will get normalized out to 0.
+    Each hand landmark is referenced according to experimenter-specified landmarks. Make sure that the landmarks that
+    are selected will not be used for further analysis as they will get normalized out to 0.
     
     INPUT VARIABLES:
     data_dict: [dictionary (relevant key/value pairs below)];
-        trajectories:  [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                       for each landmark. The time domain is in units of seconds. 
-    ref1_x:            [string]; First horizontal reference landmark
-    ref2_x:            [string]; Second horizontal reference landmark
-    refa_y:            [string]; First vertical reference landmark
-    refb_y:            [string]; Second vertical reference landmark
+        trajectories: [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each
+                      landmark. The time domain is in units of seconds.
+    ref1_x:           [string]; First horizontal reference landmark
+    ref2_x:           [string]; Second horizontal reference landmark
+    refa_y:           [string]; First vertical reference landmark
+    refb_y:           [string]; Second vertical reference landmark
 
     OUTPUT VARIABLES:
     data_dict: [dictionary (relevant key/value pairs below)];
-        trajectories:  [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                       for each landmark. The time domain is in units of seconds. 
+        trajectories: [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates for each 
+                      landmark. The time domain is in units of seconds. These are referenced in the x- and y-dimensions 
+                      according to the reference landmarks. The time domain is in units of seconds.  
     """
     
     # COMPUTATION:
@@ -865,8 +810,7 @@ def referencing_hand_trajectories(data_dict, ref1_x, ref2_x, refa_y, refb_y):
     # Extracting the hand trajectories from the data dictionary.
     hand_trajectories = data_dict['trajectories']
 
-    # Initializing the xarray that holds the normalized hand trajectories. Just deep-copying the 
-    # un-normalized version.
+    # Initializing the xarray that holds the normalized hand trajectories. Just deep-copying the un-normalized version.
     hand_trajectories_norm = copy.deepcopy(hand_trajectories)
 
     # Extracting the hand landmark trajectories of the reference landmarks.
@@ -927,8 +871,9 @@ def saving(block_id, date, dir_intermediates, movement_onsetsoffsets, patient_id
     block_id:               [String (BlockX, where X is an int))]; Block ID of the task that was run.
     date:                   [string (YYYY_MM_DD)]; Date on which the block was run.
     dir_intermediates:      [string]; Intermediates directory where relevant information is stored.
-    movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats)]; The 
-                            dictionary containing all movement onset and offset times for each movement type.
+    movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats 
+                            (units: s))]; The dictionary containing all movement onset and offset times for each
+                            movement type.
     patient_id:             [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     task:                   [string]; Type of task that was run.
     """
@@ -988,24 +933,27 @@ def unique_value_index_finder(stepwise_sequence):
     This function finds useful indexing information about step-wise sequences of numbers.
 
     INPUT VARIABLES:
-    stepwise_sequence: [list > (ints/strings)]; List of integers or strings in which steps are formed by clusters of
-                       one integer or string.
+    stepwise_sequence: [list > (ints/strings)]; List of integers or strings in which steps are formed by clusters of one
+                       integer or string.
         
     OUTPUT VARIABLES:
     unique_vals:     [list > (ints/strings)] Individual values (at different "heights") of all the steps in the vector. 
                      For example, the unique_vals of 
-                     ex_stepwise_sequence = ['a','a','a','a','b','b','b','b','a','a','a','a','c','c','c','c','a','a','a','a'] 
+                     ex_stepwise_sequence = ['a','a','a','a','b','b','b','b','a','a','a','a','c','c','c','c','a','a'] 
                      would be [a,b,c]
     n_steps_per_val: [dictionary (Key: ints/strings (step names); Value: ints (number of occurrence per step name)]; The 
-                     number of steps for each unique value. For example n_steps_per_val of ex_stepwise_sequence would be:
-                     {a: 3, b: 1, c: 1} because the "a" step occurs 3 times, whereas "b" and "c" steps occur only once.
-    unique_val_inds: [dictionary (Key: ints/strings (step names); Value: list > ints (array indices))]; All the indices within 
-                     the stepwise_sequence list of where a specific step occurs. For example, the unique_vals_inds of 
-                     ex_stepwise_sequence would be {a: [0,1,2,3,8,9,10,11,16,17,18,19], b: [4,5,6,7], c: [12,13,14,15]}.
+                     number of steps for each unique value. For example n_steps_per_val of ex_stepwise_sequence would 
+                     be: {a: 3, b: 1, c: 1} because the "a" step occurs 3 times, whereas "b" and "c" steps occur only
+                     once.
+    unique_val_inds: [dictionary (Key: ints/strings (step names); Value: list > ints (array indices))]; All the indices
+                     within the stepwise_sequence list of where a specific step occurs. For example, the 
+                     unique_vals_inds of ex_stepwise_sequence would be
+                     {a: [0,1,2,3,8,9,10,11,16,17], b: [4,5,6,7], c: [12,13,14,15]}.
 
-    start_end_inds:  [dictionary (Key: ints/strings (step names); Value: list > list > ints (array indices))]; The indices 
-                     within the stepwise_sequence list where individual steps start and end. For exaple, the start_end_inds of
-                     ex_stepwise_sequence would be {a: [[0,3],[8,11],[16,19]], b: [[4,7]], c: [[12,15]]}.
+    start_end_inds:  [dictionary (Key: ints/strings (step names); Value: list > list > ints (array indices))]; The
+                     indices within the stepwise_sequence list where individual steps start and end. For exaple, the 
+                     start_end_inds of ex_stepwise_sequence would be
+                     {a: [[0,3],[8,11],[16,17]], b: [[4,7]], c: [[12,15]]}.
     """
         
     # COMPUTATION:

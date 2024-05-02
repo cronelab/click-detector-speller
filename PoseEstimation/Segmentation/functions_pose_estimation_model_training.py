@@ -600,8 +600,6 @@ def data_upload(date_block_dict, dir_intermediates, patient_id, task):
                        instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
                        rules apply. Time dimension is in units of s.
             plotcolor: [string]; Color corresponding to the type of click for plotting.
-        trajectories:  [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each
-                       landmark. The time domain is in units of seconds. 
         onsetsoffsets: [list > list [t_onset, t_offset] > floats (units: s)]; The dictionary containing all movement
                        onset and offset times for each movement type.
         trajectories:  [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each
@@ -708,7 +706,7 @@ def equalizing_samples_per_class(features_dict, labels_dict):
             n_samples_per_class[this_class] = n_samples_this_class
 
         # Minimum number of samples per class.
-        n_samples_min = n_samples_per_class[min(n_samples_per_class)]
+        n_samples_min = n_samples_per_class[min(n_samples_per_class, key=n_samples_per_class.get)]
 
         # Initializing a dictionary which will holds equal numbers of indices per class, with all indices randomly 
         # chosen.
