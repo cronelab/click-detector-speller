@@ -38,23 +38,23 @@ def computing_eigenvectors(data, n_pc_thr, percent_var_thr):
     2) Only keep the first n_pc_thr eigenvectors.
         
     INPUT VARIABLES:
-    data:            [array (features x samples) > floats];
-    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 'None' if
-                     percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the variance will be used
-                     (no PC transform).
-    percent_var_thr: [float]; The percent variance which the user wishes to capture with the principal components. Will compute the
-                     number of principal components which capture this explained variance as close as possible, but will not surpass
-                     it. Set to 'None' if n_pc_thr is not 'None', or set to 'None' along with n_pc_thr if all of the variance will be
-                     used (no PC transform).
+    data:            [array (features, samples) > floats];
+    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 
+                     'None' if percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the 
+                     variance will be used (no PC transform).
+    percent_var_thr: [float]; The percent variance which the user wishes to capture with the principal components. Will 
+                     compute the number of principal components which capture this explained variance as close as 
+                     possible, but will not surpass it. Set to 'None' if n_pc_thr is not 'None', or set to 'None' along
+                     with n_pc_thr if all of the variance will be used (no PC transform).
     OUTPUT VARIABLES:
-    eigenvectors: [array (features x pc features) > floats]; Array in which columns consist of eigenvectors which explain the
-                  variance of the data in descending order. 
+    eigenvectors: [array (features, pc features) > floats]; Array in which columns consist of eigenvectors which explain
+                  the variance of the data in descending order. 
     """
     
     # COMPUTATION:
     
-    # Computing the PCs of the training data if the experimenter has entered a value for the expected percentage variance explained
-    # or for the number of PCs to be computed.
+    # Computing the PCs of the training data if the experimenter has entered a value for the expected percentage 
+    # variance explained or for the number of PCs to be computed.
     if (percent_var_thr != 'None') or  (n_pc_thr != 'None'):
         
         # Computing the number of samples in the data.
@@ -66,10 +66,11 @@ def computing_eigenvectors(data, n_pc_thr, percent_var_thr):
         # Computing the eigenvectors and eigenvalues of the covariance matrix. 
         [D,V] = np.linalg.eig(C)
         
-        # If there are more features than samples, curtail the the eigenvalues and eigenvectors to exclude the indices past 
-        # the number of samples. Due to Python's numerical approximation, when there are more features than samples, the 
-        # eigen-decomposition returns complex eigenvalues and eigenvectors. This shouldn't ever mathematically happen because
-        # the covariance matrix is symmetric, and therefore only has real eigenvalues and eigenvectors.
+        # If there are more features than samples, curtail the the eigenvalues and eigenvectors to exclude the indices
+        # past the number of samples. Due to Python's numerical approximation, when there are more features than 
+        # samples, the eigen-decomposition returns complex eigenvalues and eigenvectors. This shouldn't ever
+        # mathematically happen because the covariance matrix is symmetric, and therefore only has real eigenvalues and
+        # eigenvectors.
         D = D[:n_samples].real
         V = V[:,:n_samples].real
         
@@ -78,16 +79,18 @@ def computing_eigenvectors(data, n_pc_thr, percent_var_thr):
         eig_vals            = D[eig_values_dsc_inds]
         eig_vecs            = V[:,eig_values_dsc_inds]
         
-        # Calculating the percentage of variance explained from each eigenvector by cumulatively summing the eigenvalues.
+        # Calculating the percentage of variance explained from each eigenvector by cumulatively summing the
+        # eigenvalues.
         percent_var = np.cumsum(eig_vals)/np.sum(eig_vals);
         
-        # Depending on the experimenter-input, the eigenvectors will be extracted based on the percent variance explained threshold
-        # or the number of principal components threshold. 
+        # Depending on the experimenter-input, the eigenvectors will be extracted based on the percent variance
+        # explained threshold  or the number of principal components threshold. 
         if percent_var_thr != 'None':
             eigenvectors = eig_vecs[:,percent_var <= percent_var_thr];
             
-            # If the size of the eigenvectors array is 0, this means that the first eigenvector explained more than the threshold
-            # percent variance, and so it wasn't captured. Manually setting the eigenvectors variable to only the first eigenvector.
+            # If the size of the eigenvectors array is 0, this means that the first eigenvector explained more than the
+            # threshold percent variance, and so it wasn't captured. Manually setting the eigenvectors variable to only
+            # the first eigenvector.
             if eigenvectors.size == 0:
                 eigenvectors = eig_vecs[:,0];
             
@@ -99,8 +102,9 @@ def computing_eigenvectors(data, n_pc_thr, percent_var_thr):
         if len(list(eigenvectors.shape)) == 1:
             eigenvectors = np.expand_dims(eigenvectors[n],axis=1)   
             
-        # Enforcing the rule that the first element of each eigenvector should be positive, and if it is not, then the entire 
-        # eigenvector will be multiplied by a -1. This is to ensure eigenvector similarity across multiple data uploads.
+        # Enforcing the rule that the first element of each eigenvector should be positive, and if it is not, then the
+        # entire  eigenvector will be multiplied by a -1. This is to ensure eigenvector similarity across multiple data
+        # uploads.
         n_eig = eigenvectors.shape[1]
         for n in range(n_eig):
             this_eigenvector  = eigenvectors[:,n]
@@ -141,17 +145,17 @@ def computing_eigenvectors(data, n_pc_thr, percent_var_thr):
 def computing_predicted_labels(fold_models, valid_data_folds, valid_labels_folds):
     """
     DESCRIPTION:
-    For each fold of validation data, the approrpirate fold model is used to determine the predicted label for each sample.
-    Predicted labels across all folds are then concatenated together in list. Corresponding true labels for each fold are
-    also concatenated together.
+    For each fold of validation data, the approrpirate fold model is used to determine the predicted label for each 
+    sample. Predicted labels across all folds are then concatenated together in list. Corresponding true labels for each
+    fold are also concatenated together.
     
     INPUT VARIABLES:
     fold_models:        [dictionary (key: string (fold ID); Value: model)]; Models trained for each training fold.
     valid_data_folds:   [dict (key: string (fold ID); Value: xarray (dimensions vary based on model type) > floats)];
-                        Data across all validation tasks per fold. Equal number of samples per class. PC features. Rearranged 
-                        according to the type of model that will be trained.
-    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings (labels))]; Labels across
-                        all validation tasks per fold. Equal number of labels per class.
+                        Data across all validation tasks per fold. Equal number of samples per class. PC features. 
+                        Rearranged according to the type of model that will be trained.
+    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (samples,) > strings (labels))]; For each validation
+                        fold, label xarrays are concatenated in the sample dimension.
                     
     NECESSARY FUNCTIONS:
     index_advancer
@@ -185,8 +189,8 @@ def computing_predicted_labels(fold_models, valid_data_folds, valid_labels_folds
     # Iterating across all folds.
     for this_fold in valid_data_folds.keys():
         
-        # Extracting the validation data and labels from the current fold. Transforming data back into an array because tensorflow
-        # models produce warnings when given xarrays.
+        # Extracting the validation data and labels from the current fold. Transforming data back into an array because
+        # tensorflow models produce warnings when given xarrays.
         this_fold_validation_data   = np.asarray(valid_data_folds[this_fold])
         this_fold_validation_labels = valid_labels_folds[this_fold]
         
@@ -280,9 +284,10 @@ def concatenating_historical_features(features_no_history, fps, t_history):
     """
     DESCRIPTION:
     Based on the experimenter-specified time history (t_history) the number of historical time points are calculated. An
-    xarray with dimensions (history, features, time) is created, where each coordinate in the history dimension represents
-    how much the features were shifted in time. For example, consider one coordinate in the feature array, and suppose a
-    time length of 10 samples and a total time history of 3 samples. For this feature, the resulting xarray would look like:
+    xarray with dimensions (history, features, time) is created, where each coordinate in the history dimension
+    represents how much the features were shifted in time. For example, consider one coordinate in the feature array,
+    and suppose a time length of 10 samples and a total time history of 3 samples. For this feature, the resulting
+    xarray would look like:
 
     historical time shifts
          n=2 shifts      [[0.000, 0.000, 0.234, 0.523. 0.435, 0.982, 0.175, 0.759, 0.341, 0.101],
@@ -293,14 +298,14 @@ def concatenating_historical_features(features_no_history, fps, t_history):
     and the resulting dimensions of this array are (history=3, features=1, time=10).
     
     INPUT VARIABLES:
-    features_no_history: [dictionary (Key: string (task ID); Value: xarray (landmarks x time samples) > floats)]; The time 
-                         traces of the x- and y-coordinates for each landmark.
+    features_no_history: [dictionary (Key: string (task ID); Value: xarray (landmarks, time samples) > floats)]; The
+                         time traces of the x- and y-coordinates for each landmark.
     fps:                 [int (30 or 60)]; Frames per second of of the video feed.
     t_history:           [float (unit: s)]; Amount of time history used as features.
                            
     OUTPUT VARIABLES:
-    trajectories_all_history: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats)]; 
-                              Array of historical time features.
+    trajectories_all_history: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) >
+                              floats)]; Array of historical time features.
     """
     
     # COMPUTATION:
@@ -314,8 +319,8 @@ def concatenating_historical_features(features_no_history, fps, t_history):
     # Computing the total number of historical time features.
     n_history = int(t_history/t_frame)
     
-    # Extracting the number of trajectories. Computing from the first date+block pair, as the number of features should be the 
-    # same across all tasks.
+    # Extracting the number of trajectories. Computing from the first date+block pair, as the number of features should
+    # be the same across all tasks.
     n_features = features_no_history[list(features_no_history.keys())[0]].shape[0]
 
     # Iterating across all date+block pairs.
@@ -331,7 +336,8 @@ def concatenating_historical_features(features_no_history, fps, t_history):
         # Initializing a feature array which will contain all historical time features.
         this_task_trajectories_all_history = np.zeros((n_history, n_features, n_frames))
                 
-        # Iterating across all historical time shifts. The index, n, is the number of samples back in time that will be shifted.
+        # Iterating across all historical time shifts. The index, n, is the number of samples back in time that will be 
+        # shifted.
         for n in range(n_history):
             
             # If currently extracting historical time features (time shift > 0)
@@ -340,7 +346,8 @@ def concatenating_historical_features(features_no_history, fps, t_history):
                 # Extracting the historical time features for the current time shift.
                 these_features_history = this_task_trajectories[:,:-n]
                 
-                # Creating a zero-padded array to make up for the time curtailed from the beginning of the features array.
+                # Creating a zero-padded array to make up for the time curtailed from the beginning of the features
+                # array.
                 zero_padding = np.zeros((n_features, n))
                 
                 # Concatenating the features at the current historical time point with a zero-padded array.
@@ -355,7 +362,9 @@ def concatenating_historical_features(features_no_history, fps, t_history):
         
         # Converting the historical trajectory features for this task to xarray.
         this_task_trajectories_all_history = xr.DataArray(this_task_trajectories_all_history, 
-                                                          coords={'history': np.arange(n_history), 'feature': np.arange(n_features), 'time': t_seconds}, 
+                                                          coords={'history': np.arange(n_history),\
+                                                                  'feature': np.arange(n_features),\
+                                                                  'time': t_seconds}, 
                                                           dims=["history", "feature", "time"])
          
         # Creating task ID.
@@ -376,7 +385,8 @@ def confusion_matrix_display(cm, model_classes, suppress_figs='No'):
     Given the user-input confusion matrix array and corresponding labels, the confusion matrix is displayed.
 
     INPUT VARIABLES:
-    cm:            [array > float]; Confusion matrix holding the accuracy of the true (vertical axis) and predicted (horizontal axis) labels.
+    cm:            [array > float]; Confusion matrix holding the accuracy of the true (vertical axis) and predicted
+                   (horizontal axis) labels.
     model_classes: [list > strings]; Class labels for the confusion matrix.
     """
     
@@ -422,9 +432,10 @@ def confusion_matrix_display(cm, model_classes, suppress_figs='No'):
 def creating_features(data_dict, fps, t_history):
     """
     Based on the experimenter-specified time history (t_history) the number of historical time points are calculated. An
-    xarray with dimensions (history, features, time) is created, where each coordinate in the history dimension represents
-    how much the features were shifted in time. For example, consider one coordinate in the feature array, and suppose a
-    time length of 10 samples and a total time history of 3 samples. For this feature, the resulting xarray would look like:
+    xarray with dimensions (history, features, time) is created, where each coordinate in the history dimension
+    represents how much the features were shifted in time. For example, consider one coordinate in the feature array, 
+    and suppose a time length of 10 samples and a total time history of 3 samples. For this feature, the resulting
+    xarray would look like:
 
     historical time shifts
          n=2 shifts      [[0.000, 0.000, 0.234, 0.523. 0.435, 0.982, 0.175, 0.759, 0.341, 0.101],
@@ -438,8 +449,8 @@ def creating_features(data_dict, fps, t_history):
     
     INPUT VARIABLES:
     data_dict:         [dictionary (key: string (date+block ID); value: dictionary (relevant key/value pairs below))];
-        trajectories:  [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates for 
-                       each landmark. The time domain is in units of seconds.      
+        trajectories:  [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each 
+                       landmark. The time domain is in units of seconds. 
     fps:               [int (30 or 60)]; Frames per second of of the video feed.
     t_history:         [float (unit: s)]; Amount of time history used as features.
     
@@ -447,8 +458,8 @@ def creating_features(data_dict, fps, t_history):
     concatenating_historical_features
                            
     OUTPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats)]; Array of 
-                   historical time features.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time samples) > floats)];
+                   Array of historical time features.
     """
     
     # COMPUTATION:
@@ -474,22 +485,22 @@ def creating_features(data_dict, fps, t_history):
 def creating_labels(data_dict):
     """
     DESCRIPTION:
-    Labeling each video frame across all blocks according to the experimenter-specified attempted movement onsets 
-    and offsets.
+    Labeling each video frame across all blocks according to the experimenter-specified attempted movement onsets and
+    offsets.
     
     Note: Instead of date+block ID, the nomenclature will switch to task ID in the output.
     
     INPUT VARIABLES:
-    data_dict:         [dictionary (key: string (date+block ID); value: dictionary (key/value pairs below))];
-        onsetsoffsets: [list > list [t_onset, t_offset] > floats (units: s)]; The dictionary containing all movement 
+    data_dict:         [dictionary (key: string (date+block ID); value: dictionary (relevant key/value pairs below))];
+        onsetsoffsets: [list > list [t_onset, t_offset] > floats (units: s)]; The dictionary containing all movement
                        onset and offset times for each movement type.
-        trajectories:  [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates for 
-                       each landmark. The time domain is in units of seconds.      
+        trajectories:  [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each 
+                       landmark. The time domain is in units of seconds. 
                            
     OUTPUT VARIABLES:
-    labels_dict: [dictionary (Key: string (task ID); Value: xarray > strings (labels))]; For each time frame in each
-                 task, there exists a rest or movement-type label depending on the experimenter-specified onset and
-                 offset of attempted movements.
+    labels_dict: [dictionary (Key: string (task ID); Value: xarray (times samples,) > strings (labels))]; For each time 
+                 frame in each task, there exists a rest or movement-type label depending on the experimenter-specified 
+                 onset and  offset of attempted movements.
     """
     
     # COMPUTATION:
@@ -546,9 +557,7 @@ def creating_labels(data_dict):
 
         # After iterating across all movements, convert the labels array into an xarray.
         this_date_block_labels = np.asarray(this_date_block_labels)
-        this_date_block_labels = xr.DataArray(this_date_block_labels, 
-                                              coords={'time': t_seconds}, 
-                                              dims=["time"])
+        this_date_block_labels = xr.DataArray(this_date_block_labels, coords={'time': t_seconds}, dims=["time"])
         
         # Creating task ID.
         task_id = 'task' + str(n)
@@ -565,8 +574,8 @@ def creating_labels(data_dict):
 def data_upload(date_block_dict, dir_intermediates, patient_id, task):
     """
     DESCRIPTION:
-    Uploading the click, hand trajectories and movement onsets and offsets from each experimenter-input block in
-    the date_block_dict.
+    Uploading the click, hand trajectories and movement onsets and offsets from each experimenter-input block in the
+    date_block_dict.
     
     INPUT VARIABLES:
     date_block_dict:   [dictionary (key: string (YYYY_MM_DD); value: list > strings (block IDs)]; The keys and vlaues of
@@ -582,17 +591,21 @@ def data_upload(date_block_dict, dir_intermediates, patient_id, task):
     load_movement_onsetsoffsets
     
     OUTPUT VARIABLES:
-    data_dict: [dictionary (key: string (date+block ID); value: below)];
-        click_info: [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-            data:      [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there
-                       is a 'no_click' string or a click-string specific to that xarray. For example, the 'backspace'
-                       key of the dictionary has an array where each element is a string named either 'no_click' or 
+    data_dict:         [dictionary (key: string (date+block ID); value: below)];
+        click_info:    [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
+            data:      [xarray (time samples,) > strings]; For each time sample of the array of each key there is a 
+                       'no_click' string or a click-string specific to that xarray. For example, the 'backspace' key of
+                       the dictionary has an array where each element is a string named either 'no_click' or 
                        'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
                        instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
                        rules apply. Time dimension is in units of s.
             plotcolor: [string]; Color corresponding to the type of click for plotting.
-        trajectories:  [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                       for each landmark. The time domain is in units of seconds. 
+        trajectories:  [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each
+                       landmark. The time domain is in units of seconds. 
+        onsetsoffsets: [list > list [t_onset, t_offset] > floats (units: s)]; The dictionary containing all movement
+                       onset and offset times for each movement type.
+        trajectories:  [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each
+                       landmark. The time domain is in units of seconds. 
     """
     # COMPUTATION:
     
@@ -605,10 +618,12 @@ def data_upload(date_block_dict, dir_intermediates, patient_id, task):
         for this_block in date_block_dict[this_date]:
 
             # Uploading the dictionary with movement onset and offsets.
-            this_block_onsets_offsets = load_movement_onsetsoffsets(this_block, this_date, dir_intermediates, patient_id, task)
+            this_block_onsets_offsets = load_movement_onsetsoffsets(this_block, this_date, dir_intermediates,\
+                                                                    patient_id, task)
 
             # Loading the hand trajectories.
-            this_block_hand_trajectories = load_hand_trajectories(this_block, this_date, dir_intermediates, patient_id, task)
+            this_block_hand_trajectories = load_hand_trajectories(this_block, this_date, dir_intermediates, patient_id,\
+                                                                  task)
 
             # Loading the click information.
             this_block_click_info = load_click_information(this_block, this_date, dir_intermediates, patient_id, task)
@@ -632,37 +647,38 @@ def equalizing_samples_per_class(features_dict, labels_dict):
     """
     DESCRIPTION:
     According to the label array, it is unlikely that there are an equal number of samples per class. For whichever
-    class there are the msot samples, the indices of this class will be extracted to create a smaller subset of 
-    indices in number equal to that of the underrepresented classes. For example, consider the following labels array:
+    class there are the most samples, the indices of this class will be extracted to create a smaller subset of indices
+    in number equal to that of the underrepresented classes. For example, consider the following labels array:
     
     labels:  ['rest', 'rest', 'rest', 'rest', 'rest, 'grasp', 'grasp', 'grasp', 'rest', 'rest', 'rest', 'rest']
     indices:    0       1       2       3       4       5        6        7       8       9       10      11
 
-    In the example, there are 3 samples with grasp labels, while there are 9 samples with rest labels. The indices
-    corresponding to the rest labels are: [0, 1, 2, 3, 4, 8, 9, 10, 11]. These indices will be randomly subsampled
-    such that they are equal in number to the grasp class. For example: [0, 1, 2] or [1, 4, 10] or [3, 9, 11]. As
-    such the downsampled labels (and corresponding features) will use the indices:
+    In the example, there are 3 samples with grasp labels, while there are 9 samples with rest labels. The indices 
+    corresponding to the rest labels are: [0, 1, 2, 3, 4, 8, 9, 10, 11]. These indices will be randomly subsampled such
+    that they are equal in number to the indices in the grasp class. For example: [0, 1, 2] or [1, 4, 10] or [3, 9, 11].
+    As such the downsampled labels (and corresponding features) will use the indices:
 
     labels downsampled:  ['rest', 'grasp', 'grasp', 'grasp', 'rest', 'rest']
     indices downsampled:    3        5        6        7       9       11
 
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (date+block ID); Value: xarray (time history x features x time) > floats)]; Array of 
-                   historical time features.
-    labels_dict:   [dictionary (Key: string (date+block ID); Value: xarray > strings (labels))]; For each time frame in each
-                   block, there exists a rest or movement-type label depending on the experimenter-specified onset and
-                   offset of attempted movements.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats)]; Array of 
+                   historical time features. 
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings (labels))]; For each time frame in each 
+                   task, there exists a rest or movement-type label depending on the experimenter-specified onset and 
+                   offset of attempted movements. 
                    
     NECESSARY FUNCTIONS:
     index_advancer
                    
     OUTPUT VARIABLES:
-    features_dict: [dictionary (Key: string (date+block ID); Value: xarray (time history x features x time) > floats)]; Array of 
-                   historical time features. Time samples reduced such that there are an equal number of features per class.
-    labels_dict:   [dictionary (Key: string (date+block ID); Value: xarray > strings (labels))]; For each time frame in each
-                   block, there exists a rest or movement-type label depending on the experimenter-specified onset and
-                   offset of attempted movements. Time samples reduced such that there are an equal number of features per
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, samples) > floats)]; Array
+                   of historical time features. Time samples reduced such that there are an equal number of features per
                    class.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray (samples,)> strings (labels))]; For each sample in
+                   each task, there exists a rest or movement-type label depending on the experimenter-specified onset
+                   and offset of attempted movements. Time samples reduced such that there are an equal number of 
+                   features per class.
     """
     
     # COMPUTATION:
@@ -694,20 +710,20 @@ def equalizing_samples_per_class(features_dict, labels_dict):
         # Minimum number of samples per class.
         n_samples_min = n_samples_per_class[min(n_samples_per_class)]
 
-        # Initializing a dictionary which will holds equal numbers of indices per class, with all indices
-        # randomly chosen.
+        # Initializing a dictionary which will holds equal numbers of indices per class, with all indices randomly 
+        # chosen.
         downsampled_inds_per_class = {}
 
-        # Iterating across all unique labels.
+        # Iterating across all unique classes.
         for this_class in unique_classes:
 
             # Extracting the indices where the current class appears in the labels array.
             this_class_inds = np.squeeze(np.argwhere(this_date_block_labels == this_class))
 
-            # Randomly downsampling the indices of the overrepresented class.
+            # Randomly downsampling the indices of the overrepresented class to the minimum number of samples.
             inds_this_class_downsampled = sample(this_class_inds.tolist(), n_samples_min)
 
-            # Sorting indices. Not really necessary, but helps when printing.
+            # Sorting indices. Not really necessary, but helps if printing.
             inds_this_class_downsampled.sort()
 
             # Assigining the downsampled indices to the dictionary.
@@ -744,7 +760,9 @@ def equalizing_samples_per_class(features_dict, labels_dict):
 
         # Converting the features and labels arrays into xarrays.
         this_date_block_features_downsampled = xr.DataArray(this_date_block_features_downsampled, 
-                                                            coords={'history': np.arange(n_history), 'feature': np.arange(n_features), 'sample': np.arange(n_samples_downsampled)}, 
+                                                            coords={'history': np.arange(n_history),\
+                                                                    'feature': np.arange(n_features),\
+                                                                    'sample': np.arange(n_samples_downsampled)}, 
                                                             dims=["history", "feature", "sample"])
 
         this_date_block_labels_downsampled = xr.DataArray(this_date_block_labels_downsampled, 
@@ -764,16 +782,16 @@ def equalizing_samples_per_class(features_dict, labels_dict):
 def evaluating_model_accuracy(fold_models, valid_data_folds, valid_labels_folds):
     """
     DESCRIPTION:
-    Evaluating model accuracy by computing and displaying the confusion matrix of all predicted vs. true labels from
-    all folds.
+    Evaluating model accuracy by computing and displaying the confusion matrix of all predicted vs. true labels from all
+    folds.
     
     INPUT VARIABLES:
     fold_models:        [dictionary (key: string (fold ID); Value: model)]; Models trained for each training fold.
     valid_data_folds:   [dict (key: string (fold ID); Value: xarray (dimensions vary based on model type) > floats)];
-                        Data across all validation tasks per fold. Equal number of samples per class. PC features. Rearranged 
-                        according to the type of model that will be trained.
-    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings (labels))]; Labels across
-                        all validation tasks per fold. Equal number of labels per class.
+                        Data across all validation tasks per fold. Equal number of samples per class. PC features. 
+                        Rearranged according to the type of model that will be trained.
+    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (samples,) > strings (labels))]; For each validation
+                        fold, label xarrays are concatenated in the sample dimension.
     
     NECESSARY FUNCTIONS:
     computing_predicted_labels
@@ -798,38 +816,37 @@ def evaluating_model_accuracy(fold_models, valid_data_folds, valid_labels_folds)
 
 
 
-def extracting_relevant_trajectories(data_dict, relevant_hand_landmarks):
+def extracting_relevant_trajectories(data_dict, relevant_landmarks):
     """
     DESCRIPTION:
     For each movement type, the experimenter enters the most relevant hand landmarks for training. The experimenter
-    creates a relevant_hand_landmarks dictionary where the keys of the dictionary are the possible movement classes 
-    and the value for each key is a list of the most relevant hand landmarks to that class. The plotting cells above
-    should be used to determine these landmarks. Then for each movement type a dictionary, hand_trajectories_relevant
-    is created where for each movement, only the relevant hand trajectories are stored.
+    creates a relevant_hand_landmarks dictionary where the keys of the dictionary are the possible movement classes and 
+    the value for each key is a list of the most relevant hand landmarks to that class. The plotting cells above should
+    be used to determine these landmarks. Then for each movement type a dictionary, hand_trajectories_relevant is 
+    created where for each movement, only the relevant hand trajectories are stored.
 
     INPUT VARIABLES:
-    data_dict: [dictionary (key: string (date+block ID); value: dictionary (key/value pairs below))];
-        click_info: [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-            data:      [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there
-                       is a 'no_click' string or a click-string specific to that xarray. For example, the 'backspace'
-                       key of the dictionary has an array where each element is a string named either 'no_click' or 
-                       'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
-                       instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
-                       rules apply. Time dimension is in units of s.
-            plotcolor: [string]; Color corresponding to the type of click for plotting.
-        onsetsoffsets: [list > list [t_onset, t_offset] > floats (units: s)]; The dictionary containing all
-                       movement onset and offset times for each movement type.
-        trajectories:  [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                       for each landmark. The time domain is in units of seconds. 
-    relevant_hand_landmarks: [dictionary (key: string (movement type); Value: list > strings (hand landmarks))]; Each
-                             movement holds a list of the most useful landmarks used to detect the corresponding 
-                             movement type.
+    data_dict:          [dictionary (key: string (date+block ID); value: dictionary (key/value pairs below))];
+        click_info:     [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
+            data:       [xarray (time samples,) > strings]; For each time sample of the array of each key there is a 
+                        'no_click' string or a click-string specific to that xarray. For example, the 'backspace' key of
+                        the dictionary has an array where each element is a string named either 'no_click' or 
+                        'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
+                        instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
+                        rules apply. Time dimension is in units of s.
+            plotcolor:  [string]; Color corresponding to the type of click for plotting.
+        onsetsoffsets:  [list > list [t_onset, t_offset] > floats (units: s)]; The dictionary containing all movement
+                        onset and offset times for each movement type.
+        trajectories:   [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for
+                        each landmark. The time domain is in units of seconds. 
+    relevant_landmarks: [dictionary (key: string (movement type); Value: list > strings (hand landmarks))]; Each key 
+                        corresponds to a list of the most useful landmarks used to detect the movement type.
     
     OUTPUT VARIABLES:
     data_dict: Same as above with the additional key/value pair:
-        trajectories_relevant: [dictionary (Key: string (movement type); Value: xarray (relevant landmarks x time samples)
-                                > floats]; For each movement type, only the relevant hand trajectories are stored. The time
-                                dimension of each xarray is in units of s.
+        trajectories_relevant: [dictionary (Key: string (movement type); Value: xarray (relevant landmarks, time
+                               samples) > floats]; For each movement type, only the relevant hand trajectories are 
+                               stored. The time dimension of each xarray is in units of s.
     """
     
     # COMPUTATION:
@@ -844,10 +861,10 @@ def extracting_relevant_trajectories(data_dict, relevant_hand_landmarks):
         these_hand_trajectories_relevant = {}
 
         # Iterating across all movement types:
-        for this_movement in relevant_hand_landmarks.keys():
+        for this_movement in relevant_landmarks.keys():
 
             # Extracting the relevant landmarks for the current movement.
-            this_movement_relevant_landmarks = relevant_hand_landmarks[this_movement]
+            this_movement_relevant_landmarks = relevant_landmarks[this_movement]
 
             # Extracting only the trajectories of the relevant landmarks for the current movement.
             this_movement_hand_trajectories = these_hand_trajectories.loc[this_movement_relevant_landmarks,:]
@@ -868,10 +885,12 @@ def index_advancer(indices, shift):
     
     """
     DESCRIPTION:
-    This function is used to update the indices of a vector X which is being repeatedly filled with smaller vectors A, B, 
-    C, D, of a particular size, shift. For example, if vector X is initialized as A = zeros(1,20) and vectors A-D are 
+    This function is used to update the indices of a vector X which is being repeatedly filled with smaller vectors A,
+    B, C, D, of a particular size, shift. For example, if vector X is initialized as A = zeros(1,20) and vectors A-D are 
     defined as follows:
+    
     A = 1:5, B = 1:5, C = 12:16, D = 7:11;
+    
     Then we may wish to fill the first 5 elements of X with A and so the inputs are: indices = [0,0], shift = length(A),
     and the output is indices = [1,5], We may wish to fill the next 5 elements with B, and so the inputs are 
     indices = [1,5], shift = length(B), and the output is indieces = [6,10].
@@ -902,25 +921,25 @@ def index_advancer(indices, shift):
 def load_click_information(block_id, date, dir_intermediates, patient_id, task):
     """
     DESCRIPTION:
-    Loading the click information dictionary. Note that the click information is curtailed between the block
-    start and stop times.
+    Loading the click information dictionary. Note that the click information is curtailed between the block start and
+    stop times.
     
     INPUT VARIABLES:
     block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
     date:              [string (YYYY_MM_DD)]; Date on which the block was run.
-    dir_intermediates: [string]; [string]; Intermediates directory where relevant information is stored.
+    dir_intermediates: [string]; Intermediates directory where relevant information is stored.
     patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     task:              [string]; Type of task that was run.
     
     OUTPUT VARIABLES:
-     click_info: [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-        data:       [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there
-                    is a 'no_click' string or a click-string specific to that xarray. For example, the 'backspace'
-                    key of the dictionary has an array where each element is a string named either 'no_click' or 
-                    'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
-                    instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
-                    rules apply. Time dimension is in units of s.
-        plotcolor:  [string]; Color corresponding to the type of click for plotting.
+    click_info:    [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
+        data:      [xarray (time samples,) > strings]; For each time sample of the array of each key there is a 
+                   'no_click' string or a click-string specific to that xarray. For example, the 'backspace' key of the
+                   dictionary has an array where each element is a string named either 'no_click' or 'backspace_click'.
+                   The 'backspace_click' elements do not occur consecutively and describe the instance a click on the 
+                   backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar rules apply. Time dimension
+                   is in units of s.
+        plotcolor: [string]; Color corresponding to the type of click for plotting.
     """
     
     # COMPUTATION:
@@ -944,25 +963,26 @@ def load_click_information(block_id, date, dir_intermediates, patient_id, task):
 def load_hand_trajectories(block_id, date, dir_intermediates, patient_id, task):
     """
     DESCRIPTION:
-    Importing the xarray of hand trajectories. Note that these hand trajectories are curtailed between the 
-    block start and stop times.
+    Importing the xarray of hand trajectories. Note that these hand trajectories are curtailed between the block start
+    and stop times.
     
     INPUT VARIABLES:
     block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
     date:              [string (YYYY_MM_DD)]; Date on which the block was run.
-    dir_intermediates: [string]; [string]; Intermediates directory where relevant information is stored.
+    dir_intermediates: [string]; Intermediates directory where relevant information is stored.
     patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     task:              [string]; Type of task that was run.
     
     OUTPUT VARIABLES:
-    hand_trajectories: [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                       for each landmark. The time domain is in units of seconds. 
+    hand_trajectories: [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each
+                       landmark. The time domain is in units of seconds. 
     """
     
     # COMPUTATION:
     
     # Creating the directory and filename for the hand trajectories.
-    dir_handtrajectories      = dir_intermediates + patient_id + '/' + task + '/HandTrajectories/'  + date + '/Curtailed/'
+    dir_handtrajectories      = dir_intermediates + patient_id + '/' + task + '/HandTrajectories/'  + date + \
+                                '/Curtailed/'
     filename_handtrajectories = date + '_' + block_id + '_hand_trajectories.nc'
     
     # Pathway for uploading the hand trajectories.
@@ -971,10 +991,6 @@ def load_hand_trajectories(block_id, date, dir_intermediates, patient_id, task):
     # Loading the xarray with the hand trajectories.
     hand_trajectories = xr.open_dataarray(path_handtrajectories)
     hand_trajectories.load()
-
-    # PRINTING
-    # print('HAND TRAJECTORIES ARRAY')
-    # print(hand_trajectories)
     
     # Printing all the hand landmarks.
     print('\nHAND LANDMARKS LIST:')
@@ -997,13 +1013,14 @@ def load_movement_onsetsoffsets(block_id, date, dir_intermediates, patient_id, t
     INPUT VARIABLES:
     block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
     date:              [string (YYYY_MM_DD)]; Date on which the block was run.
-    dir_intermediates: [string]; [string]; Intermediates directory where relevant information is stored.
+    dir_intermediates: [string]; Intermediates directory where relevant information is stored.
     patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     task:              [string]; Type of task that was run.
 
     OUTPUT VARIABLES:
-    movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats)]; The 
-                            dictionary containing all movement onset and offset times for each movement type.
+    movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats
+                            (units: s))]; The dictionary containing all movement onset and offset times for each
+                            movement type.
     """
     
     # COMPUTATION:
@@ -1024,80 +1041,12 @@ def load_movement_onsetsoffsets(block_id, date, dir_intermediates, patient_id, t
         # Read in the dictionary from the pathway.
         with open(path_onsetsoffsets_dict, "rb") as fp:
             movement_onsetsoffsets = pickle.load(fp)
-            
-        # # Print the dictionary.
-        # pprint(movement_onsetsoffsets)
-        
+
     # The onsets/offsets dictionary does not exist in the specified pathway.
     else:
         print('Dictionary does not exist. Please create.')
     
     return movement_onsetsoffsets
-
-
-
-
-
-def lstm_arrange_data(data, time_history):
-    """
-    DESCRIPTION:
-    Rearrange the data so that each training sample's features from the time domain are organized into another dimension for LSTM use.
-
-    INPUT VARIABLES:
-    data:         [array (samples x features) > floats]; Training or testing data which will be rearranged.
-    time_history: [list > int (units: ms)]; Historical time points which will be included during classification of each data sample. Specifically, if
-                  time_history = [0,50,100], then the classification at time point t will occur with features from times t, t-50ms and t-100ms. If
-                  no time history will be used, set time_history as an empty list []. Note: Do not make this time history list at higher resolution
-                  than the spectral window shift.
-
-    NECESSARY FUNCTIONS:
-    index_advancer
-
-    OUTPUT VARIABLES:
-    data_lstm: [array (samples x time points x features) > floats]; Rearranged data fit for the LSTM.
-    """
-    
-    # COMPUTATION:
-    
-    # Extracting the number of time points, training samples, and features from the current fold to organize the features in 
-    # preparation for the LSTM.
-    N_time_history = len(time_history)
-    if N_time_history == 0:
-        N_time_history = 1
-        
-    # Computing the number of samples and features.
-    N_samples        = data.shape[0]
-    N_features_all_t = data.shape[1]
-    
-    # Computing the number of features per historical time point.
-    N_features_no_t = int(N_features_all_t / N_time_history)
-    
-    # Initializing the re-arranged data array. 
-    data_lstm = np.zeros((N_samples, N_time_history, N_features_no_t))
-    
-    # Iterating across all time samples.
-    for n in range(N_samples):
-        
-        # Extracting the current training sample.
-        this_sample = data[n, :]
-        
-        # Initializing the time samples x feature array for the current time sample.
-        this_sample_time_vs_feat = np.zeros((N_time_history, N_features_no_t))
-        
-        # Iterating across all time points.
-        ind = np.zeros((2,))
-        for t in range(N_time_history):
-            
-            # Extracting the indices of the current time feature.
-            ind = index_advancer(ind, N_features_no_t)
-            
-            # Populating the time vs feature array with the features of the current time point.
-            this_sample_time_vs_feat[t,:] = this_sample[ind[0]:ind[1]]
-
-        # Populating the LSTM data with the current sample's rearranged temporal information.
-        data_lstm[n,:,:] = this_sample_time_vs_feat
-
-    return data_lstm
 
 
 
@@ -1109,14 +1058,14 @@ def mean_centering(data, data_mean):
     Mean-centering all features at all historical time points by subtracting the data mean, averaged across time.
         
     INPUT VARIABLES:
-    data:      [xarray (history x features x time samples) > floats ]; Historical power features across time
-               samples. Time samples are in units of seconds.
-    data_mean: [xarray (history x features) > floats ]; Mean power of each feature of only the 0th time shift.
-               This array is repeated for each historical time point.
+    data:      [xarray (history, features, time samples) > floats ]; Historical power features across samples. Time 
+               samples are in units of seconds.
+    data_mean: [xarray (history, features) > floats ]; Mean power of each feature of only the 0th time shift. This array
+               is repeated for each historical time point.
     
     OUTPUT VARIABLES:
-    data_centered: [xarray (history x features x time samples) > floats]; Mean-centered historical power features
-                   across time samples. Time samples are in units of seconds.
+    data_centered: [xarray (history, features, time samples) > floats]; Mean-centered historical power features across 
+                   samples.
     """
     
     # COMPUTATION:
@@ -1133,7 +1082,9 @@ def mean_centering(data, data_mean):
     
     # Converting the data mean array back into an xarray
     data_mean = xr.DataArray(data_mean, 
-                             coords={'history': np.arange(n_history), 'feature': np.arange(n_features), 'sample': np.arange(n_samples)}, 
+                             coords={'history': np.arange(n_history),\
+                                     'feature': np.arange(n_features),\
+                                     'sample': np.arange(n_samples)}, 
                              dims=["history", "feature", "sample"])
     
     # Computing the mean-centered data.
@@ -1151,17 +1102,17 @@ def mean_centering_all_folds(data_folds, data_fold_means):
     Using the data mean to mean center the data at each fold.
 
     INPUT VARIABLES:
-    data_folds:      [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats)];
-                     For each fold, feature xarrays are concatenated in the sample dimension.
-    data_fold_means: [dict (Key: string (fold ID); Value: xarray (time history x features) > floats)]; The mean,
-                     averaged across samples, for each fold. 
+    data_folds:      [dict (key: string (fold ID); Value: xarray (time history, features, samples) > floats)]; For each
+                     fold, feature xarrays are concatenated in the sample dimension.
+    data_fold_means: [dict (Key: string (fold ID); Value: xarray (time history, features) > floats)]; The mean, averaged
+                     across samples, for each fold. 
                      
     NECESSARY FUNCTIONS:
     mean_centering
 
     OUTPUT VARIABLES:
-    data_folds_centered: [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats)];
-                         For each fold, the features are mean-centered according to means from the respective folds.
+    data_folds_centered: [dict (key: string (fold ID); Value: xarray (time history, features, samples) > floats)]; For 
+                         each fold, the features are mean-centered according to means from the respective folds.
     """
     
     # COMPUTATION:
@@ -1188,32 +1139,32 @@ def mean_centering_all_folds(data_folds, data_fold_means):
 def mean_compute(data):
     """
     DESCRIPTION:
-    Computing the mean across all time samples for each feature. Note that though the data array has a history dimension, 
-    only the first time history coordinate (time shift = 0) is used. As the mean is computed for potential PC reduction,
-    the PCs will only be based off of the non-shifted features.
+    Computing the mean across all time samples for each feature. Note that though the data array has a history 
+    dimension, only the first time history coordinate (time shift = 0) is used. As the mean is computed for potential PC
+    reduction, the PCs will only be based off of the non-shifted features.
     
     INPUT VARIABLES:
-    data: [xarray (history x features x samples) > floats]; Historical power features across time samples.
+    data: [xarray (history, features, samples) > floats]; Historical power features across samples.
     
     OUTPUT VARIABLES:
-    data_mean_history: [xarray (history x features) > floats ]; Mean power of each feature of only the 0th time shift.
+    data_mean_history: [xarray (history, features) > floats ]; Mean power of each feature of only the 0th time shift.
                        This array is repeated for each historical time point.
     """
     # COMPUTATION:
     
-    # Extracting the number of historical time points and features from task0. These number are the same across all tasks.
+    # Extracting the number of historical time points and features.
     n_features = data.feature.shape[0]
     n_history  = data.history.shape[0]
     
-    # Extracting only the first historical time feature (no time shift). Eventually, in PC reduction, only this slice will 
-    # be used to compute the eigenvectors.
+    # Extracting only the first historical time feature (no time shift). Eventually, in PC reduction, only this slice 
+    # will be used to compute the eigenvectors.
     data = data.loc[0,:,:]
     
     # Computing the mean of the data across the time samples dimension.
     data_mean = np.asarray(data.mean(dim='sample'))
     
-    # Creating an array of concatenated rows where each row is the data mean for each feature. There are as many rows as there
-    # are historical time points. 
+    # Creating an array of concatenated rows where each row is the data mean for each feature. There are as many rows as
+    # there are historical time points. 
     data_mean_history = np.tile(data_mean, (n_history,1))
 
     # Converting the concatenated array into an xarray.
@@ -1230,20 +1181,20 @@ def mean_compute(data):
 def mean_compute_all_folds(data_folds):
     """
     DESCRIPTION:
-    Computing the mean across all dimensions of each fold. Note that only the mean of the first historical time point is computed
-    with the intent of only computing the PCs from those features. This mean will be repeated in an array for as many historical
-    time features that there are.
+    Computing the mean across all dimensions of each fold. Note that only the mean of the first historical time point is
+    computed with the intent of only computing the PCs from those features. This mean will be repeated in an array for 
+    as many historical time features that there are.
 
     INPUT VARIABLES:
-    data_folds: [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats)]; For each fold, 
-                feature xarrays are concatenated in the sample dimension.
+    data_folds: [dict (key: string (fold ID); Value: xarray (time history, features, samples) > floats)]; Feature 
+                xarrays for each fold.
                 
     NECESSARY FUNCTIONS:
     mean_compute
 
     OUTPUT VARIABLES:
-    data_fold_means: [dict (Key: string (fold ID); Value xarray (time history x features) > floats)]; The mean, averaged across
-                     samples, for each fold. 
+    data_fold_means: [dict (Key: string (fold ID); Value xarray (time history, features) > floats)]; The mean, averaged
+                     across samples, for each fold. 
     """
     
     # COMPUTATION:
@@ -1251,18 +1202,14 @@ def mean_compute_all_folds(data_folds):
     # Initializing a dictionary of time-averaged data for each fold.
     data_fold_means = {}
     
-    # Extracting the number of historical time points and features from task0. These numbers are the same across all tasks.
-    n_features = data_folds['fold0'].feature.shape[0]
-    n_history  = data_folds['fold0'].history.shape[0]
-    
     # Iterating across each fold.
     for this_fold in data_folds.keys():
         
         # Extracting the data from the current fold.
         this_data = data_folds[this_fold]
                 
-        # Computing the mean of the current fold's data. The resulting array has concatenated rows where each row is the data mean
-        # for each feature. There are as many rows as there are historical time points.
+        # Computing the mean of the current fold's data. The resulting array has concatenated rows where each row is the
+        # data mean for each feature. There are as many rows as there are historical time points.
         this_data_mean_history = mean_compute(this_data)
         
         # Computing the mean of the data across the time dimension.
@@ -1296,7 +1243,7 @@ def model_training_lstm(training_data, training_labels, validation_data, validat
     alpha         = 0.001
     batch_size    = 45
     dropout_rate  = 0.3
-    epochs        = 2 # 10
+    epochs        = 3 # 10
     n_hidden_lstm = 25
     
     # Converting the training and validation data and labels from xarrays to arrays.
@@ -1324,21 +1271,26 @@ def model_training_lstm(training_data, training_labels, validation_data, validat
     model       = Sequential()
     
     # Creating the model architecture
-    model.add(LSTM(n_hidden_lstm, input_shape = (n_time_history, n_features), activation = 'tanh', recurrent_activation = 'sigmoid',\
-                   kernel_initializer = initializer, dropout = dropout_rate, recurrent_dropout = dropout_rate, return_sequences = True,\
+    model.add(LSTM(n_hidden_lstm,\
+                   input_shape = (n_time_history, n_features),\
+                   activation = 'tanh',\
+                   recurrent_activation = 'sigmoid',\
+                   kernel_initializer = initializer,\
+                   dropout = dropout_rate,\
+                   recurrent_dropout = dropout_rate,\
+                   return_sequences = True,\
                    unroll = True))
     model.add(Flatten())
     model.add(Dense(10, activation = 'elu', kernel_initializer = initializer))
     model.add(Dropout(dropout_rate))
     model.add(Dense(n_model_classes, activation = 'softmax', kernel_initializer = initializer))
 
-    # Categorical cross-entropy for computing the error between true and predicted labels of each batch and updating the weights using
-    # adaptive moment optimization (Adam optimizer)
+    # Categorical cross-entropy for computing the error between true and predicted labels of each batch and updating the
+    # weights using adaptive moment optimization (Adam optimizer)
     opt     = Adam(learning_rate = alpha)
     loss_fn = 'categorical_crossentropy' 
     model.compile(loss = loss_fn, optimizer = opt, metrics = ['accuracy'])
     print(model.summary())
-        
     
     # Extracting the number of training and validation samples in this fold.
     n_training_samples   = training_labels.shape[0]
@@ -1348,7 +1300,6 @@ def model_training_lstm(training_data, training_labels, validation_data, validat
     training_labels_1hot   = np.zeros((n_training_samples, n_model_classes))
     validation_labels_1hot = np.zeros((n_validation_samples, n_model_classes))
     
-
     # Iterating across all the training time samples.
     for n in range(n_training_samples):
         
@@ -1447,13 +1398,13 @@ def pc_transform(data, eigenvectors):
 def pc_transform_all_folds(n_pc_thr, percent_var_thr, train_data_folds, valid_data_folds):
     """
     DESCRIPTION: 
-    Transforming the training and validation data into PC space for each fold. The eigenvectors for the PC transformation
-    are computed from the 0th point in time history. For example consider an array of dimensions (h x f x t) where h, f
-    and t correspond to the historical time sequence, number of features and number of time samples, respectively. 
-    Using a historical time features of the last 1 second with 100 ms shifts, this means that h can be any integer from
-    0 to 9. The PCs are computed from the 0th time history coordinate of the data array: (0 x f x t). This can be 
-    dimensionally reduced to an array of dimensions (f x t). The resulting PCs of dimensions (p x t) where p <= f are
-    applied to the (f x t) array at each historical time point. 
+    Transforming the training and validation data into PC space for each fold. The eigenvectors for the PC
+    transformation are computed from the 0th point in time history. For example consider an array of dimensions
+    (h x f x t) where h, f and t correspond to the historical time sequence, number of features and number of time
+    samples, respectively. sing a historical time features of the last 1 second with 100 ms shifts, this means that h 
+    can be any integer from 0 to 9. The PCs are computed from the 0th time history coordinate of the data array: 
+    (0 x f x t). This can be dimensionally reduced to an array of dimensions (f x t). The resulting PCs of dimensions
+    (p x t) where p <= f are applied to the (f x t) array at each historical time point. 
     
     The number of eigenvectors are selected based on one of two experimenter-specified criteria:
     
@@ -1463,27 +1414,27 @@ def pc_transform_all_folds(n_pc_thr, percent_var_thr, train_data_folds, valid_da
     
 
     INPUT VARIABLES:                        
-    n_pc_thr:         [int]; The number of principal components to which the user wishes to reduce the data set. Set to 'None' if
-                      percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the variance will be used
-                      (no PC transform).
-    percent_var_thr:  [float]; The percent variance which the user wishes to capture with the principal components. Will compute the
-                      number of principal components which capture this explained variance as close as possible, but will not surpass
-                      it. Set to 'None' if n_pc_thr is not 'None', or set to 'None' along with n_pc_thr if all of the variance will be
-                      used (no PC transform).
-    train_data_folds: [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats)];
-                      The training data across all training tasks for each fold. 
-    valid_data_folds: [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats)];
-                      The validation data across all training tasks for each fold. 
+    n_pc_thr:         [int]; The number of principal components to which the user wishes to reduce the data set. Set to 
+                      'None' if percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the 
+                      variance will be used (no PC transform).
+    percent_var_thr:  [float]; The percent variance which the user wishes to capture with the principal components. Will 
+                      compute the number of principal components which capture this explained variance as close as
+                      possible, but will not surpass it. Set to 'None' if n_pc_thr is not 'None', or set to 'None' along
+                      with n_pc_thr if all of the variance will be used (no PC transform).
+    train_data_folds: [dict (key: string (fold ID); Value: xarray (time history, features, samples) > floats)]; For each
+                      training fold, feature xarrays are centered according to the corresponding training fold mean.
+    valid_data_folds: [dict (key: string (fold ID); Value: xarray (time history, features, samples) > floats)]; For each 
+                      validation fold, feature xarrays are centered according to the corresponding training fold mean.
     
     NECESSARY FUNCTIONS:
     computing_eigenvectors
     pc_transform
 
     OUTPUT VARIABLES: 
-    train_data_folds  [dict (Key: string (fold ID); Value: xarray (history x pc features x time samples) > floats (units: PC units)];
-                      Reduced dimensionality version of the training data arrays.
-    valid_data_folds: [dict (Key: string (fold ID); Value: xarray (history x pc features x time samples) > floats (units: PC units)];
-                      Reduced dimensionality version of the validation data arrays.
+    train_data_folds  [dict (Key: string (fold ID); Value: xarray (history, pc features, samples) > floats (units: 
+                      PC units)]; Reduced dimensionality version of the training data arrays.
+    valid_data_folds: [dict (Key: string (fold ID); Value: xarray (history, pc features, time samples) > floats (units:
+                      PC units)]; Reduced dimensionality version of the validation data arrays.
     """
     
     # COMPUTATION:
@@ -1498,7 +1449,8 @@ def pc_transform_all_folds(n_pc_thr, percent_var_thr, train_data_folds, valid_da
         # Extracting only the training data from this fold corresponding to the 0th historical time shift.
         train_data_history0 = np.asarray(this_fold_train_data.loc[0,:,:])
         
-        # Computing the eigenvectors for the current fold, using only the historical features corresponding to the 0th shift.
+        # Computing the eigenvectors for the current fold, using only the historical features corresponding to the 0th
+        # shift.
         this_fold_eigenvectors = computing_eigenvectors(train_data_history0, n_pc_thr, percent_var_thr)
         
         # Replacing the training and validation data with the PC transformed for the current fold.
@@ -1511,30 +1463,30 @@ def pc_transform_all_folds(n_pc_thr, percent_var_thr, train_data_folds, valid_da
 
 
 
-def plotting_landmarks_and_clicks(block_id, date, data_dict, landmark_trajectories_plotting):
+def plotting_landmarks_and_clicks(block_id, date, data_dict, landmark_plotting):
     """
     DESCRIPTION:
     Plotting the experimenter-specified hand landmarks and the click information across the entirety of
     experimenter-specified date and block.
     
     INPUT VARIABLES:
-    block_id: [String (BlockX, where X is an int))]; Block ID of the task whose click, hand trajectory and movement
-              onset and offset will be plotted.
-    date:     [string (YYYY_MM_DD)]; Date on which the block was run.
-    data_dict: [dictionary (key: string (date+block ID); value: dictionary (key/value pairs below))];
-        click_info: [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-            data:      [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there
-                       is a 'no_click' string or a click-string specific to that xarray. For example, the 'backspace'
-                       key of the dictionary has an array where each element is a string named either 'no_click' or 
-                       'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
+    block_id:          [String (BlockX, where X is an int))]; Block ID of the task whose click, hand trajectory and
+                       movement onsets and offsets will be plotted.
+    date:              [string (YYYY_MM_DD)]; Date on which the block was run.
+    data_dict:         [dictionary (key: string (date+block ID); value: dictionary (key/value pairs below))];
+        click_info:    [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
+            data:      [xarray (time samples,) > strings]; For each time sample of the array of each key there is a 
+                       'no_click' string or a click-string specific to that xarray. For example, the 'backspace' key of
+                       the dictionary has an array where each element is a string named either 'no_click' or 
+                       'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the
                        instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
                        rules apply. Time dimension is in units of s.
             plotcolor: [string]; Color corresponding to the type of click for plotting.
-        onsetsoffsets: [list > list [t_onset, t_offset] > floats (units: s)]; The dictionary containing all
-                       movement onset and offset times for each movement type.
-        trajectories:  [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                       for each landmark. The time domain is in units of seconds. 
-    landmark_trajectories_plotting: [list > strings]; Possible landmarks to display.
+        onsetsoffsets: [list > list [t_onset, t_offset] > floats (units: s)]; The dictionary containing all movement
+                       onset and offset times for each movement type.
+        trajectories:  [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each
+                       landmark. The time domain is in units of seconds. 
+    landmark_plotting: [list > strings]; Possible landmarks to display.
     """
     
     # PLOTTING
@@ -1548,13 +1500,13 @@ def plotting_landmarks_and_clicks(block_id, date, data_dict, landmark_trajectori
     
 
     # Initializing the figure.
-    fig, ax = plt.subplots(2,1, figsize = (20,7.5))
+    _, ax = plt.subplots(2,1, figsize = (20,7.5))
 
     
     # Plotting Landmark Trajectories.
 
     # Iterating across each landmark trajectory that will be plotted.
-    for this_landmark in landmark_trajectories_plotting:
+    for this_landmark in landmark_plotting:
 
         # Extracting the trajectory for the current landmark.
         this_landmark_trajectory = hand_trajectories.loc[this_landmark]
@@ -1628,7 +1580,8 @@ def rearranging_features(data, model_type):
 
         # Converting the rearranged features back into an xarray.
         data_rearranged = xr.DataArray(data_rearranged, 
-                                       coords={'sample': np.arange(n_samples), 'feature': np.arange(n_history*n_features)}, 
+                                       coords={'sample': np.arange(n_samples),\
+                                               'feature': np.arange(n_history*n_features)}, 
                                        dims=["sample", "feature"])
 
     # If the model type is an LSTM.
@@ -1651,9 +1604,9 @@ def rearranging_features_all_folds(features_dict, model_type):
     
     INPUT VARIABLES:
     model_type:    [string ('SVM','LSTM')]; The model type that will be used to fit the data.
-    features_dict: [dictionary (Key: string (fold ID); Value: xarray (time history x features x time samples) > floats)]
-                   Array of historical time features. Time samples reduced such that there are an equal number of features
-                   per class.
+    features_dict: [dictionary (Key: string (fold ID); Value: xarray (time history, features, samples) > floats)]; Array
+                   of historical time features. Time samples reduced such that there are an equal number of features per
+                   class.
                    
     NECESSARY FUNCTIONS:
     rearranging_features
@@ -1683,13 +1636,13 @@ def rearranging_features_all_folds(features_dict, model_type):
 def referencing_hand_trajectories(data_dict, ref1_x, ref2_x, refa_y, refb_y):
     """
     DESCRIPTION:
-    Each hand landmark is referenced according to experimenter-specified landmarks. Make sure that the landmarks that are
-    selected will not be used for further analysis as they will get normalized out to 0.
+    Each hand landmark is referenced according to experimenter-specified landmarks. Make sure that the landmarks that 
+    are selected will not be used for further analysis as they will get normalized out to 0.
     
     INPUT VARIABLES:
     data_dict:         [dictionary (key: string (date+block ID); value: dictionary (relevant key/value pairs below))];
-        trajectories:  [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                       for each landmark. The time domain is in units of seconds. 
+        trajectories:  [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each
+                       landmark. The time domain is in units of seconds. 
     ref1_x:            [string]; First horizontal reference landmark
     ref2_x:            [string]; Second horizontal reference landmark
     refa_y:            [string]; First vertical reference landmark
@@ -1697,9 +1650,9 @@ def referencing_hand_trajectories(data_dict, ref1_x, ref2_x, refa_y, refb_y):
     
     OUTPUT VARIABLES:
     data_dict:         [dictionary (key: string (date+block ID); value: dictionary (relevant key/value pairs below))];
-        trajectories:  [xarray (landmarks x time samples) > floats]; The trajectories of the x- and y-coordinates for each
-                       landmark. These are referenced in the x- and y-dimensions according to the reference landmarks. The
-                       time domain is in units of seconds. 
+        trajectories:  [xarray (landmarks, time samples) > floats]; The trajectories of the x- and y-coordinates for
+                       each landmark. These are referenced in the x- and y-dimensions according to the reference
+                       landmarks. The time domain is in units of seconds. 
     """
     
     # COMPUTATION:
@@ -1710,8 +1663,8 @@ def referencing_hand_trajectories(data_dict, ref1_x, ref2_x, refa_y, refb_y):
         # Extracting the hand trajectories from the current date+block pair.
         hand_trajectories = data_dict[this_date_block_id]['trajectories']
 
-        # Initializing the xarray that holds the normalized hand trajectories. Just deep-copying the 
-        # un-normalized version.
+        # Initializing the xarray that holds the normalized hand trajectories. Just deep-copying the un-normalized 
+        # version.
         hand_trajectories_norm = copy.deepcopy(hand_trajectories)
 
         # Extracting the hand landmark trajectories of the reference landmarks.
@@ -1822,9 +1775,9 @@ def save_model(directory, filename, model, model_type):
 def time_history_sample_adjustment(features_dict, fps, labels_dict, t_history):
     """
     DESCRIPTION:
-    Adjusting the time dimension of the labels and features. Due to the time history, the time-shifted rows of the features
-    arrays are zero padded. As such, all columns with leading zeros should be removed. If there are N time shfited columns,
-    this means that N-1 columns should be removed. For example, consider N = 3:
+    Adjusting the time dimension of the labels and features. Due to the time history, the time-shifted rows of the 
+    features arrays are zero padded. As such, all columns with leading zeros should be removed. If there are N time
+    shfited columns, this means that N-1 columns should be removed. For example, consider N = 3:
 
     Features array:
 
@@ -1849,22 +1802,22 @@ def time_history_sample_adjustment(features_dict, fps, labels_dict, t_history):
     where time points and labels will then be re-adjusted.
 
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats)]; Array of 
-                   historical time features.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time samples) > floats)]; 
+                   Array of historical time features.
     fps:           [int (30 or 60)]; Frames per second of of the video feed.
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings (labels))]; For each time frame in each
-                   block, there exists a rest or movement-type label depending on the experimenter-specified onset and
-                   offset of attempted movements.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray (time samples,) > strings (labels))]; For each time
+                   frame in each block, there exists a rest or movement-type label depending on the experimenter-
+                   specified onset and offset of attempted movements.
     t_history:     [float (unit: s)]; Amount of feature time history.
 
     OUTPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats)]; Array of 
-                   historical time features.  Number of time samples corresponding to time history are curtailed at the beginning
-                   of the time array.
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings (labels))]; For each time frame in each
-                   block, there exists a rest or movement-type label depending on the experimenter-specified onset and
-                   offset of attempted movements. Number of time samples corresponding to time history are
-                   curtailed at the beginning of the time array.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time samples) > floats)]; 
+                   Array of historical time features. Number of time samples corresponding to time history are curtailed
+                   at the beginning of the time array.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray (time samples,)> strings (labels))]; For each time 
+                   frame in each task, there exists a rest or movement-type label depending on the experimenter-
+                   specified onset and offset of attempted movements. Number of time samples corresponding to time 
+                   history are curtailed at the beginning of the time array.
     """
     
     # COMPUTATION:
@@ -1906,15 +1859,15 @@ def training_fold_models(model_type, train_data_folds, train_labels_folds, valid
     INPUT VARIABLES:
     model_type:         [string ('SVM','LSTM')]; The model type that will be used to fit the data.
     train_data_folds:   [dict (key: string (fold ID); Value: xarray (dimensions vary based on model type) > floats)];
-                        Data across all training tasks per fold. Equal number of samples per class. PC features. Rearranged 
-                        according to the type of model that will be trained.
-    train_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings (labels))]; Labels across
-                        all training tasks per fold. Equal number of labels per class.
+                        Data across all training tasks per fold. Equal number of samples per class. PC features. 
+                        Rearranged according to the type of model that will be trained.
+    train_labels_folds: [dict (key: string (fold ID); Value: xarray (samples,) > strings (labels))]; For each training
+                        fold, label xarrays are concatenated in the sample dimension.
     valid_data_folds:   [dict (key: string (fold ID); Value: xarray (dimensions vary based on model type) > floats)];
-                        Data across all validation tasks per fold. Equal number of samples per class. PC features. Rearranged 
-                        according to the type of model that will be trained.
-    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings (labels))]; Labels across
-                        all validation tasks per fold. Equal number of labels per class.
+                        Data across all validation tasks per fold. Equal number of samples per class. PC features. 
+                        Rearranged according to the type of model that will be trained.
+    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (samples,) > strings (labels))]; For each validation
+                        fold, label xarrays are concatenated in the sample dimension.
                              
     NECESSARY FUNCTIONS:
     model_training_lstm
@@ -1937,8 +1890,8 @@ def training_fold_models(model_type, train_data_folds, train_labels_folds, valid
         this_fold_valid_data   = valid_data_folds[this_fold]
         this_fold_valid_labels = valid_labels_folds[this_fold]
         
-        # If the model type is na SVM. Currently code for training SVM does not exist. Feel free to write a model_training_svm
-        # function.
+        # If the model type is na SVM. Currently code for training SVM does not exist. Feel free to write a 
+        # model_training_svm function.
         if model_type == 'SVM':
             pass
         
@@ -1946,8 +1899,8 @@ def training_fold_models(model_type, train_data_folds, train_labels_folds, valid
         if model_type == 'LSTM':
             
             # Creating a LSTM model for the current fold of training data.
-            this_fold_model = model_training_lstm(this_fold_train_data, this_fold_train_labels,\
-                                                  this_fold_valid_data, this_fold_valid_labels)
+            this_fold_model = model_training_lstm(this_fold_train_data, this_fold_train_labels, this_fold_valid_data,\
+                                                  this_fold_valid_labels)
         
         # Updating the fold models dictionary with the current fold model.
         fold_models[this_fold] = this_fold_model
@@ -1990,11 +1943,11 @@ def training_final_model(features_dict, labels_dict, model_type, n_pc_thr, perce
     rearranging_features
 
     OUTPUT VARIABLES:
-    eigenvectors_final: [array (features x pc features) > floats]; Array in which columns consist of eigenvectors which
+    eigenvectors_final: [array (features, pc features) > floats]; Array in which columns consist of eigenvectors which
                         explain the variance of the data in descending order. 
     final_model:        [classification model]; Model trained with data from all tasks.
     model_classes:      [list > strings]; Class labels for the confusion matrix.
-    training_data_mean: [xarray (history x features) > floats ]; Mean power of each feature of only the 0th time shift.
+    training_data_mean: [xarray (history, features) > floats ]; Mean power of each feature of only the 0th time shift.
                         This array is repeated for each historical time point.
     """
     
@@ -2027,9 +1980,9 @@ def training_final_model(features_dict, labels_dict, model_type, n_pc_thr, perce
     # If the model type is an LSTM
     if model_type == 'LSTM':
 
-        # Creating a LSTM model for the current fold of training data. The third and fourth inputs in this
-        # function take the spot of validation data and labels, but are meaningless here. Similarly, the 
-        # validation accuracy should be ignored.
+        # Creating a LSTM model for the current fold of training data. The third and fourth inputs in this function take
+        # the spot of validation data and labels, but are meaningless here. Similarly, the validation accuracy should be
+        # ignored.
         final_model = model_training_lstm(training_data, training_labels, training_data, training_labels)
     
     return eigenvectors, final_model, model_classes, training_data_mean
@@ -2044,15 +1997,15 @@ def training_validation_split_tasks(features_dict):
     Creating dictionaries of training and validation folds where the tasks are split up per-fold.
 
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features. Time samples reduced such that there are an equal number of features per
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, samples) > floats)]; Array
+                   of historical time features. Time samples reduced such that there are an equal number of features per
                    class.
 
     OUTPUT VARIABLES:
-    training_folds_tasks    [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the training tasks
-                            for each training fold.
-    validation_folds_tasks: [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the validation tasks
-                            for each validation fold.
+    train_folds_tasks  [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the training tasks
+                       for each training fold.
+    valid_folds_tasks: [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the validation
+                       tasks  for each validation fold.
     """
     
     # COMPUTATION:
@@ -2063,9 +2016,6 @@ def training_validation_split_tasks(features_dict):
 
     # Extracting a list of all the tasks.
     task_list = list(features_dict.keys())
-
-    # Computing the number of folds
-    n_folds = len(task_list)
 
     # Iterating across all folds.
     for f, this_task in enumerate(task_list):
@@ -2096,31 +2046,32 @@ def training_validation_split_tasks(features_dict):
 def training_validation_split(features_dict, labels_dict, train_folds_tasks, valid_folds_tasks):
     """
     DESCRIPTION:
-    Splitting the data into training and validation blocks for building the fold-models. The validation folds will be tested
-    on the models built on the corresponding training folds to confirm that the decoder is generalizable to unseen data. 
+    Splitting the data into training and validation blocks for building the fold-models. The validation folds will be 
+    tested on the models built on the corresponding training folds to confirm that the decoder is generalizable to
+    unseen data. 
 
     INPUT VARIABLES:
-    features_dict:     [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                       Array of historical time features. Time samples reduced such that there are an equal number of features per
-                       class.
-    labels_dict:       [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                       task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                       modulation as well as the per-trial shift from the AW model. Time samples reduced such that there are an equal
-                       number of features per class.
+    features_dict:     [dictionary (Key: string (task ID); Value: xarray (time history, features, samples) > floats)]; 
+                       Array of historical time features. Time samples reduced such that there are an equal number of 
+                       features per class.
+    labels_dict:       [dictionary (Key: string (task ID); Value: xarray (samples,)> strings (labels))]; For each sample
+                       in each task, there exists a rest or movement-type label depending on the experimenter-specified
+                       onset and offset of attempted movements. Time samples reduced such that there are an equal number
+                       of features per class.
     train_folds_tasks  [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the training tasks
                        for each training fold.
     valid_folds_tasks: [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the validation tasks
-                       for each validation fold.
+                    for each validation fold.
 
     OUTPUT VARIABLES:
-    train_data_folds:   [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                        For each training fold, feature xarrays are concatenated in the sample dimension.
-    train_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; For each training
-                        fold, label xarrays are concatenated in the sample dimension.
-    valid_data_folds:   [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
+    train_data_folds:   [dict (key: string (fold ID); Value: xarray (time history, features, samples) > floats)]; For 
+                        each training fold, feature xarrays are concatenated in the sample dimension.
+    train_labels_folds: [dict (key: string (fold ID); Value: xarray (samples,) > strings ('grasp'/'rest'))]; For each 
+                        training fold, label xarrays are concatenated in the sample dimension.
+    valid_data_folds:   [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > floats)];
                         For each validation fold, feature xarrays are concatenated in the sample dimension.
-    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; For each validation
-                        fold, label xarrays are concatenated in the sample dimension.
+    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (samples,) > strings ('grasp'/'rest'))]; For each
+                        validation fold, label xarrays are concatenated in the sample dimension.
     """
     
     # COMPUTATION:
@@ -2138,16 +2089,16 @@ def training_validation_split(features_dict, labels_dict, train_folds_tasks, val
     for fold_id in fold_list:
 
         # Extracting the training and validation task lists for the current fold.
-        this_fold_training_tasks   = train_folds_tasks[fold_id]
-        this_fold_validation_tasks = valid_folds_tasks[fold_id]
+        this_fold_train_tasks   = train_folds_tasks[fold_id]
+        this_fold_valid_tasks = valid_folds_tasks[fold_id]
 
-        # Initialize the training and validation task flags, which will help with initializing the arrays of 
-        # training and validation data and labels for the current fold.
-        training_task0_flag   = True
-        validation_task0_flag = True
+        # Initialize the training and validation task flags, which will help with initializing the arrays of training
+        # and validation data and labels for the current fold.
+        train_task0_flag = True
+        valid_task0_flag = True
         
         # Iterating across all training tasks for the current fold.
-        for this_task in this_fold_training_tasks:
+        for this_task in this_fold_train_tasks:
 
             # Extracting the training data and labels of the current task.
             this_task_data   = features_dict[this_task]
@@ -2155,58 +2106,54 @@ def training_validation_split(features_dict, labels_dict, train_folds_tasks, val
 
             # If the training task flag is True, intiailize the training data and labels xarrays. If not, concatenate
             # them with data and labels from another task.
-            if training_task0_flag:
-                these_training_data   = this_task_data
-                these_training_labels = this_task_labels
+            if train_task0_flag:
+                these_train_data   = this_task_data
+                these_train_labels = this_task_labels
 
                 # Setting the flag to False to never enter this IF statement again.
-                training_task0_flag = False
+                train_task0_flag = False
 
             else:
-                these_training_data   = xr.concat([these_training_data, this_task_data], dim="sample")
-                these_training_labels = xr.concat([these_training_labels, this_task_labels], dim='sample')
+                these_train_data   = xr.concat([these_train_data, this_task_data], dim="sample")
+                these_train_labels = xr.concat([these_train_labels, this_task_labels], dim='sample')
         
         # Iterating across all validatoin tasks for the current fold.
-        for this_task in this_fold_validation_tasks:
+        for this_task in this_fold_valid_tasks:
 
             # Extracting the training data and labels of the current task.
             this_task_data   = features_dict[this_task]
             this_task_labels = labels_dict[this_task]
 
-            # If the validation task flag is True, intiailize the validation data and labels xarrays. If not, concatenate
-            # them with data and labels from another task.
-            if validation_task0_flag:
-                these_validation_data   = this_task_data
-                these_validation_labels = this_task_labels
+            # If the validation task flag is True, intiailize the validation data and labels xarrays. If not,
+            # concatenate them with data and labels from another task.
+            if valid_task0_flag:
+                these_valid_data   = this_task_data
+                these_valid_labels = this_task_labels
 
                 # Setting the flag to False to never enter this IF statement again.
-                validation_task0_flag = False
+                valid_task0_flag = False
 
             else:
-                these_validation_data   = xr.concat([these_validation_data, this_task_data], dim="sample")
-                these_validation_labels = xr.concat([these_validation_labels, this_task_labels], dim='sample')
+                these_valid_data   = xr.concat([these_valid_data, this_task_data], dim="sample")
+                these_valid_labels = xr.concat([these_valid_labels, this_task_labels], dim='sample')
                 
-                
-        # if this_fold_training_tasks:
-        
+                        
         # Reassigning the sample coordinates to the training data and labels xarrays.
-        these_training_data     = these_training_data.assign_coords(sample=np.arange(these_training_data.sample.shape[0]))
-        these_training_labels   = these_training_labels.assign_coords(sample=np.arange(these_training_labels.sample.shape[0]))
+        these_train_data   = these_train_data.assign_coords(sample=np.arange(these_train_data.sample.shape[0]))
+        these_train_labels = these_train_labels.assign_coords(sample=np.arange(these_train_labels.sample.shape[0]))
 
         # Updating the training data and labels dictionaries with the appropriate training information.
-        train_data_folds[fold_id]   = these_training_data
-        train_labels_folds[fold_id] = these_training_labels
+        train_data_folds[fold_id]   = these_train_data
+        train_labels_folds[fold_id] = these_train_labels
 
-      
-        # if this_fold_validation_tasks:
-            
+                  
         # Reassigning the sample coordinates to the validation data and labels xarrays.
-        these_validation_data   = these_validation_data.assign_coords(sample=np.arange(these_validation_data.sample.shape[0]))
-        these_validation_labels = these_validation_labels.assign_coords(sample=np.arange(these_validation_labels.sample.shape[0]))
+        these_valid_data   = these_valid_data.assign_coords(sample=np.arange(these_valid_data.sample.shape[0]))
+        these_valid_labels = these_valid_labels.assign_coords(sample=np.arange(these_valid_labels.sample.shape[0]))
 
         # Updating the validation data and labels dictionaries with the appropriate validation information.
-        valid_data_folds[fold_id]   = these_validation_data
-        valid_labels_folds[fold_id] = these_validation_labels
+        valid_data_folds[fold_id]   = these_valid_data
+        valid_labels_folds[fold_id] = these_valid_labels
         
     return train_data_folds, train_labels_folds, valid_data_folds, valid_labels_folds
 
@@ -2217,30 +2164,30 @@ def training_validation_split(features_dict, labels_dict, train_folds_tasks, val
 def zooming_in(block_id, date, data_dict, movement_colors, t_end_zoom, t_start_zoom):
     """
     DESCRIPTION:
-    The experimenter inputs a start and an end time between which to zoom in to view the relevant hand trajectories
-    for each movement and click information for a specific date+block pair. The hand landmark trajectories are shown
-    for each movement in a separate plot.
+    The experimenter inputs a start and an end time between which to zoom in to view the relevant hand trajectories for
+    each movement and click information for a specific date+block pair. The hand landmark trajectories are shown for
+    each movement in a separate plot.
     
     INPUT VARIABLES:
-    block_id:                  [String (BlockX, where X is an int))]; Block ID of the task whose click, hand trajectory and
-                               movement onset and offset will be plotted.
+    block_id:                  [String (BlockX, where X is an int))]; Block ID of the task whose click, hand trajectory
+                               and movement onset and offset will be plotted.
     date:                      [string (YYYY_MM_DD)]; Date on which the block was run.
     data_dict:                 [dictionary (key: string (date+block ID); value: dictionary (key/value pairs below))];
         click_info:            [dict (key: string ('backspace','keyboard','stimcolumn'); Values: below)];
-            data:              [xarray (1 x time samples) > strings];  For each  time sample of the array of each key there
-                               is a 'no_click' string or a click-string specific to that xarray. For example, the 'backspace'
-                               key of the dictionary has an array where each element is a string named either 'no_click' or 
-                               'backspace_click'. The 'backspace_click' elements do not occur consecutively and describe the 
-                               instance a click on the backspace key occured. For the 'keyboard' and 'stimcolumn' keys, similar
-                               rules apply. Time dimension is in units of s.
+            data:              [xarray (time samples,) > strings]; For each time sample of the array of each key there 
+                               is a 'no_click' string or a click-string specific to that xarray. For example, the
+                               'backspace' key of the dictionary has an array where each element is a string named
+                               either 'no_click' or 'backspace_click'. The 'backspace_click' elements do not occur 
+                               consecutively and describe the  instance a click on the backspace key occured. For the
+                               'keyboard' and 'stimcolumn' keys, similar rules apply. Time dimension is in units of s.
             plotcolor:         [string]; Color corresponding to the type of click for plotting.
         onsetsoffsets:         [list > list [t_onset, t_offset] > floats (units: s)]; The dictionary containing all
                                movement onset and offset times for each movement type.
-        trajectories:          [xarray (landmarks x time samples) > floats]; The time traces of the x- and y-coordinates 
-                               for each landmark. The time domain is in units of seconds. 
-        trajectories_relevant: [dictionary (Key: string (movement type); Value: xarray (relevant landmarks x time samples)
-                               > floats]; For each movement type, only the relevant hand trajectories are stored. The time
-                               dimension of each xarray is in units of s.              
+        trajectories:          [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for
+                               each landmark. The time domain is in units of seconds. 
+        trajectories_relevant: [dictionary (Key: string (movement type); Value: xarray (relevant landmarks, 
+                               time samples) > floats]; For each movement type, only the relevant hand trajectories are
+                               stored. The time dimension of each xarray is in units of s.              
     movement_colors:           [dictionary (key: string (movement); Value: string (color))]; There is a color associated
                                with each movement for plotting.
     t_end_zoom:                [int (units: s)]; The ending time point for the zoomed in window. To set as the last time
@@ -2254,17 +2201,18 @@ def zooming_in(block_id, date, data_dict, movement_colors, t_end_zoom, t_start_z
     # Creating the date+block key.
     date_block_id = date + '_' + block_id
     
-    # Extracting the click information, relevant hand trajectories and movement onsets and offsets from the date+block pair.
+    # Extracting the click information, relevant hand trajectories and movement onsets and offsets from the date+block
+    # pair.
     click_info                 = data_dict[date_block_id]['click_info']
     movement_onsetsoffsets     = data_dict[date_block_id]['onsetsoffsets']
     hand_trajectories_relevant = data_dict[date_block_id]['trajectories_relevant']
     
-    # Extracting the time array from the first key of the relevant hand trajectories dictikonary. This is
-    # the same time array that is used for the click information.
+    # Extracting the time array from the first key of the relevant hand trajectories dictikonary. This is the same time
+    # array that is used for the click information.
     t_seconds = hand_trajectories_relevant[list(hand_trajectories_relevant.keys())[0]].time_seconds.values
 
-    # Defaulting to the first and last time points if the experimenter-specified starting and ending time
-    # points are left empty ( [] ).
+    # Defaulting to the first and last time points if the experimenter-specified starting and ending time points are 
+    # left empty ( [] ).
     if not t_start_zoom:
         t_start_zoom = t_seconds[0]
     if not t_end_zoom:
@@ -2279,8 +2227,8 @@ def zooming_in(block_id, date, data_dict, movement_colors, t_end_zoom, t_start_z
     # Iterating across all movements in the relevant hand trajectories dictionary.
     for this_movement in hand_trajectories_relevant.keys():
 
-        # Extracting the relevent hand trajectories for the current movement and zoomed-in interval.
-        # Transposing is necessary for plotting.
+        # Extracting the relevent hand trajectories for the current movement and zoomed-in interval. Transposing is 
+        # necessary for plotting.
         these_hand_trajectories_zoomed = hand_trajectories_relevant[this_movement][:,zoom_bool].transpose()
 
         # Extracting the onset and offsets times for the current movement.
@@ -2307,11 +2255,13 @@ def zooming_in(block_id, date, data_dict, movement_colors, t_end_zoom, t_start_z
                 move_onset_times.append(this_onset_time)
 
                 # Find the index location for the current movement onset time.
-                this_onset_location = ["{} {}".format(ind1,ind2) for (ind1,val1) in enumerate(this_movement_onsets_offset_times) for (ind2,val2) in enumerate(val1) if val2 == this_onset_time]
+                this_onset_location = ["{} {}".format(ind1,ind2) for (ind1,val1) in\
+                                       enumerate(this_movement_onsets_offset_times) for (ind2,val2) in enumerate(val1)\
+                                       if val2 == this_onset_time]
                 this_onset_location = this_onset_location[0].split()
 
-                # Add the index of the current movement onset time to the list of movement onsets indices within
-                # the zoomed-in period.
+                # Add the index of the current movement onset time to the list of movement onsets indices within the 
+                # zoomed-in period.
                 move_onset_inds.append(int(this_onset_location[0]))
 
             # The current movement offset time falls within the zoomed-in period.
@@ -2321,15 +2271,17 @@ def zooming_in(block_id, date, data_dict, movement_colors, t_end_zoom, t_start_z
                 move_offset_times.append(this_offset_time)
 
                 # Find the index location for the current movement offset time.
-                this_offset_location = ["{} {}".format(ind1,ind2) for (ind1,val1) in enumerate(this_movement_onsets_offset_times) for (ind2,val2) in enumerate(val1) if val2 == this_offset_time]
+                this_offset_location = ["{} {}".format(ind1,ind2) for (ind1,val1) in\
+                                        enumerate(this_movement_onsets_offset_times) for (ind2,val2) in enumerate(val1)\
+                                        if val2 == this_offset_time]
                 this_offset_location = this_offset_location[0].split()
 
-                # Add the index of the current movement offset time to the list of movement offsets indices within
-                # the zoomed-in period.
+                # Add the index of the current movement offset time to the list of movement offsets indices within the
+                # zoomed-in period.
                 move_offset_inds.append(int(this_offset_location[0]))
 
-        # Printing movement times that fall in the zoomed-in region as well as the cardinality of the onset/offset
-        # pairs within the zoomed-in region.
+        # Printing movement times that fall in the zoomed-in region as well as the cardinality of the onset/offset pairs
+        # within the zoomed-in region.
         print('Movement: ', this_movement)
         print('\nMovement Onset Times: ', move_onset_times)
         print('Movement Onset Inds: ', move_onset_inds)
@@ -2337,8 +2289,8 @@ def zooming_in(block_id, date, data_dict, movement_colors, t_end_zoom, t_start_z
         print('Movement Offset Inds: ', move_offset_inds)
 
         
-        # For the current movement, initializing a plot the movement onsets and offsets as well as the 
-        # click information.
+        # For the current movement, initializing a plot the movement onsets and offsets as well as the click 
+        # information.
         fig, ax1 = plt.subplots(figsize=(20,2.5))
         ax2 = ax1.twinx()
 
