@@ -5,8 +5,8 @@ import shutil
 
 ######################## PATIENT AND DATA INFORMATION #########################
 aw_model_type   = 'shift'
-car             = True
 calib_state_val = 1# 1
+car             = True
 f_power_max     = [170] # [45, 115, 170]
 f_power_min     = [110] # [15, 70, 125]
 file_extension  = 'mat'
@@ -24,8 +24,8 @@ sxx_window      = 256
 PARAMETERS:
 aw_model_type:   [string ('shift'/'piecewise')]; The type of affine warp transformation the experimenter wishes to 
                  perform. Leave empty [] if no AW-alignment will occur.
-car:             [bool (True/False)] Whether or not CAR filtering will be performed.
 calib_state_val: [int]; The state value from where to extract the appropriate calibration data.
+car:             [bool (True/False)] Whether or not CAR filtering will be performed.
 f_power_max:     [list > int (units: Hz)]; For each frequency band, maximum power band frequency.
 f_power_min:     [list > int (units: Hz)]; For each frequency band, minimum power band frequency.
 file_extension:  [string (hdf5/mat)]; The data file extension of the data.
@@ -145,6 +145,12 @@ car_channels['CC01'] = [['chan66', 'chan67', 'chan68', 'chan69', 'chan70', 'chan
                          'chan21', 'chan23', 'chan22', 'chan30', 'chan20', 'chan25', 'chan28', 'chan27', 'chan29',\
                          'chan31', 'chan32', 'chan6', 'chan26', 'chan14', 'chan13', 'chan15', 'chan12', 'chan16',\
                          'chan7', 'chan4', 'chan9', 'chan3', 'chan5', 'chan2', 'chan8', 'chan1', 'chan10', 'chan11']]
+
+"""
+PARAMETERS:
+car_channels: [dictionary (key string (patient ID); Value: list > list > strings (channels))]; The sublists of channels
+              that are CAR filtered together.
+"""
 
 
 

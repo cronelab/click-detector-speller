@@ -1,0 +1,12 @@
+Units: hh:mm:ss:ff
+start: 00:00:18:02
+stop:  00:16:22:18
+
+Units: Seconds
+start: 18.067
+stop:  982.6
+
+Units: Frames
+start: 542
+stop:  29478
+Endline

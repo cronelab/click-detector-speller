@@ -71,7 +71,7 @@ def apply_preprocessing(calibration_sxx_mean, calibration_sxx_stdev, data_packet
     For each signal packet, computing the historical time features into a list.
     
     INPUT VARIABLES:
-    calibration_sxx_mean   [xarray (channels, frequency bins) > floats (units: V^2/Hz)]; Calibration mean of each
+    calibration_sxx_mean   [xarray (channels, frequency bins) > floats (units: V^2/Hz)]; Calibration mean of each 
                            channel and frequency bin across time.
     calibration_sxx_stdev: [xarray (channels, frequency bins) > floats (units: V^2/Hz)]; Calibration standard deviation
                            of each channel and frequency bin across time.
@@ -82,7 +82,8 @@ def apply_preprocessing(calibration_sxx_mean, calibration_sxx_stdev, data_packet
         t_seconds:         [list > floats (units: s)]; List of time points for each packet.
         
     GLOBAL PARAMETERS:
-    buffer_size:   [float (units: ms)]; Window length of raw signal used for computing spectrogram, which continuously updates.
+    buffer_size:   [float (units: ms)]; Window length of raw signal used for computing spectrogram, which continuously
+                   updates.
     sampling_rate: [int (samples/s)]; Sampling rate at which the data was recorded.
     t_history:     [float (unit: ms)]; Amount of feature time history.
     
@@ -98,10 +99,10 @@ def apply_preprocessing(calibration_sxx_mean, calibration_sxx_stdev, data_packet
     standardize_to_calibration
     
     OUTPUT VARIABLES:
-    feature_packets: [dictionary (key: packet number; Values: below)]; Dictionary containing packet data and corresponding
-                     time for each packet.
-        data:        [xarray (pc features, time samples) > floats (units: V^2/Hz)]; All historical time features for each 
-                     packet.
+    feature_packets: [dictionary (key: packet number; Values: below)]; Dictionary containing packet data and 
+                     corresponding  time for each packet.
+        data:        [xarray (pc features, time samples) > floats (units: V^2/Hz)]; All historical time features for
+                     each packet.
         time:        [float (units: s)]; Corresponding time for feature packet.
     """
     
@@ -168,7 +169,7 @@ def apply_preprocessing(calibration_sxx_mean, calibration_sxx_stdev, data_packet
         
         # Computing the powerband features from the spectrogram 
         features_all_bands = power_generator(buffer_sxx_z)
-        
+                
         # Concatenating features across all powerbands.
         features_bands_concat = concatenating_power_bands(features_all_bands)
         
@@ -194,18 +195,18 @@ def apply_preprocessing(calibration_sxx_mean, calibration_sxx_stdev, data_packet
 def buffer_raw_update(buffer_raw, packet):
     """
     DESCRIPTION:
-    The buffer of raw signals (continuous voltage time signals) gets updated with each new packet of data. The 
-    previous packet's worth of data is dropped from the buffer.
+    The buffer of raw signals (continuous voltage time signals) gets updated with each new packet of data. The previous
+    packet's worth of data is dropped from the buffer.
     
     INPUT VARIABLES:
-    buffer_raw: [array (channels, time samples) > floats (units: microvolts)]; Buffer of raw time signals across
-                all channels. Time samples are in units of seconds.
-    packet:     [xarray (channels, time samples) > floats (units: microvolts)]; Array of packet's worth of time 
-                signals across all channels. Time samples are in units of seconds.
+    buffer_raw: [array (channels, samples) > floats (units: microvolts)]; Buffer of raw time signals across all 
+                channels. 
+    packet:     [xarray (channels, samples) > floats (units: microvolts)]; Array of packet's worth of time signals
+                across all channels. 
     
     OUTPUT VARIABLES:
-    buffer_raw: [array (channels, time samples) > floats (units: microvolts)]; Updated buffer of raw time signals
-                across all channels. Time samples are in units of seconds.
+    buffer_raw: [array (channels, samples) > floats (units: microvolts)]; Updated buffer of raw time signals across all
+                channels. 
     """                             
     
     # COMPUTATION:
@@ -238,10 +239,10 @@ def buffer_sxx_update(buffer_sxx, sxx):
     points in the historical time features.
     
     INPUT VARIABLES:
-    buffer_sxx: [xarray (channels, frequency, time samples) > floats (units: V^2/Hz)]; Updating buffer of spectral power, 
-                where each new spectrogram entry is one time sample long. Time samples are in units of seconds.
-    sxx:        [xarray (channels, frequency, time samples) > floats (units: V^2/Hz)]; Spectrogram array for only one time
-                sample. 
+    buffer_sxx: [xarray (channels, frequency, time samples) > floats (units: V^2/Hz)]; Updating buffer of spectral 
+                power, where each new spectrogram entry is one time sample long. Time samples are in units of seconds.
+    sxx:        [xarray (channels, frequency, time samples) > floats (units: V^2/Hz)]; Spectrogram array for only one
+                time sample. 
     
     OUTPUT VARIABLES:
     buffer_sxx: [array (channels, frequency, time samples) > floats (units: V^2/Hz)]; Updated spectrogram buffer.
@@ -305,15 +306,15 @@ def calib_signals_relevant(calib_state_str, data_calib_dict):
 def car_filter(signals):   
     """
     DESCRIPTION:
-    The signals from the included channels will be extracted and referenced to their common average at each time
-    point (CAR filtering: subtracting the mean of all signals from each signal at each time point). The experimenter
-    may choose to CAR specific subset of channels or to CAR all the channels together. If the experimenter wishes to
-    CAR specific subsets of channels, each subset of channels should be written as a sublist, within a larger nested
-    list. For example: [[ch1, ch2, ch3],[ch8, ch10, ch13]].
+    The signals from the included channels will be extracted and referenced to their common average at each time point
+    (CAR filtering: for each time point, subtracting the mean of all signals from each signal). The experimenter may 
+    choose to CAR specific subset of channels or to CAR all the channels together. If the experimenter wishes to CAR 
+    specific subsets of channels, each subset of channels should be written as a sublist, within a larger nested list.
+    For example: [[ch1, ch2, ch3], [ch8, ch10, ch13]].
     
     INPUT VARIABLES:
-    signals: [xarray (channels, time samples) > floats (units: microvolts)]; Array of continuous voltage signals 
-             from all channels. Time samples are in units of seconds.
+    signals: [xarray (channels, samples) > floats (units: microvolts)]; Array of continuous voltage signals from all
+             channels. 
         
     GLOBAL PARAMETERS:
     car:         [bool (True/False)] Whether or not CAR filtering will be performed.
@@ -337,8 +338,8 @@ def car_filter(signals):
         # Extracting the signal values from the signals xarray for speed.
         signals = signals.values
 
-        # Ensuring that the CAR channels are actually in the included channels list. If a particular channel is not in the 
-        # included hannels list, it will be removed from the CAR channel list.
+        # Ensuring that the CAR channels are actually in the included channels list. If a particular channel is not in
+        # the included hannels list, it will be removed from the CAR channel list.
         n_car_sets  = len(car_chs)
         car_chs_inc = [None]*n_car_sets
         for (n, this_car_set) in enumerate(car_chs):
@@ -352,7 +353,7 @@ def car_filter(signals):
         # Initializing the CAR-ed signals array.
         signals_car = copy.deepcopy(signals)
 
-        # If the user wishes to CAR only a specific subset of channels.
+        # If subsets of channels will be CAR-ed.
         if specific_car_chs:
 
             # Computing the number of specific CAR channel groups.
@@ -367,8 +368,8 @@ def car_filter(signals):
                 # Computing the number of channels to CAR from the current group.
                 n_these_car_chs = len(these_car_chs)
 
-                # Only perform CAR on the current group of channels if that group contains more than one channel. If there is only one 
-                # channel, the resulting CAR-ed activity will be equal to 0.
+                # Only perform CAR on the current group of channels if that group contains more than one channel. If 
+                # there is only one channel, the resulting CAR-ed activity will be equal to 0.
                 if n_these_car_chs > 1:
 
                     # Extracting the specific channel indices which will be CAR-ed.
@@ -380,7 +381,7 @@ def car_filter(signals):
                         # CAR-ing only the specific channels in this particular subgroup.
                         signals_car[(car_ch_inds, n)] = signals[(car_ch_inds, n)] - np.mean(signals[(car_ch_inds, n)])
 
-        # If the user wishes to CAR all channels.
+        # If all channels will be CAR-ed together.
         else:
             
             # Iterating through all time samples to CAR all channels.
@@ -392,7 +393,7 @@ def car_filter(signals):
                                    coords={'channel': chs_include, 'time': t_seconds}, 
                                    dims=["channel", "time"])
 
-    # If no CAR filtering of signals was applied. 
+    # If no CAR filtering will be applied.
     else:
         
         # Simply assigning the signals_car variable to signals.
@@ -419,10 +420,6 @@ def command_from_voting_buffer(classification, n_votes_thr, voting_buffer):
                     to issue a click command.
     voting_buffer:  [list > strings ('rest'/'grasp')]; The updating buffer of the most recent classifications at any
                     time.
-                                
-    GLOBAL PARAMETERS:
-    model_classes: [list > strings]; List of all the classes to be used in the classifier.
-    packet_size:   [float (units: ms)]; Temporal size of data-streamed packet to decoder.
     
     OUTPUT VARIABLES:
     command:       [string ('nothing'/'click')]; Depending on whether or not the voting threshold was met, a 'click'
@@ -581,18 +578,17 @@ def computing_calibration_stats(sxx_signals_calib):
 def concatenating_power_bands(sxx_power):
     """
     DESCRIPTION:
-    Features across all powerbands are concatenated into one feature dimension. For example, if a feature array
-    has dimensions (chs: 128, powerbands: 3, time samples: 4500), the powerband concatenation will result in an
-    array of size: (chs x pwrbands: 384, time samples: 4500).
+    Features across all powerbands are concatenated into one feature dimension. For example, if a feature array has 
+    dimensions (chs: 128, powerbands: 3, time samples: 4500), the powerband concatenation will result in an array of 
+    size: (chs x pwrbands: 384, time samples: 4500).
     
     INPUT VARIABLES:
-    sxx_power: [xarray (channel, powerband, time samples] > floats (units: V^2/Hz)]; For each standardized 
-               (to calibration) frequency band, the band power exists for each channel across every time point. 
-               Time dimensions is in units of seconds.
+    sxx_power: [xarray (channel, powerband, time samples] > floats (units: Z-score)]; For each standardized (to 
+               calibration) frequency band, the band power exists for each channel across every time point. 
                         
     OUTPUT VARIABLES:
-    sxx_power_all_bands: [xarray (features (chs x bands),  time samples) > floats (units: V^2/Hz)]; Concatenated
-                         band power features over all power bands. 
+    sxx_power_all_bands: [xarray (features (chs x bands),  time samples) > floats (units: Z-score)]; Concatenated band
+                         power features over all power bands. 
     """
     
     # COMPUTATION:
@@ -607,8 +603,9 @@ def concatenating_power_bands(sxx_power):
 
     # Converting the concatenated band features back into an xarray.
     sxx_power_all_bands = xr.DataArray(sxx_power_all_bands, 
-                                       coords={'feature': np.arange(n_channels*n_bands), 'time': np.arange(n_samples)}, 
-                                       dims=["feature", "time"])
+                                       coords={'feature': np.arange(n_channels*n_bands),\
+                                               'sample': np.arange(n_samples)}, 
+                                       dims=["feature", "sample"])
     
     return sxx_power_all_bands
 
@@ -619,11 +616,11 @@ def concatenating_power_bands(sxx_power):
 def concatenating_historical_features(sxx_power_all_bands):
     """
     DESCRIPTION:
-    Based on the experimenter-determined time history (t_history) and the time resolution (global variable sxx_shift), the number of 
-    historical time points are calculated (t_history/sxx_shift). An xarray with dimensions (history, features, time) is created, 
-    where each coordinate in the history dimension represents how much the features were shifted in time. For example, consider one 
-    coordinate in the feature array, and suppose a time length of 10 samples and a total time history of 3 samples. For this feature, 
-    the resulting xarray would look like:
+    Based on the experimenter-determined time history (t_history) and the time resolution (global variable sxx_shift),
+    the number of historical time points are calculated (t_history/sxx_shift). An xarray with dimensions
+    (history, feature, sample) is created, where each coordinate in the history dimension represents how much the 
+    features were shifted in time. For example, consider one coordinate in the feature array, and suppose a time length
+    of 10 samples and a total time history of 3 samples. For this feature, the resulting xarray would look like:
     
     historical time shifts
          n=2 shifts      [[0.000, 0.000, 0.234, 0.523. 0.435, 0.982, 0.175, 0.759, 0.341, 0.101],
@@ -634,17 +631,16 @@ def concatenating_historical_features(sxx_power_all_bands):
     and the resulting dimensions of this array are (history=3, features = 1, time = 10).
     
     INPUT VARIABLES:
-    sxx_power_all_bands: [xarray (channels, time samples) > floats (units: V^2/Hz))]; Concatenated band power features
-                         across all power bands. Time dimension is in units of seconds.
-    
+    sxx_power_all_bands: [xarray (channels, time samples) > floats (units: Z-score))]; Concatenated band power features
+                         across all power bands. 
                            
     GLOBAL PARAMETERS: 
     sxx_shift: [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the time domain.
     t_history: [float (unit: ms)]; Amount of time history used as features.
     
     OUTPUT VARIABLES:
-    sxx_power_all_history: [xarray (time history, features, sample) > floats (units: V^2/Hz))]; Array of historical time features.
-                           The sample dimension is only coordinate long.
+    sxx_power_all_history: [xarray (time history, features, sample) > floats (units: Z-score))]; Array of historical
+                           time features. The sample dimension is only coordinate long.
     """
     
     # COMPUTATION:
@@ -655,15 +651,14 @@ def concatenating_historical_features(sxx_power_all_bands):
     # Extracting the number of features over all powerbands. 
     n_features = sxx_power_all_bands.feature.shape[0]
     
-    # Extracting the time array and corresponding number of time samples.
-    t_seconds = sxx_power_all_bands.time
-    n_samples = t_seconds.shape[0]
+    # Extractign the number of time samples.
+    n_samples = sxx_power_all_bands.shape[1] 
     
     # Initializing a feature array which will contain all historical time features.
     sxx_power_all_history = np.zeros((n_history, n_features, n_samples))
     
-    # Iterating across all historical time shifts. The index, n, is the number of samples back in time that
-    # will be shifted.
+    # Iterating across all historical time shifts. The index, n, is the number of samples back in time that will be
+    # shifted.
     for n in range(n_history):
 
         # If currently extracting historical time features (time shift > 0)
@@ -672,8 +667,7 @@ def concatenating_historical_features(sxx_power_all_bands):
             # Extracting the historical time features for the current time shift.
             these_features_history = sxx_power_all_bands[:,:-n]
 
-            # Creating a zero-padded array to make up for the time curtailed from the beginning of the features
-            # array.
+            # Creating a zero-padded array to make up for the time curtailed from the beginning of the features array.
             zero_padding = np.zeros((n_features, n))
 
             # Concatenating the features at the current historical time point with a zero-padded array.
@@ -686,13 +680,14 @@ def concatenating_historical_features(sxx_power_all_bands):
         # Assigning the current historical time features to the xarray with all historical time features.
         sxx_power_all_history[n,:,:] = these_features
     
-
-    # Converting the historical power features for this task to xarray. Only extracting the very last time sample
-    # of the historical spectral power. All other time samples have 0's due to the zero padding. In training, this
-    # is accounted for by curtailing the beginning of this historical power array by the first n samples
-    # corresponding to time history.
+    # Converting the historical power features for this task to xarray. Only extracting the very last time sample of the
+    # historical spectral power. All other time samples have 0's due to the zero padding. In training, this is accounted
+    # for by curtailing the beginning of this historical power array by the first n samples corresponding to time 
+    # history.
     sxx_power_all_history = xr.DataArray(np.expand_dims(sxx_power_all_history[:,:,-1], axis=2), 
-                                         coords={'history': np.arange(n_history), 'feature': np.arange(n_features)}, 
+                                         coords={'history': np.arange(n_history),\
+                                                 'feature': np.arange(n_features),\
+                                                 'sample': np.arange(1)},
                                          dims=["history", "feature", "sample"])
     
     return sxx_power_all_history
@@ -709,10 +704,10 @@ def creating_data_packets(data_exper_dict):
     
     INPUT VARIABLES:
     data_exper_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        signals:     [xarray (channels x time samples) > floats (units: microvolts)]; Array of continuous voltage time
+        signals:     [xarray (channels, time samples) > floats (units: microvolts)]; Array of continuous voltage time
                      signals of the experimental task from all channels. Time samples are in units of seconds.
-        stimuli:     [xarray (1 x time samples) > strings ('click'/'no_click')]; Array of states at each time sample
-                     of the experimental task. Time samples are in units of seconds.
+        states:      [xarray (time samples,) > strings ('click'/'no_click')]; Array of states at each time sample of the
+                     experimental task. Time samples are in units of seconds.
     
     GLOBAL PARAMETERS:
     packet_size:   [float (units: ms)]; Temporal size of data-streamed packet to decoder.
@@ -827,7 +822,8 @@ def data_upload(date, eeglabels, exper_name, file_extension, patient_id, state_m
     data_dict = {}
 
     # Creating the path for the current date/task pair.
-    path = '/mnt/shared/ecog/' + patient_id + '/' + file_extension + '/' + date + '/' + exper_name + '.' + file_extension
+    path = '/mnt/shared/ecog/' + patient_id + '/' + file_extension + '/' + date + '/' + exper_name + '.' +\
+           file_extension
 
     # Extracting the eeg signals, depending on whether they come from an .hdf5 or .mat file.
     if file_extension == 'hdf5':
@@ -954,9 +950,9 @@ def downsample_to_video_fps(click_highlights_bci2k, fps, t_start):
 def import_electrode_information(date, exper_name, file_extension, patient_id):
     """
     DESCRIPTION:
-    The eeglabels and auxlabels lists will be populated with eeg channel names and auxilliary channel
-    names respectively. These lists are created differently based on whether the data is extracted from
-    a .hdf5 file or a .mat file.
+    The eeglabels and auxlabels lists will be populated with eeg channel names and auxilliary channel names 
+    respectively. These lists are created differently based on whether the data is extracted from a .hdf5 file or a
+    .mat file.
 
     INPUT VARIABLES:
     date:           [string]; Date on which the speller was run. Format: YYYY_MM_DD.
@@ -973,10 +969,8 @@ def import_electrode_information(date, exper_name, file_extension, patient_id):
     # COMPUTATION:
     
     # Creating the path for the current date/task pair.
-    path = '/mnt/shared/ecog/' + patient_id + '/' + file_extension + '/' + date + '/' + exper_name + '.' + file_extension
-    
-    # Defining the ecog object.
-    ecog = ECoGConfig()
+    path = '/mnt/shared/ecog/' + patient_id + '/' + file_extension + '/' + date + '/' + exper_name + '.' +\
+           file_extension
 
     # Extracting the channel and auxilliary labels from the .hdf5 file.
     if file_extension == 'hdf5':
@@ -1037,16 +1031,16 @@ def index_advancer(indices, shift):
 
 
 
-def load_start_stop_times(block_id, date, dir_intermediates, patient_id):
+def load_start_stop_times(block_id, date, dir_blocksstartstops, patient_id):
     """
     DESCRIPTION:
     Loading the true starting and stopping times for the current block. 
     
     INPUT VARIABLES:
-    block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
-    date:              [string (YYYY_MM_DD)]; Date on which the block was run.
-    dir_intermediates: [string]; [string]; Intermediates directory where relevant information is stored.
-    patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
+    block_id:             [String (BlockX, where X is an int))]; Block ID of the task that was run.
+    date:                 [string (YYYY_MM_DD)]; Date on which the block was run.
+    dir_blocksstartstops: [string]; Directory where the block start and stop times are found.
+    patient_id:           [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     
     OUTPUT VARIABLES:
     t_start: [float (units: s)]; True starting time of the block.
@@ -1055,12 +1049,11 @@ def load_start_stop_times(block_id, date, dir_intermediates, patient_id):
     
     # COMPUTATION:
     
-    # Creating the directory and filename for the .txt file containing the starting and ending times of the block.
-    dir_start_stop      = dir_intermediates + patient_id + '/Speller/BlocksStartAndStops/' + date + '/'
+    # Creating the filename for the .txt file containing the starting and ending times of the block.
     filename_start_stop = date + '_' + block_id +'_StartStop.txt'
 
     # Creating the pathway for the .txt file.
-    path_start_stop = dir_start_stop + filename_start_stop
+    path_start_stop = dir_blocksstartstops + date + '/' + filename_start_stop
 
     # Opening up the block starting and ending times from the pathway.
     txt_file_start_stop = open(path_start_stop)
@@ -1351,14 +1344,14 @@ def mean_centering(data, data_mean):
     Mean-centering all features at all historical time points by subtracting the data mean, averaged across time.
         
     INPUT VARIABLES:
-    data:      [xarray (history x features x time samples) > floats (units: V^2/Hz)]; Historical power features across time
-               samples. Time samples are in units of seconds.
-    data_mean: [xarray (history x features) > floats (units: V^2/Hz)]; Mean power of each feature of only the 0th time shift.
-               This array is repeated for each historical time point.
+    data:      [xarray (time history, feature, sample) > floats (units: Z-score)]; Historical power features across time
+               samples. 
+    data_mean: [xarray (history, feature) > floats (units: Z-score)]; Mean power of each feature of only the 0th time 
+               shift. This array is repeated for each historical time point.
     
     OUTPUT VARIABLES:
-    data_centered: [xarray (history x features x time samples) > floats (units: V^2/Hz)]; Mean-centered historical power features
-                   across time samples. Time samples are in units of seconds.
+    data_centered: [xarray (time history, feature, sample) > floats (units: Z-score)]; Mean-centered historical power 
+                   features across time samples. Time samples are in units of seconds.
     """
     
     # COMPUTATION:
@@ -1369,15 +1362,15 @@ def mean_centering(data, data_mean):
     n_samples  = data.sample.shape[0]
     
     # Converting the data mean xarray to a regular array and repeating the means for each sample.
-    data_mean = np.array(data_mean)
-    # print('DATA MEAN SHAPE: ', data_mean.shape)
-    
+    data_mean = np.array(data_mean)    
     data_mean = np.expand_dims(data_mean, axis=2)
     data_mean = np.tile(data_mean, (1, 1, n_samples))
     
     # Converting the data mean array back into an xarray
     data_mean = xr.DataArray(data_mean, 
-                             coords={'history': np.arange(n_history), 'feature': np.arange(n_features), 'sample': np.arange(n_samples)}, 
+                             coords={'history': np.arange(n_history),\
+                                     'feature': np.arange(n_features),\
+                                     'sample': np.arange(n_samples)}, 
                              dims=["history", "feature", "sample"])
     
     # Computing the mean-centered data.
@@ -1395,10 +1388,10 @@ def model_output_per_packet(feature_packets):
     Computing the model probabilities and classifications for each feature packet.
     
     INPUT VARIABLES:
-    feature_packets: [dictionary (key: packet number; Values: below)]; Dictionary containing packet data and corresponding
-                     time for each packet.
-        data:        [xarray (pc features, time samples) > floats (units: V^2/Hz)]; All historical time features for each 
-                     packet.
+    feature_packets: [dictionary (key: packet number; Values: below)]; Dictionary containing packet data and 
+                     corresponding time for each packet.
+        data:        [xarray (time history, pc features, time samples) > floats (units: Z-score)]; All historical time
+                     features for each packet.
         time:        [float (units: s)]; Corresponding time for feature packet.
         
     GLOBAL PARAMETERS:
@@ -1408,10 +1401,10 @@ def model_output_per_packet(feature_packets):
     rearranging_features
     
     OUTPUT VARIABLES:
-    model_outputs: [dictionary (key: packet number; Values: below)]; Dictionary containing the model probabilities, model
-                   classification, and corresponding time for each data packet.
-        class:     [list > strings]; Classification for each packet.
-        prob:      [array (1 x classes) > floats]; Per-packet model probabilities for each class.
+    model_outputs: [dictionary (key: packet number; Values: below)]; Dictionary containing the model probabilities, 
+                   model classification, and corresponding time for each data packet.
+        class:     [list > strings ('grasp'/'rest')]; Classification for each packet.
+        prob:      [array (classes,) > floats]; Per-packet model probabilities for each class.
         time:      [float (units: s)]; Corresponding time for each set of model probabilities.
     """
     
@@ -1460,16 +1453,16 @@ def model_output_per_packet(feature_packets):
 def pc_transform(data, eig_vectors):
     """
     DESCRIPTION:
-    Transforming the data into PC space by multiplying the features at each historical time point by the same eigenvectors.
+    Transforming the data into PC space by multiplying the features at each historical time point by the same
+    eigenvectors.
     
     INPUT VARIABLES:
-    data:        [xarray (features x time samples) > floats (units: V^2/Hz)];
-    eig_vectors: [array (features x pc features) > floats]; Array in which columns consist eigenvectors which explain the variance in 
-                 features in descending fashion. Time samples are in units of seconds.
+    data:        [xarray (time history, features, samples) > floats (units: Z-score)];
+    eig_vectors: [array (features, pc features) > floats]; Array in which columns consist eigenvectors which explain the
+                 variance in features in descending fashion. 
     
     OUTPUT VARIABLES:
-    data_pc: [xarray (pc features x time samples) > floats (units: V^2/Hz)]; Reduced-dimensionality data. Time samples are in units of
-             seconds.
+    data_pc: [xarray (time history, pc features, samples) > floats (units: pc units)]; Reduced-dimensionality data. 
     """
     
     # COMPUTATION:
@@ -1483,7 +1476,9 @@ def pc_transform(data, eig_vectors):
     
     # Initializing an xarray of PC data.
     data_pc = xr.DataArray((np.zeros((n_history, n_features_pc, n_samples))),
-                            coords={'history': np.arange(n_history), 'feature': np.arange(n_features_pc), 'sample': np.arange(n_samples)},
+                            coords={'history': np.arange(n_history),\
+                                   'feature': np.arange(n_features_pc),\
+                                   'sample': np.arange(n_samples)},
                             dims=["history", "feature", "sample"])
     
     # Iterating across all historical time shifts and multiplying the data at each historical time shift by the same eigenvectors.
@@ -1507,8 +1502,8 @@ def power_generator(sxx_signals):
     Given the experimenter-specified minimum and maximum frequencies, the spectral band power is computed.
     
     INPUT VARIABLES:
-    sxx_signals: [xarray (channels, frequency bins, time samples) > floats (units: V^2/Hz)]; Spectrogram power
-                 of the continuous voltage time signals. Time dimension is in units of seconds.
+    sxx_signals: [xarray (channels, frequency bins, time samples) > floats (units: Z-score)]; Spectrogram power of the 
+                 continuous voltage time signals. Time dimension is in units of seconds.
                        
     GLOBAL PARAMETERS:
     chs_include:  [list > strings]; The list of channels to be included in further analysis.
@@ -1516,9 +1511,9 @@ def power_generator(sxx_signals):
     f_min_bounds: [list > int (units: Hz)]; For each frequency band, minimum power band frequency.
         
     OUTPUT VARIABLES:
-    sxx_power: [xarray (channel, powerband, time samples] > floats (units: V^2/Hz)]; For each standardized 
-               (to calibration) frequency band, the band power exists for each channel across every time point. 
-               Time dimensions is in units of seconds.
+    sxx_power: [xarray (channel, powerband, time samples] > floats (units: Z-score)]; For each standardized (to 
+               calibration) frequency band, the band power exists for each channel across every time point. Time 
+               dimensions is in units of seconds.
     """
     
     # COMPUTATION:
@@ -1566,13 +1561,15 @@ def rearranging_features(data):
     Rearranging the data dimensions as necessary to fit the experimenter-determined model.
     
     INPUT VARIABLES:
-    data: [xarray (time history x features x time samples) > floats (units: V^2/Hz)]; Array of historical time features.
+    data: [xarray (time history x features x time samples) > floats (units: Z-scores)]; Array of historical time 
+          features.
     
     GLOBAL PARAMETERS:
     model_type: [string ('SVM','LSTM')]; The model type that will be used to fit the data.
     
     OUTPUT VARIABLES:
-    data_rearranged: [xarray (dimensions vary based on model type) > floats (units: V^2/Hz)]; Rearranged data. 
+    data_rearranged: [xarray (dimensions vary based on model type) > floats (units: Z-scores)]; Rearranged array of 
+                     historical time features.
     """
     # COMPUTATION:
     
@@ -1590,13 +1587,14 @@ def rearranging_features(data):
 
         # Converting the rearranged features back into an xarray.
         data_rearranged = xr.DataArray(data_rearranged, 
-                                       coords={'sample': np.arange(n_samples), 'feature': np.arange(n_history*n_features)}, 
+                                       coords={'sample': np.arange(n_samples),\
+                                               'feature': np.arange(n_history*n_features)}, 
                                        dims=["sample", "feature"])
 
     # If the model type is an LSTM.
     if model_type == 'LSTM':
 
-        # Don't rearrange the features. They already have the correct dimensionality for LSTM.
+        # Rearranging features.
         data_rearranged = data.transpose("sample","history","feature")
     
     return data_rearranged
@@ -1628,8 +1626,7 @@ def saving_click_highlights(block_id, click_highlights, click_highlights_name, d
     # COMPUTATION:
     
     # Creating the pathway for saving the click highlights array.
-    dir_saving  = '/mnt/shared/danprocessing/Projects/PseudoOnlineTests_for_RTCoG/Intermediates/CC01/Speller/ClickDetections/Simulated/' + date + '/'\
-                  + block_id + '/' + str(n_votes) +'_vote_window_' + str(n_votes_thr) + '_vote_thr' + '/'
+    dir_saving  = 'ClickDetectionsSimulated/' + date + '/' + block_id + '/' + str(n_votes) +'_vote_window_' + str(n_votes_thr) + '_vote_thr' + '/'
     filename    = date + '_' + block_id + '_' + click_highlights_name + '.nc'
     path_saving = dir_saving + filename
     
@@ -1670,46 +1667,42 @@ def saving_click_highlights(block_id, click_highlights, click_highlights_name, d
 def sending_command(command, packet_counter, send_command, t_lockout, t_most_recent_click):
     """
     DESCRIPTION:
-    Determining whether a 'click' or 'nothing' command should be sent to the user-interface. Specifically,
-    if the lockout period starting from the time when the most recent 'click' command was sent to the user-
-    interface has not yet elapsed, then regardless of whether there were enough votes in the voting buffer
-    to issue a 'click' command, a 'click' command will not be sent to the user-interface, and the command
-    will be changed to 'nothing'.
+    Determining whether a 'click' or 'nothing' command should be sent to the user-interface. Specifically, if the
+    lockout period starting from the time when the most recent 'click' command was sent to the user-interface has not
+    yet elapsed, then regardless of whether there were enough votes in the voting buffer to issue a 'click' command, a
+    'click' command will not be sent to the user-interface, and the command will be changed to 'nothing'.
     
     INPUT VARIABLES:
-    command:             [string ('nothing'/'click')]; Depending on whether or not the voting threshold was
-                         met, a 'click' or 'nothing' command is simulated to be sent to the user-interface.
+    command:             [string ('nothing'/'click')]; Depending on whether or not the voting threshold was met, a 
+                         'click' or 'nothing' command is simulated to be sent to the user-interface.
     packet_counter:      [int]; Number of feature packets that have elapsed.
-    send_command:        [boolean (True/False)]; Whether or not a 'click' command may be sent to the user-
-                         interface. This state is False if the lockout period from the most recent 'click'
-                         command has not yet elapsed. Otherwise, the state is True.
-    t_lockout:           [float (units: ms)]; The minimum amount of time which must elapse after the most 
-                         recent 'click' command was sent to the user-interface, such that another 'click'
-                         command may be issued.
-    t_most_recent_click: [float (units: ms)]; Time at which the most recent 'click' command was issued. This
-                         is used as a reference to determine whether or not the lockout time has elapsed.
+    send_command:        [boolean (True/False)]; Whether or not a 'click' command may be sent to the user-interface. 
+                         This state is False if the lockout period from the most recent 'click' command has not yet \
+                         elapsed. Otherwise, the state is True.
+    t_lockout:           [float (units: ms)]; The minimum amount of time which must elapse after the most recent 'click'
+                         command was sent to the user-interface, such that another 'click' command may be issued.
+    t_most_recent_click: [float (units: ms)]; Time at which the most recent 'click' command was issued. This is used as
+                         a reference to determine whether or not the lockout time has elapsed.
       
     GLOBAL PARAMETERS:
     packet_size: [float (units: ms)]; Temporal size of data-streamed packet to decoder.
         
     OUTPUT VARIABLES:
-    command:             [string ('nothing'/'click')]; Updated command depending on whether or not the lockout
-                         period starting from the most recent 'click' command has elapsed. If the command is 
-                         'click' and this lockout period has not elapsed, change the command to 'nothing'. 
-                         Otherwise, leave unchanged.
-    send_command:        [boolean (True/False)]; Whether or not a 'click' command may be sent to the user-
-                         interface. This state is False if the lockout period from the most recent 'click'
-                         command has not yet elapsed. Otherwise, the state is True.
-    t_most_recent_click: [float (units: ms)]; If a 'click' command is sent to the user-interface, this is the
-                         starting time of that lockout period.
+    command:             [string ('nothing'/'click')]; Updated command depending on whether or not the lockout period
+                         starting from the most recent 'click' command has elapsed. If the command is 'click' and this
+                         lockout period has not elapsed, change the command to 'nothing'. Otherwise, leave unchanged.
+    send_command:        [boolean (True/False)]; Whether or not a 'click' command may be sent to the user-interface.
+                         This state is False if the lockout period from the most recent 'click' command has not yet
+                         elapsed. Otherwise, the state is True.
+    t_most_recent_click: [float (units: ms)]; If a 'click' command is sent to the user-interface, this is the starting
+                         time of that lockout period.
     """
     
     # COMPUTATION:
     
-    # The lockout period from the most recent 'click' command has not yet elapsed, and it is impossible to
-    # send a 'click' command to the user-interface regardless of whether the command variable is 'click'. As
-    # such, the command will be overwritten as 'nothing' (this is simply for visualization purposes later on
-    # in).
+    # The lockout period from the most recent 'click' command has not yet elapsed, and it is impossible to send a 
+    # 'click' command to the user-interface regardless of whether the command variable is 'click'. As such, the command
+    # will be overwritten as 'nothing' (this is simply for visualization purposes later on in).
     if not send_command:
         
         # Setting the command to 'nothing'. 
@@ -1719,18 +1712,17 @@ def sending_command(command, packet_counter, send_command, t_lockout, t_most_rec
         t_current_packet   = packet_counter*packet_size             # N x ms = ms
         t_since_prev_click = t_current_packet - t_most_recent_click # ms - ms = ms
         
-        # If the time since the most recent click has elapsed the lockout time, switch the send_command gate to
-        # True, so that a future 'click' command may be sent to the user-interface.
+        # If the time since the most recent click has elapsed the lockout time, switch the send_command gate to True, so
+        # that a future 'click' command may be sent to the user-interface.
         if t_since_prev_click > t_lockout: # ms - ms
             send_command = True
     
-    # The lockout time starting from the most recent 'click' command has elapsed, and it is now possible to
-    # issue another 'click' command to the user-interface.
+    # The lockout time starting from the most recent 'click' command has elapsed, and it is now possible to issue 
+    # another 'click' command to the user-interface.
     if send_command:
         
-        # If the command is 'click', do not change the command name to 'nothing'. Reset the starting time of
-        # the lockout period and switch the send_command gate to False. The time of the most recent 'click' 
-        # command sent to the user-interface is updated.
+        # If the command is 'click', do not change the command name to 'nothing'. Reset the time of the most recent 
+        # click and switch the send_command state to False. 
         if command == 'click':
             t_most_recent_click = packet_counter*packet_size # N x ms = ms
             send_command        = False
@@ -1853,19 +1845,18 @@ def spectrogram_generator(signals):
     Computing the spectrogram for each channel across all time. 
     
     INPUT VARIABLES:
-    signals: [array (channels, time samples > floats (units: microvolts)]; Array of continuous voltage time
-             signals across all channels. Time samples are in units of seconds.
+    signals: [array (channels, time samples > floats (units: microvolts)]; Array of continuous voltage time signals 
+             across all channels. Time samples are in units of seconds.
              
     GLOBAL PARAMETERS:
     chs_include:   [list > strings]; The list of channels to be included in further analysis.
     sampling_rate: [int (samples/s)]; Sampling rate at which the data was recorded.
-    sxx_shift:     [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the
-                   time domain.
+    sxx_shift:     [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the time domain.
     sxx_window:    [int (units: ms)]; Time length of the window that computes the frequency power.
     
     OUTPUT VARIABLES:
-    sxx_signals: [xarray (channels, frequency bins, time samples) > floats (units: V^2/Hz)]; Spectral power
-                 of the continuous voltage signals for each channel. Time samples are in units of seconds.
+    sxx_signals: [xarray (channels, frequency bins, time samples) > floats (units: V^2/Hz)]; Spectral power of the 
+                 continuous voltage signals for each channel. Time samples are in units of seconds.
     """
     
     # COMPUTATION:
@@ -1911,8 +1902,7 @@ def spectrogram_generator(signals):
 def standardize_to_calibration(calibration_sxx_mean, calibration_sxx_stdev, sxx_signals):
     """
     DESCRIPTION:
-    For each channel at each frequency, standardizing the spectral power to the statistics of the 
-    calibration period. 
+    For each channel at each frequency, standardizing the spectral power to the statistics of the calibration period. 
     
     INPUT VARIABLES:
     calibration_sxx_mean   [xarray (channels, frequency bins) > floats (units: V^2/Hz)]; Calibration mean of each
@@ -1923,7 +1913,7 @@ def standardize_to_calibration(calibration_sxx_mean, calibration_sxx_stdev, sxx_
                            of the raw signals. Time dimension is in units of seconds.
                      
     OUTPUT VARIABLES:
-    sxx_signals_z: [xarray (channels, frequency bins, time samples) > floats (units: V^2/Hz)]; Spectral power of the 
+    sxx_signals_z: [xarray (channels, frequency bins, time samples) > floats (units: Z-scores)]; Spectral power of the 
                    continuous voltage time signals that is standardized to the statistics from the calibration period. 
                    Time dimension is in units of seconds.
     """
@@ -1935,9 +1925,7 @@ def standardize_to_calibration(calibration_sxx_mean, calibration_sxx_stdev, sxx_
     freqs    = sxx_signals.frequency
     times    = sxx_signals.time
 
-    # Counting the number of coordinates in each dimension.
-    n_chs   = channels.shape[0]
-    n_freqs = freqs.shape[0]
+    # Counting the number of coordinates in the time dimension.
     n_times = times.shape[0]
     
     # Expanding the calibration mean and standard deviation dimensions.

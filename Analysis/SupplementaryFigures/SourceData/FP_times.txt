@@ -1,0 +1,1087 @@
+
+2022_11_08_Block1: (13 total)
+136.03	Not FP
+144.07	Not FP
+277.8	FP
+345.83	Not FP
+420.43	Not FP
+439.8	Not FP
+444.83	Not FP
+626.6	FP
+798.3 	FP
+1051.17	Not FP
+1108.73	Not FP
+1116.8	Not FP
+1324.93 Not FP
+
+2022_11_08_Block2: (3 total)
+1.8	FP
+237.46	Not FP
+332.46	Not FP
+
+2022_11_09_Block1: (5 total)
+365.17	Not FP
+471.1	FP	
+617.1	FP
+786.2	FP
+928.27	Not FP
+
+2022_11_11_Block1: (2 total)
+187.66	Not FP
+321.53	FP
+
+2022_11_11_Block2: (3 total)
+110.0	Not FP
+407.93	Not FP
+565.36	Not FP
+
+2022_11_11_Block3: (3 total)
+268.67	Not FP
+431.57	Not FP
+
+2022_11_15_Block1: (7 total)
+361.3	FP
+367.3	FP
+385.7	FP
+389.9	FP
+589.7	FP
+721.7	FP
+780.53	FP
+
+2022_11_15_Block2: (6 total)
+111.87	Not FP
+256.6	Not FP
+268.9	FP
+581.23	FP
+622.87	FP
+725.43	FP
+
+2022_11_17_Block1: (10 total)
+140.73	Not FP
+384.17	Not FP
+480.07	Not FP
+488.13	Not FP
+517.0	Not FP
+565.3	Not FP
+714.03	FP
+747.2	Not FP
+796.97	Not FP
+843.27	Not FP
+
+2022_11_17_Block2: (20 total)
+32.17	Not FP
+91.7	Not FP
+99.77	Not FP
+183.8	Not FP
+299.1	Not FP
+336.1	Not FP
+341.13	Not FP
+381.1	Not FP
+398.5	Not FP
+416.03	Not FP
+433.43	Not FP
+491.23	Not FP
+499.27	Not FP
+560.6	Not FP
+576.5	Not FP
+584.57	Not FP
+651.6	Not FP
+693.3	Not FP
+701.3	Not FP
+757.53	Not FP
+
+2022_11_17_Block3: (17 total)
+41.43	Not FP
+56.66	Not FP
+81.13	Not FP
+96.53	Not FP
+139.23	Not FP
+153.63	Not FP
+154.63	Not FP
+190.93	Not FP
+251.06	Not FP
+342.16	Not FP
+397.23	Not FP
+415.83	Not FP
+478.6	Not FP
+559.56	Not FP
+560.56	Not FP
+588.93	Not FP
+627.13	Not FP
+
+2022_11_17_Block4: (21 total)
+54.4	Not FP
+59.16	FP
+80.2	Not FP
+159.13	Not FP
+180.0	Not FP
+180.73	Not FP
+279.66	Not FP
+280.7	Not FP
+298.26	Not FP
+349.0	Not FP
+386.4	Not FP
+386.9	Not FP
+387.1	Not FP
+425.8	Not FP
+442.23	Not FP
+533.93	Not FP
+560.23	Not FP
+714.96	Not FP
+715.53	Not FP
+720.06	Not FP
+721.1	Not FP
+
+2022_11_18_Block1: (3 total)
+223.06	Not FP
+265.56	Not FP
+741.63	Not FP
+
+2022_11_18_Block2: (3 total)
+146.86	Not FP
+286.23	Not FP
+391.36	Not FP
+
+2022_11_18_Block3: (7 total)
+129.0	Not FP
+346.76	FP
+506.4	Not FP
+535.53	Not FP
+561.16	Not FP
+610.13	Not FP
+690.0	Not FP
+
+2022_11_29_Block1: (10 total)
+78.06	Not FP
+153.06	Not FP
+241.56	Not FP
+292.1	Not FP
+330.56	Not FP
+432.56	Not FP
+524.56	Not FP
+564.96	Not FP
+666.96	Not FP
+729.93	Not FP
+
+2022_11_29_Block2: (6 total)
+46.63	Not FP
+122.63	Not FP
+127.66	Not FP
+171.66 	Not FP
+208.53	Not FP
+553.36	Not FP
+
+2022_11_30_Block1: (3 total)
+212.26 	Not FP
+285.03 	Not FP
+788.73 	Not FP
+
+2022_11_30_Block2: (6 total)
+228.0 	Not FP
+458.8 	Not FP
+538.9	Not FP
+567.16	Not FP
+724.13	Not FP
+773.13	Not FP
+
+2022_11_30_Block3: (5 total)
+61.23	Not FP
+76.16   FP
+248.93	Not FP
+452.76	Not FP
+565.1	Not FP
+
+2022_12_13_Block1 (14 Total):
+74.0	Not FP
+160.23	Not FP
+193.63	Not FP
+294.87	Not FP
+345.6	Not FP
+362.23	Not FP
+482.47	Not FP
+567.03	Not FP
+641.2	Not FP
+691.67	Not FP
+724.17	Not FP
+757.57	Not FP
+781.73	Not FP
+828.7	Not FP
+
+2023_12_13_Block2 (19 Total):
+68.53	Not FP
+120.87	Not FP
+164.6	Not FP
+263.0	Not FP
+288.63	Not FP
+305.43	Not FP
+313.5	Not FP
+333.23	Not FP
+351.23	Not FP
+387.23	Not FP
+395.33	Not FP
+427.63	Not FP
+584.73	Not FP
+638.17	Not FP
+745.53	Not FP
+766.37	Not FP
+803.37	Not FP
+811.43	Not FP
+935.73	Not FP
+
+2022_12_13_Block3 (3 Total):
+262.0	Not FP
+367.8	Not FP
+
+2022_12_15_Block1 (3 Total):
+58.97	FP
+229.1	FP
+231.9	FP
+
+2022_12_15_Block2 (2 Total):
+436.23	Not FP
+494.07	FP
+
+2022_12_15_Block3 (9 Total):
+81.33	Not FP
+155.23	FP
+192.67	Not FP
+311.33	FP
+350.13	FP
+469.73	FP
+520.33	FP
+697.43	FP
+749.43	FP
+
+2022_12_15_Block4 (7 Total):
+231.83	FP
+296.03	FP
+413.53	FP
+508.93	FP
+510.77	FP
+538.93	FP
+711.63	FP
+
+2022_12_16_Block1 (2 Total):
+167.33	FP
+389.67	FP
+
+2022_12_16_Block2 (4 Total):
+83.57	FP
+362.73	Not FP
+407.07	FP
+536.73	FP
+
+2022_12_16_Block3 (4 Total):
+198.7	Not FP
+481.47	Not FP
+533.13	Not FP
+587.1	Not FP
+
+2022_12_16_Block4 (2 Total):
+200.03	Not FP
+281.97	Not FP
+
+2022_12_16_Block5 (4 Total):
+89.93	Not FP
+120.57	Not FP
+439.73	Not FP
+585.07	Not FP
+
+2022_12_19_Block1 (2 Total):
+242.97	Not FP
+371.27	Not FP
+
+2022_12_19_Block2 (2 Total):
+169.57	Not FP
+516.7	FP
+
+2022_12_21_Block1 (12 Total):
+33.73	FP
+298.9	Not FP
+368.97	FP
+435.87	FP
+612.87	FP
+721.47	FP
+745.07	FP
+821.77	FP
+850.37	FP
+893.37	FP
+895.57	FP
+913.17	FP
+
+2022_12_21_Block2 (1 Total):
+172.83	FP
+
+2022_12_21_Block3 (4 Total):
+40.5	FP
+192.9	FP
+446.2	FP
+461.2	FP
+
+2022_12_21_Block4 (2 Total):
+457.27	Not FP
+525.53	FP
+
+2022_12_21_Block5 (4 Total):
+71.3	FP
+210.7	FP
+377.5	FP
+644.1	FP
+
+2022_12_21_Block6 (4 Total):
+346.03	FP
+629.27	FP
+690.8	Not FP
+754.03	FP
+
+2023_01_05_Block1 (3 Total):
+732.4	FP
+754.0	FP
+792.3	FP
+
+2023_01_05_Block2 (1 Total):
+855.07	Not FP
+
+2023_01_05_Block3 (10 Total):
+129.63	FP
+211.7	Not FP
+310.4	FP
+465.37	Not FP
+600.33	Not FP
+651.8	FP
+720.4	FP
+753.93	FP
+758.5	FP
+990.93	FP
+
+2023_01_06_Block1 (9 Total):
+79.1	FP
+151.57	Not FP
+259.13	Not FP
+325.77	Not FP
+429.5	FP
+475.23	Not FP
+785.53	Not FP
+797.1	FP
+860.7	FP
+
+2023_01_06_Block2 (10 Total):
+111.57	Not FP
+191.4	Not FP
+233.93	Not FP
+400.3	Not FP
+494.0	Not FP
+702.2	Not FP
+745.57	Not FP
+869.17	Not FP
+947.57	FP
+955.6	Not FP
+
+2023_01_06_Block3 (4 Total):
+89.7	Not FP
+177.13	Not FP
+218.0	Not FP
+830.5	Not FP
+
+2023_01_10_Block1 (3 Total):
+20.52	FP
+320.67	Not FP
+393.38	Not FP
+
+2023_01_10_Block2 (3 Total):
+779.75	FP
+850.13	FP
+956.13	FP
+
+2023_01_10_Block3 (6 Total):
+65.8	Not FP
+136.53	Not FP
+358.78	Not FP
+373.97	Not FP
+475.97	Not FP
+825.83	FP
+
+2023_01_12_Block1 (13 Total):
+48.25	Not FP
+81.85	Not FP
+101.03	Not FP
+137.67	Not FP
+194.05	Not FP
+288.83	Not FP
+299.9	FP
+483.37	Not FP
+491.42	Not FP
+629.73	Not FP
+734.33	Not FP
+820.57	Not FP
+837.5	FP
+
+2023_01_12_Block2 (18 Total):
+69.33	Not FP
+109.3	Not FP
+158.53	Not FP
+217.3	Not FP
+386.35	Not FP
+414.92	Not FP
+455.77	Not FP
+495.12	Not FP
+510.33	Not FP
+550.13	Not FP
+613.73	Not FP
+731.77	Not FP
+754.92	Not FP
+856.53	Not FP
+870.55	Not FP
+909.28	Not FP
+940.22	Not FP
+971.82	Not FP
+
+2023_01_12_Block3 (13 Total):
+67.63	Not FP
+82.85	Not FP
+101.43	Not FP
+120.78	FP
+259.43	Not FP
+293.25	Not FP
+414.45	Not FP
+448.22	Not FP
+492.67	Not FP
+506.85	Not FP
+718.85	Not FP
+736.02	Not FP
+862.8	Not FP
+
+2023_01_19_Block1 (8 Total):
+29.35	FP
+68.15	FP
+120.0	Not FP
+128.07	FP
+136.15	FP
+159.63	FP
+167.7	Not FP
+174.75	FP
+
+2023_01_19_Block2 (9 Total):
+12.88	FP
+90.53	Not FP
+112.68	FP
+124.33	Not FP
+129.37	Not FP
+134.42	Not FP
+221.17	Not FP
+229.23	Not FP
+254.17	Not FP
+
+2023_01_20_Block1 (22 Total):
+50.43	Not FP
+107.02	Not FP
+122.78	Not FP
+190.0	Not FP
+274.23	Not FP
+319.82	Not FP
+362.38	Not FP
+396.78	Not FP
+462.2	Not FP
+482.73	Not FP
+547.32	Not FP
+565.7	Not FP
+616.9	Not FP
+624.93	Not FP
+632.97	Not FP
+641.02	Not FP
+674.27	Not FP
+684.65	FP
+782.05	Not FP
+797.95	Not FP
+876.52	Not FP
+902.9	Not FP
+
+2023_01_31_Block1 (20 Total):
+53.98	Not FP
+105.22	Not FP
+149.85	Not FP
+187.22	Not FP
+195.28	Not FP
+209.22	Not FP
+229.43	Not FP
+254.63	Not FP
+291.02	Not FP
+315.62	Not FP
+355.42	Not FP
+381.03	Not FP
+417.57	Not FP
+446.97	FP
+532.63	Not FP
+540.67	Not FP
+565.23	Not FP
+594.57	FP
+619.02	Not FP
+655.23	Not FP
+
+2023_02_02_Block1 (24 Total):
+26.6	Not FP
+41.8	Not FP
+130.08	Not FP
+180.63	Not FP
+234.13	Not FP
+242.2	Not FP
+287.23	Not FP
+320.42	Not FP	
+357.43	Not FP
+391.43	Not FP
+429.85	Not FP
+447.85	Not FP
+495.33	Not FP
+536.4	Not FP
+566.62	Not FP
+607.4	Not FP
+633.62	Not FP
+649.25	Not FP
+772.15	Not FP
+814.03	Not FP
+841.63	Not FP
+868.83	Not FP
+965.97	Not FP
+984.83	Not FP
+
+2023_02_02_Block2 (15 Total):
+22.0	Not FP
+151.7	Not FP
+208.05	Not FP
+314.93	Not FP
+412.68	Not FP
+454.67	Not FP
+469.67	Not FP
+552.98	Not FP
+568.35	Not FP
+576.43	Not FP
+649.95	Not FP
+654.98	Not FP
+688.88	Not FP
+822.7	Not FP
+830.75	Not FP
+
+2023_02_03_Block1 (40 Total):
+28.92	Not FP
+93.77	Not FP
+108.17	Not FP
+165.18	Not FP
+192.37	Not FP
+248.15	Not FP
+253.18	Not FP
+258.22	Not FP
+315.38	Not FP
+338.77	Not FP
+346.83	Not FP
+363.98	Not FP
+383.13	Not FP
+388.18	Not FP
+403.75	Not FP
+434.77	Not FP
+449.17	Not FP
+478.55	Not FP
+486.63	Not FP
+541.17	Not FP
+564.93	Not FP
+580.15	Not FP
+598.55	Not FP
+606.58	Not FP
+621.55	Not FP
+629.57	Not FP
+697.98	Not FP
+713.2	Not FP
+735.77	Not FP
+743.82	Not FP
+784.78	Not FP
+803.57	Not FP
+820.37	Not FP
+835.8	Not FP
+849.75	Not FP
+889.35	Not FP
+897.4	Not FP
+915.15	Not FP
+923.22	Not FP
+983.58	Not FP
+
+2023_02_03_Block2 (9 Total):
+59.78	Not FP
+86.48	Not FP
+94.55	Not FP
+155.5	Not FP
+200.37	Not FP
+208.43	Not FP
+231.55	Not FP
+236.6	Not FP
+275.3	Not FP
+
+2023_02_09_Block1 (28 Total):
+25.82	Not FP
+91.68	FP
+145.9	Not FP
+247.52	Not FP
+284.52	Not FP
+306.9	Not FP
+314.97	Not FP
+368.72	Not FP
+412.52	Not FP
+428.72	Not FP
+468.72	Not FP
+492.7	Not FP
+512.72	Not FP
+551.7	Not FP
+664.28	Not FP
+684.63	Not FP
+791.63	Not FP
+807.22	Not FP
+889.5	Not FP
+897.55	Not FP
+943.12	Not FP
+970.32	Not FP
+984.72	Not FP
+1096.53	Not FP
+1104.57	Not FP
+1167.8	Not FP
+1198.42	Not FP
+1203.42	Not FP
+
+2023_02_09_Block2 (37 Total):
+1.52	FP
+32.8	FP
+63.68	Not FP
+82.65	Not FP
+155.23	Not FP
+216.5	Not FP
+234.23	Not FP
+275.83	Not FP
+304.87	Not FP
+464.97	Not FP
+484.58	Not FP
+499.57	Not FP
+519.15	Not FP
+527.2	Not FP
+549.77	Not FP
+551.52	FP
+617.55	Not FP
+634.6	Not FP
+731.18	Not FP
+755.33	Not FP
+787.95	Not FP
+802.47	Not FP
+857.87	Not FP
+871.73	Not FP
+879.8	Not FP
+881.92	Not FP
+925.3	FP
+947.97	Not FP
+965.68	Not FP
+973.73	Not FP
+1000.38	Not FP
+1006.33	FP
+1046.62	Not FP
+1085.95	Not FP
+1094.03	Not FP
+1197.38	Not FP
+1216.17	Not FP
+
+2023_05_18_Block2 (4 Total):
+42.266 Not FP
+453.15 Not FP
+624.56 Not FP
+683.65 FP
+
+2023_05_18_Block3 (2 Total):
+315.333 Not FP
+
+2023_05_18_Block4 (10 Total):
+74.633	Not FP
+91.8	FP
+165.2	FP
+214.63	Not FP
+247.13	Not FP
+296.11	Not FP
+393.91	Not FP
+520.23 	Not FP
+603.4	FP
+676.4 	FP
+
+2023_05_18_Block5 (7 Total):
+42.217	FP
+130.2	FP
+171.61	FP
+267.21	FP
+294.03	Not FP
+452.21	FP
+527.6	FP
+
+2023_05_18_Block6 (10 Total):
+264.73	FP
+267.95	FP
+486.95	FP
+622.05	FP
+656.63	FP
+660.05	FP
+832.47	Not FP
+901.45	FP
+957.85	FP
+973.85	FP
+
+2023_05_18_Block7 (25 Total):
+39.78	FP
+45.38	FP
+92.0	FP
+94.4	FP
+101.58	FP
+149.0	FP
+197.62	FP
+222.2	FP
+345.2	FP
+364.2	FP
+381.4	FP
+399.62	FP
+477.4	FP
+509.05	FP
+566.62	FP
+588.6	FP
+648.02	FP
+666.4	FP
+679.1	FP
+793.28	FP
+830.92	FP
+886.98	FP
+969.1	FP
+980.5	FP
+1023.72	FP
+
+2023_05_19_Block1 (18 Total):
+20.02	Not FP
+48.03	Not FP
+56.07	Not FP
+64.1	Not FP
+302.6	Not FP
+332.82	Not FP
+359.82	Not FP
+367.85	Not FP
+392.43	Not FP
+412.0	Not FP
+608.6	Not FP
+629.03	Not FP
+708.8	Not FP
+724.22	Not FP
+836.0	Not FP
+866.78	FP
+918.58	Not FP
+923.62	Not FP
+
+2023_05_19_Block2 (7 Total):
+91.83	Not FP
+111.22	Not FP
+137.02	Not FP
+330.22	Not FP
+612.02	Not FP
+680.02	Not FP
+805.8	Not FP
+
+2023_05_19_Block3 (3 Total):
+26.88	Not FP
+38.32	Not FP
+640.27	Not FP
+
+2023_05_19_Block4 (10 Total):
+181.97	Not FP
+256.57	Not FP
+277.03	FP
+288.43	Not FP
+306.07	Not FP
+417.87	Not FP
+620.07	Not FP
+648.27	Not FP
+675.45	Not FP
+694.65	FP
+
+2023_05_19_Block5 (8 Total):
+21.33	Not FP
+83.35	Not FP
+137.55	Not FP
+260.33	Not FP
+306.35	Not FP
+458.67	Not FP
+487.87	Not FP
+592.15	Not FP
+
+2023_05_23_Block1 (1 Total):
+105.17	Not FP
+
+2023_05_23_Block2 (7 Total):
+255.05	FP
+256.85	FP
+288.05	Not FP. Click after it is FP.
+305.65	FP
+390.07	FP
+712.25	FP
+741.25	FP
+
+2023_05_23_Block3 (5 Total):
+67.55	FP
+254.87	FP
+258.47	FP
+443.47	FP
+522.87	FP
+
+2023_05_23_Block4 (6 Total):
+332.62	FP
+373.02	FP
+453.82	FP
+484.42	FP
+580.02	FP
+627.32	FP
+
+2023_05_23_Block5 (11 Total):
+105.32	FP
+182.12	FP
+196.02	FP
+238.23	FP
+253.43	FP
+309.62	FP
+343.02	FP
+345.42	FP
+358.83	FP
+360.83	FP
+376.62	FP
+
+2023_05_23_Block6 (2 Total):
+74.07	Not FP
+515.57	Not FP
+
+2023_05_25_Block1 (26 Total):
+39.67	Not FP
+54.87	Not FP
+164.27	Not FP
+172.32	Not FP
+193.67	Not FP
+206.67	Not FP
+221.87	Not FP
+237.68	Not FP
+256.85	Not FP
+285.68	Not FP
+293.73	Not FP
+332.5	Not FP
+381.67	Not FP
+426.27	Not FP
+492.1	Not FP
+528.68	Not FP
+548.07	Not FP
+771.58	Not FP
+810.98	Not FP
+819.0	Not FP
+832.77	Not FP
+855.78	Not FP
+863.82	Not FP
+878.98	Not FP
+930.27	Not FP
+935.3	Not FP
+
+2023_05_25_Block2 (5 Total):
+82.6	FP
+233.43	Not FP
+252.22	Not FP
+269.25	Not FP
+605.92	Not FP
+
+2023_05_25_Block3 (5 Total):
+19.53	Not FP
+91.53	Not FP
+201.53	Not FP
+494.47	Not FP
+546.62	FP
+
+2023_05_25_Block4 (15 Total):
+80.28	Not FP
+115.48	Not FP
+119.65	FP
+170.27	Not FP
+197.65	Not FP
+210.3	Not FP
+239.27	FP
+259.9	Not FP
+364.62	Not FP
+488.3	Not FP
+503.18	Not FP
+559.55	FP
+644.18	Not FP
+692.98	Not FP
+713.62	Not FP
+
+2023_05_25_Block5 (11 Total):
+29.02	Not FP
+37.03	Not FP
+55.0	Not FP
+392.28 	FP
+438.5	Not FP
+454.07	FP
+519.7	Not FP
+631.52	Not FP
+657.12	Not FP
+726.9	Not FP
+760.9	Not FP
+
+2023_05_30_Block1 (7 Total):
+69.27	Not FP
+128.88	Not FP
+238.27	Not FP
+411.68	Not FP
+437.48	Not FP
+588.27	Not FP
+651.63	Not FP
+
+2023_05_30_Block2 (7 Total):
+93.58	FP
+610.7	Not FP
+
+2023_05_30_Block3 (15 Total):
+215.05	FP
+258.37	FP
+307.05	FP
+329.3	Not FP
+404.32	Not FP
+417.68	Not FP
+477.17	FP
+549.37	FP
+574.2	Not FP
+628.08	Not FP
+635.08	FP
+717.17	FP
+718.77	FP
+741.77	FP
+766.37	FP
+
+2023_05_30_Block4 (21 Total):
+22.05	Not FP
+197.83	FP
+229.23	FP
+232.05	FP
+303.95	FP
+384.13	FP
+416.05	FP
+427.83	Not FP
+465.38	Not FP
+485.53	FP
+531.33	FP
+552.18	Not FP
+649.33	FP
+654.35	Not FP
+688.33	FP
+721.53	FP
+723.53	FP
+733.53	FP
+783.53	FP
+875.58	Not FP
+883.62	Not FP
+
+2023_05_30_Block5 (19 Total):
+33.83	Not FP
+90.6	Not FP
+98.63	Not FP
+116.97	FP
+150.97	FP
+234.67	FP
+284.67	FP (twitch)
+318.57	FP
+324.17	FP
+448.67	FP
+505.97	FP
+511.77	FP (no obs movement)
+530.58	Not FP
+546.17	FP (No obs movement. happened before grasp)
+602.62	Not FP
+658.6	Not FP
+697.37	FP (no obs movement)
+723.37	FP (no obs movement)
+805.8	FP (prior slight arm movement)
+
+2023_05_30_Block6 (16 Total):
+40.18	Not FP
+74.37	FP (no obs movement)
+298.77  FP (no obs movement)
+351.97  FP (No obs movement. happened before grasp)
+434.98  FP (no obs movement)
+549.87  FP (No obs movement. happened before grasp)
+588.67	FP (happened before grasp)
+607.07  FP (no obs movement)
+611.48  FP (prior slight hand movement)
+751.33	Not FP
+766.7	Not FP
+863.88  FP (no obs movement)
+869.88  FP (no obs movement)
+887.08  FP (no obs movement)
+900.48  FP (no obs movement)
+905.48  FP (no obs movement)
+
+2023_06_02_Block1 (12 Total):
+19.63	Not FP
+158.35	Not FP
+317.02	Not FP
+362.22	Not FP
+413.8	Not FP
+418.82	Not FP
+433.63	Not FP
+441.67	Not FP
+466.42	Not FP
+494.43	Not FP
+534.82	Not FP
+708.63	Not FP
+
+2023_06_02_Block2 (15 Total):
+65.45	Not FP
+156.12	FP (no obs movement)
+166.72	FP (no obs movement)
+330.35	Not FP
+417.12  FP (No obs movement. happened before grasp)
+525.72  FP (no obs movement)
+553.92  FP (no obs movement)
+593.52  FP (no obs movement)
+625.32  FP (no obs movement)
+674.12  FP (no obs movement)
+732.12  FP (leg movement)
+765.73  Not FP
+769.52  FP (no obs movement)
+868.92  FP (prior slight finger movement)
+936.32  FP (no obs movement)
+
+2023_06_02_Block3 (5 Total):
+122.85	FP
+264.28	Not FP
+419.63	FP
+472.48	Not FP
+553.65	Not FP
+
+2023_06_02_Block4 (3 Total):
+338.8	Not FP
+402.17	FP (no obs movement)
+593.97  FP (no obs movement)
+
+2023_06_02_Block5 (15 Total):
+72.18   FP (no obs movement)
+103.6	Not FP
+157.62	Not FP
+221.62	Not FP
+279.63	Not FP
+328.22	Not FP
+341.78  FP (prior slight finger movement)
+470.98	FP (prior slow movement)
+599.0	Not FP
+693.62	Not FP
+701.65	Not FP
+733.38  FP (prior slight finger movement)
+1010.3	FP (column 1)
+1106.32 FP (no obs movement)
+1122.9  FP (no obs movement)
+
+2023_06_02_Block6 (8 Total):
+57.22   FP (no obs movement)
+69.4	FP (no obs movement)
+135.43  FP (no obs movement)
+519.12  FP (no obs movement)
+716.43  FP (no obs movement. happened before grasp)
+766.83  FP (no obs movement)
+798.22  FP (no obs movement)
+802.42  FP (no obs movement)

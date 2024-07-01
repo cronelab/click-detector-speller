@@ -106,9 +106,9 @@ def uploading_global_parameters():
     
     # PRINTING THE GLOBAL PARAMETERS.
     print('GLOBAL PARAMETERS TO functions_click_detector_final_model_training.py SCRIPT')
+    print('CALIB STATE VAL: ', calib_state_val)
     print('AW MODEL TYPE:   ', aw_model_type)
     print('CAR FILTERING:   ', car)
-    print('CALIB STATE VAL: ', calib_state_val)
     print('F-BAND MAX VALS: ', f_power_max, 'Hz')
     print('F-BAND MIN VALS: ', f_power_min, 'Hz')
     print('FILE EXTENSION:  ', file_extension)
@@ -128,7 +128,7 @@ uploading_global_parameters()
 
 
 
-
+# FUNCTIONS
 
 
 
@@ -441,8 +441,8 @@ def car_filter(data_cont_dict, car_tag):
     INPUT VARIABLES:
     car_tag:        [string]; What type of data is being CAR-ed.
     data_cont_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        signals:    [xarray (channels, time samples) > floats (units: microvolts)]; Array of continuous voltage 
-                    signals. Time dimension is in units of seconds.
+        signals:    [xarray (channels, time samples) > floats (units: microvolts)]; Array of continuous voltage signals
+                    Time dimension is in units of seconds.
         states:     [xarray (time samples,) > ints (0 or 1)]; Array of states at each time sample. Time dimension is in
                     units of seconds.
         
@@ -494,7 +494,7 @@ def car_filter(data_cont_dict, car_tag):
             # Initializing the CAR-ed signals array.
             signals_car = copy.deepcopy(signals)
 
-            # If the experimenter wishes to CAR only a specific subset of channels.
+            # If subsets of channels will be CAR-ed.
             if specific_car_chs:
                 
                 # Computing the number of specific CAR channel groups.
@@ -523,7 +523,7 @@ def car_filter(data_cont_dict, car_tag):
                             signals_car[(car_ch_inds, n)] = signals[(car_ch_inds, n)] -\
                                                             np.mean(signals[(car_ch_inds, n)])
 
-            # If the experimenter wishes to CAR all channels together.
+            # If all channels will be CAR-ed together.
             else:
                 # Iterating through all time samples to CAR all channels.
                 for n in range(n_samples):
@@ -537,7 +537,7 @@ def car_filter(data_cont_dict, car_tag):
             # Updating the data dictionary with the CAR-ed signals.
             data_cont_dict[this_task]['signals'] = signals_car_xr  
             
-    # If no CAR filtering of signals was applied. 
+    # If no CAR filtering will be applied.
     else:
         pass
     
@@ -1616,8 +1616,8 @@ def data_upload(chs_include, data_info_dict, eeglabels, state_info_dict):
             # Populating the signals xarray with the eeg signals.
             for ch_name in chs_include:
 
-                # Extracting the appropriate channel index from the original eeglabels list and populating the
-                # signals xarray with the channel's activity.
+                # Extracting the appropriate channel index from the original eeglabels list and populating the signals
+                # xarray with the channel's activity.
                 eeg_ind              = eeglabels.index(ch_name)            
                 signals.loc[ch_name] = eeg_signals[:,eeg_ind]
 
@@ -1875,6 +1875,7 @@ def import_electrode_information(data_info_dict):
     
     GLOBAL PARAMETERS:
     file_extension: [string (hdf5/mat)]; The data file extension of the data.
+    patient_id:      [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
 
     OUTPUT VARIABLES:
     auxlabels: [array > strings (aux channel names)]: Auxilliary channels extracted from the .hdf5 or .mat file.
@@ -3106,6 +3107,7 @@ def save_info(dictionary, directory, filename):
     # Iterating across each item in the dictionary.
     for pair in dictionary.items():
         
+        
         # Extracting the key and value of the current item. 
         key   = pair[0]
         value = pair[1]
@@ -3286,6 +3288,8 @@ def spectrogram_info_per_trial(grasp_sxx_dict, t_post_on_state, t_pre_on_state):
 
     # Iterating across each task.
     for this_task in grasp_sxx_dict.keys():
+        
+        print('This task: ', this_task)
             
         # Extracting the standardized spectrograms of the current task.
         this_task_sxx = grasp_sxx_dict[this_task]['sxx_signals_z']

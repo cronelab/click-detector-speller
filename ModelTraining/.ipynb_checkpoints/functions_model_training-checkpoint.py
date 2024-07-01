@@ -44,8 +44,8 @@ def uploading_global_parameters():
     Importing all of the parameters which will become global to this script.
     
     GLOBAL PARAMETERS:
-    aw_model_type:   [string ('shift'/'piecewise')]; The type of affine warp transformation the experimenter wishes to perform. 
-                     Leave empty [] if no AW-alignment will occur.
+    aw_model_type:   [string ('shift'/'piecewise')]; The type of affine warp transformation the experimenter wishes to 
+                     perform. Leave empty [] if no AW-alignment will occur.
     car:             [bool (True/False)] Whether or not CAR filtering will be performed.
     calib_state_val: [int]; The state value from where to extract the appropriate calibration data.
     f_power_max:     [list > int (units: Hz)]; For each frequency band, maximum power band frequency.
@@ -54,14 +54,17 @@ def uploading_global_parameters():
     model_classes:   [list > strings]; List of all the classes to be used in the classifier.
     model_name:      [string]; Name that describes what data the model is trained on.
     model_type:      [string ('SVM','LSTM')]; The model type that will be used to fit the data.
-    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 'None' if percent_var_thr
-                     is not 'None', or set to 'None' along with percent_var_thr if all of the variance will be used (no PC transform).
+    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 
+                     'None' if percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the
+                     variance will be used (no PC transform).
     patient_id:      [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-    percent_var_thr: [float]; The percent variance which the user wishes to capture with the principal components. Will compute the number
-                     of principal components which capture this explained variance as close as possible, but will not surpass it. Set to 'None'
-                     if n_pc_thr is not 'None', or set to 'None' along with n_pc_thr if all of the variance will be used (no PC transform).
+    percent_var_thr: [float (between 0 and 1)]; The percent variance which the user wishes to capture with the principal
+                     components. Will compute the number of principal components which capture this explained variance
+                     as close as possible, but will not surpass it. Set to 'None' if n_pc_thr is not 'None', or set to
+                     'None' along with n_pc_thr if all of the variance will be used (no PC transform).
     sampling_rate:   [int (samples/s)]; Sampling rate at which the data was recorded.
-    sxx_shift:       [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the time domain.
+    sxx_shift:       [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the time 
+                     domain.
     sxx_window:      [int (units: ms)]; Time length of the window that computes the frequency power.
     """
     
@@ -103,9 +106,9 @@ def uploading_global_parameters():
     
     # PRINTING THE GLOBAL PARAMETERS.
     print('GLOBAL PARAMETERS TO functions_click_detector_final_model_training.py SCRIPT')
+    print('CALIB STATE VAL: ', calib_state_val)
     print('AW MODEL TYPE:   ', aw_model_type)
     print('CAR FILTERING:   ', car)
-    print('CALIB STATE VAL: ', calib_state_val)
     print('F-BAND MAX VALS: ', f_power_max, 'Hz')
     print('F-BAND MIN VALS: ', f_power_min, 'Hz')
     print('FILE EXTENSION:  ', file_extension)
@@ -125,7 +128,7 @@ uploading_global_parameters()
 
 
 
-
+# FUNCTIONS
 
 
 
@@ -135,12 +138,12 @@ def averaging_channel_importance_scores(ch_importance_per_sample):
     Averaging the mean saliency for each channel across all validation folds.
     
     INPUT VARIABLES:
-    ch_importance_per_sample: [dictionary (key: string (fold); Value: array (time samples x channels))]; For each validation fold,
-                              the importance score for each channel is computed for each sample of the experimenter-specified
-                              saliency class.
+    ch_importance_per_sample: [dictionary (key: string (fold); Value: array (time samples, channels))]; For each
+                              validation fold, the importance score for each channel is computed for each sample of the
+                              experimenter-specified saliency class.
     
     OUTPUT VARIABLES:
-    ch_importance_scores: [array (1 x channels) > floats]; Mean importance score for each channel, averaged across all
+    ch_importance_scores: [array (channels, ) > floats]; Mean importance score for each channel, averaged across all
                           time samples from all validation folds.
     """
     # COMPUTATION:
@@ -161,7 +164,8 @@ def averaging_channel_importance_scores(ch_importance_per_sample):
 
         # Otherwise, concatenate this array of channel importance scores.
         else:
-            ch_importance_all_folds = np.concatenate((ch_importance_all_folds, ch_importance_per_sample[this_fold]), axis=0)
+            ch_importance_all_folds = np.concatenate((ch_importance_all_folds, ch_importance_per_sample[this_fold]),\
+                                                      axis=0)
 
     # Taking the mean of all importance scores across all samples (over all validation folds).
     ch_importance_scores = np.mean(ch_importance_all_folds, axis=0)
@@ -175,37 +179,43 @@ def averaging_channel_importance_scores(ch_importance_per_sample):
 def aw_model_building(aw_powerband, chs_alignment, grasp_bandpower_dict, ptr_all_trials, t_aw_end, t_aw_start):
     """
     DESCRIPTION:
-    Each trial of the power trial rasters will be shifted in time be some trial-specific value such that the inter-trial
-    correlation increases. This shifting will occur because of the natural variability in delay between the state ON onset
-    and onset of neural activity. For example, this variability may arise from the natural variation in the participant's
-    reaction delay when seeing a cue to make an attempted grasp.
-    
-    An affine warp (aw) model (see https://github.com/ahwillia/affinewarp.git) is created to compute these shifts for each
-    trial. The aw model is trained on multiple channels (qualitatively selected) and on on power band from these channels.
-    The experimenter must also specify the time bounds within the power trial rasters by which this model will be trained.
+    Each trial of the power trial rasters will be shifted in time by some trial-specific value such that the inter-trial
+    correlation increases. This shifting will occur because of the natural variability in delay between the state ON 
+    onset and onset of neural activity. For example, this variability may arise from the natural variation in the
+    participant's reaction delay when seeing a cue to make an attempted grasp.
+
+    An affine warp (aw) model (see https://github.com/ahwillia/affinewarp.git) is created to compute these shifts for
+    each trial. The aw model is trained on multiple channels (here, qualitatively selected) and on power band from these 
+    channels. The experimenter must also specify the time bounds within the power trial rasters by which this model will
+    be trained.
 
     INPUT VARIABLES:
-    aw_powerband:         [string ('powerbandX')]; Name of the powerband that will be used for aligning the power trial rasters.
-                          X is an integer (0, 1, 2,...).
+    aw_powerband:         [string ('powerbandX')]; Name of the powerband that will be used for aligning the power trial 
+                          rasters. X is an integer (0, 1, 2,...).
     chs_alignment:        [list > strings]; The list of channels which will be used for affine warp. Leave as [] if all
                           channels will be used.
     grasp_bandpower_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:        [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                          the band power is computed for each channel across every time point.
-        sxx_power_z:      [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                          calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:       [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                          to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:   [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
+        sxx_power:        [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each frequency 
+                          band, the band power is computed for each channel across every time samples. Time dimension is
+                          in units of seconds. 
+        sxx_power_z:      [xarray (channel, powerband, time samples] > floats (units:z-scores)]; For each standardized 
+                          (to calibration) frequency band, the band power is computed for each channel across every time
+                          point. Time dimension is in units of seconds.
+        sxx_states:       [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                          downsampled to match time resolution of the signal spectral power. Time dimension is in units
+                          of seconds.
+        power_trials_z:   [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral 
                           information for each trial. Time dimension is in units of seconds.
-    ptr_all_trials:       [xarray (trials x channels x powerbands x time samples) > floats (units: V^2/Hz)]; The spectral information
-                          for  each trial (across all tasks). Time dimension is in units of seconds.
-    t_aw_end:             [float (units: s)]; The ending time boundary for the HG onset period on which AW will be applied.
-    t_aw_start:           [float (units: s)]; The starting time boundary for the HG onset period on which AW will be applied.
+    ptr_all_trials:       [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral
+                          information for each trial (across all tasks). Time dimension is in units of seconds.
+    t_aw_end:             [float (units: s)]; The ending time boundary for the modulation onset period on which AW will 
+                          be applied.
+    t_aw_start:           [float (units: s)]; The starting time boundary for the modulation onset period on which AW 
+                          will be applied.
     
     GLOBAL PARAMETERS:
-    aw_model_type: [string ('shift'/'piecewise')]; The type of affine warp transformation the experimenter wishes to perform. 
-                   Leave empty [] if no AW-alignment will occur.
+    aw_model_type: [string ('shift'/'piecewise')]; The type of affine warp transformation the experimenter wishes to 
+                   perform. Leave empty [] if no AW-alignment will occur.
     
     OUTPUT VARIABLES:
     aw_model:                  [Affinewarp model]; Created using all trials.
@@ -224,17 +234,16 @@ def aw_model_building(aw_powerband, chs_alignment, grasp_bandpower_dict, ptr_all
         # Extracting the indices of the time samples the AW model will use to perform per-trial re-alignment.
         aw_inds = np.logical_and(t_ptr > t_aw_start, t_ptr < t_aw_end)
         
-        # In addition to extracting the specific power band and indicies of time samples used for alignment, if the experimenter
-        # specified a specific set of channels to be used for computing per-trial alignment, extract the power trial rasters 
-        # information from only those channels
+        # In addition to extracting the specific power band and indicies of time samples used for alignment, if the
+        # experimenter specified a specific set of channels to be used for computing per-trial alignment, extract the
+        # power trial rasters information from only those channels
         if chs_alignment:            
             aw_ptr = ptr_all_trials.loc[:,chs_alignment, aw_powerband, aw_inds].values
         
-        # If the experimenter has not specified channels to be used to compute the per-trial shifts, extracting only the specific
-        # power band and indices of time samples used for alignment.
+        # If the experimenter has not specified channels to be used to compute the per-trial shifts, extracting only 
+        # the specific power band and indices of time samples used for alignment.
         else:
             aw_ptr = ptr_all_trials.loc[:,:, aw_powerband, aw_inds].values
-            
 
         # Flipping the channels and time dimensions for the affine warp function.
         aw_ptr = np.moveaxis(aw_ptr, -2, -1)  # Dimensions: trials x time samples x channels
@@ -306,16 +315,17 @@ def aligning_power_trial_rasters(aw_model, ptr_all_trials):
     
     INPUT VARIABLES:
     aw_model:       [Affinewarp model]; Created using all trials.
-    ptr_all_trials: [xarray (trials x channels x powerbands x time samples) > floats (units: V^2/Hz)]; The spectral information
-                    for each trial (across all tasks). Time dimension is in units of seconds.
+    ptr_all_trials: [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral
+                    information for each trial (across all tasks). Time dimension is in units of seconds.
            
     GLOBAL PARAMETERS:
-    aw_model_type: [string ('shift'/'piecewise')]; The type of affine warp transformation the experimenter wishes to perform. 
-                   Leave empty [] if no AW-alignment will occur.
+    aw_model_type: [string ('shift'/'piecewise')]; The type of affine warp transformation the experimenter wishes to 
+                   perform. Leave empty [] if no AW-alignment will occur.
     
     OUTPUT VARIABLES:
-    ptr_aligned_all_trials: [xarray (trials x channels x powerbands x time samples) > floats (units: V^2/Hz)]; The spectral
-                            information for each aligned trial (across all tasks). Time dimension is in units of seconds.
+    ptr_aligned_all_trials: [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
+                            spectral  information for each aligned trial (across all tasks). Time dimension is in units
+                            of seconds.
     """
     
     # COMPUTATION:
@@ -334,7 +344,10 @@ def aligning_power_trial_rasters(aw_model, ptr_all_trials):
         
     # Initializing an array of aligned power trial rasters.
     ptr_aligned_all_trials = xr.DataArray(np.zeros((n_trials_all, n_chs, n_bands, n_samples_per_trial)), 
-                                          coords={'trial': np.arange(n_trials_all),'channel': channels, 'powerband': powerbands, 'time': t_sxx_per_trial}, 
+                                          coords={'trial': np.arange(n_trials_all),\
+                                                  'channel': channels,\
+                                                  'powerband': powerbands,\
+                                                  'time': t_sxx_per_trial},\
                                           dims=["trial", "channel", "powerband", "time"])
     
     # Iterating over all powerbands.
@@ -343,8 +356,8 @@ def aligning_power_trial_rasters(aw_model, ptr_all_trials):
         # Extracting the unaligned power trial rasters for the current power band.
         this_pwrband_ptr = ptr_all_trials.loc[:,:,powerband_id,:].values
         
-        # Flipping the channels and time dimensions for the AW model.
-        this_pwrband_ptr = np.moveaxis(this_pwrband_ptr, -2, -1)  # Dimensions: trials x time samples x channels
+        # Flipping the channels and time dimensions for the AW model. Dimensions: (trials, time samples, channels)
+        this_pwrband_ptr = np.moveaxis(this_pwrband_ptr, -2, -1)  
                 
         # If an affine warp model was used, align the power trial rasters of the current power band appropriately.
         if aw_model_type:
@@ -352,12 +365,14 @@ def aligning_power_trial_rasters(aw_model, ptr_all_trials):
             # Aligning the power trial rasters of the current band according to the AW model.
             this_pwrband_ptr_aligned = aw_model.transform(this_pwrband_ptr)
                     
-        # If no affine warp model was used, keep the aligned power trial rasters the same as the unaligned power trial rasters.
+        # If no affine warp model was used, keep the aligned power trial rasters the same as the unaligned power trial
+        # rasters.
         else:
             this_pwrband_ptr_aligned = this_pwrband_ptr
                     
-        # Flipping the channels and time dimension back again for the aligned power trial rasters xarray.
-        this_pwrband_ptr_aligned = np.moveaxis(this_pwrband_ptr_aligned, -2 ,-1) # Dimensions: trials x channels x time samples
+        # Flipping the channels and time dimension back again for the aligned power trial rasters xarray.  
+        # Dimensions: (trials, time samples, channels)
+        this_pwrband_ptr_aligned = np.moveaxis(this_pwrband_ptr_aligned, -2 ,-1) 
         
         # Assigning the aligned power trial rasters array according to the appropriate powerband ID.
         ptr_aligned_all_trials.loc[:,:,powerband_id,:] = this_pwrband_ptr_aligned
@@ -375,9 +390,9 @@ def calib_signals_relevant(calib_cont_dict):
     
     INPUT VARIABLES:
     calib_cont_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        signals:     [xarray (channels x time samples (units: s) > floats (units: microvolts)]; Array of continuous
-                     voltage signals from the calibration tasks. Time dimension is in units of seconds.
-        states:      [xarray (1 x time samples) > ints (0 or 1)]; Array of states at each time sample for the calibration
+        signals:     [xarray (channels, time samples) > floats (units: microvolts)]; Array of continuous voltage 
+                     signals from the calibration tasks. Time dimension is in units of seconds.
+        states:      [xarray (time samples,) > ints (0 or 1)]; Array of states at each time sample for the calibration
                      tasks. Time dimension is in units of seconds.
     
     GLOBAL PARAMETERS:
@@ -385,15 +400,14 @@ def calib_signals_relevant(calib_cont_dict):
     
     OUTPUT VARIABLES:
     calib_cont_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        signals:     [xarray (channels x time samples (units: s) > floats (units: microvolts)]; Array of only continuous
-                     voltage signals from only the relevant time samples for the calibration tasks. Time dimension is in
-                     units of seconds.
-        states:      [xarray (1 x time samples) > ints (0 or 1)]; Array if states from only the relevant time samples for
+        signals:     [xarray (channels, time samples) > floats (units: microvolts)]; Array of only continuous voltage 
+                     signals from only the relevant time samples for the calibration tasks. Time dimension is in units 
+                     of seconds.
+        states:      [xarray (time samples,) > ints (0 or 1)]; Array of states from only the relevant time samples for 
                      the calibration tasks. Time dimension is in units of seconds.
     """
     
     # COMPUTATION:
-    
     
     # Iterating across all tasks in the calibration data dictionary.
     for this_task in calib_cont_dict.keys():
@@ -418,22 +432,22 @@ def calib_signals_relevant(calib_cont_dict):
 def car_filter(data_cont_dict, car_tag):   
     """
     DESCRIPTION:
-    The signals from the included channels will be extracted and referenced to their common average at each time
-    point (CAR filtering: subtracting the mean of all signals from each signal at each time point). The experimenter
-    may choose to CAR specific subset of channels or to CAR all the channels together. If the experimenter wishes to
-    CAR specific subsets of channels, each subset of channels should be written as a sublist, within a larger nested
-    list. For example: [[ch1, ch2, ch3],[ch8, ch10, ch13]].
+    The signals from the included channels will be extracted and referenced to their common average at each time point
+    (CAR filtering: for each time point, subtracting the mean of all signals from each signal). The experimenter may 
+    choose to CAR specific subset of channels or to CAR all the channels together. If the experimenter wishes to CAR 
+    specific subsets of channels, each subset of channels should be written as a sublist, within a larger nested list.
+    For example: [[ch1, ch2, ch3], [ch8, ch10, ch13]].
     
     INPUT VARIABLES:
     car_tag:        [string]; What type of data is being CAR-ed.
     data_cont_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        signals:    [xarray (channels x time samples (units: s) > floats (units: microvolts)]; Array of continuous 
-                    voltage signals. Time dimension is in units of seconds.
-        states:     [xarray (1 x time samples) > ints (0 or 1)]; Array of states at each time sample. Time dimension
-                    is in units of seconds.
+        signals:    [xarray (channels, time samples) > floats (units: microvolts)]; Array of continuous voltage signals
+                    Time dimension is in units of seconds.
+        states:     [xarray (time samples,) > ints (0 or 1)]; Array of states at each time sample. Time dimension is in
+                    units of seconds.
         
     GLOBAL PARAMETERS:
-    car:        [bool (True/False)] Whether or not CAR filtering will be performed.
+    car:        [bool (True/False)]; Whether or not CAR filtering will be performed.
     patient_id: [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
         
     OUTPUT VARIABLES:
@@ -457,7 +471,7 @@ def car_filter(data_cont_dict, car_tag):
 
             # Extracting all of the channel and time coordinates from the signals xarray.
             chs_include = list(signals.channel.values) 
-            t_seconds   = signals.time
+            t_seconds   = signals.time.values
             
             # Extracting the signal values from the signals xarray for speed.
             signals = signals.values
@@ -465,8 +479,8 @@ def car_filter(data_cont_dict, car_tag):
             # Loading the sets of channels over which to independently apply CAR.
             specific_car_chs = params_model_training.car_channels[patient_id]
 
-            # Ensuring that the CAR channels are actually in the included channels list. If a particular channel is not in the 
-            # included hannels list, it will be removed from the CAR channel list.
+            # Ensuring that the CAR channels are actually in the included channels list. If a particular channel is not
+            # in the included channels list, it will be removed from the CAR channel list.
             n_car_sets           = len(specific_car_chs)
             specific_car_chs_inc = [None]*n_car_sets
             for (n, this_car_set) in enumerate(specific_car_chs):
@@ -480,7 +494,7 @@ def car_filter(data_cont_dict, car_tag):
             # Initializing the CAR-ed signals array.
             signals_car = copy.deepcopy(signals)
 
-            # If the experimenter wishes to CAR only a specific subset of channels.
+            # If subsets of channels will be CAR-ed.
             if specific_car_chs:
                 
                 # Computing the number of specific CAR channel groups.
@@ -506,9 +520,10 @@ def car_filter(data_cont_dict, car_tag):
                         for n in range(n_samples):
 
                             # CAR-ing only the specific channels in this particular subgroup.
-                            signals_car[(car_ch_inds, n)] = signals[(car_ch_inds, n)] - np.mean(signals[(car_ch_inds, n)])
+                            signals_car[(car_ch_inds, n)] = signals[(car_ch_inds, n)] -\
+                                                            np.mean(signals[(car_ch_inds, n)])
 
-            # If the user wishes to CAR all channels together.
+            # If all channels will be CAR-ed together.
             else:
                 # Iterating through all time samples to CAR all channels.
                 for n in range(n_samples):
@@ -522,7 +537,7 @@ def car_filter(data_cont_dict, car_tag):
             # Updating the data dictionary with the CAR-ed signals.
             data_cont_dict[this_task]['signals'] = signals_car_xr  
             
-    # If no CAR filtering of signals was applied. 
+    # If no CAR filtering will be applied.
     else:
         pass
     
@@ -535,15 +550,15 @@ def car_filter(data_cont_dict, car_tag):
 def channel_selector(eeglabels):
     """
     DESCRIPTION:
-    This function extracts all the channels to include in further analysis and excludes the experimenter-determined
-    channels for elimination.
+    This function extracts all the channels to include in further analysis and excludes the experimenter-specified 
+    channels for exclusion.
 
     INPUT VARIABLES:
     eeglabels: [array > strings (eeg channel names)]: EEG channels extracted from the .hdf5 or .mat file.
     
     GLOBAL PARAMETERS:
-    elim_channels: [dictionary (key: string (patient_id); Value: list > strings (bad channels))]; The list of
-                   bad or non-neural channels to be exlucded from further analysis of the neural data.
+    elim_channels: [dictionary (key: string (patient ID); Value: list > strings (bad channels))]; The list of bad or 
+                   non-neural channels to be exlucded from further analysis.
     patient_id:    [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     
     OUTPUT VARIABLES:
@@ -571,8 +586,8 @@ def channel_selector(eeglabels):
 
 
 
-def computing_channel_importance(aw_shifts, chs_include, grasp_bandpower_dict, saliency_class, saliency_powerband, t_history,\
-                                 t_grasp_end_per_trial, t_grasp_start_per_trial):
+def computing_channel_importance(aw_shifts, chs_include, grasp_bandpower_dict, saliency_class, saliency_powerband,\
+                                 t_history, t_grasp_end_per_trial, t_grasp_start_per_trial):
     """
     DESCRIPTION:
     Computing the channel importance (saliency map) to a specific class (attemped movement) in a specified frequency 
@@ -585,27 +600,29 @@ def computing_channel_importance(aw_shifts, chs_include, grasp_bandpower_dict, s
         N (where N is an int): [int]; AW shift for the Nth trial in units of samples.
     chs_include:               [list > strings]; The list of channels to be included in further analysis.
     grasp_bandpower_dict:      [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:             [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                               the band power is computed for each channel across every time point.
-        sxx_power_z:           [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                               calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:            [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                               to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:        [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
-                               information for each trial. Time dimension is in units of seconds.
-    
+        sxx_power:             [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each
+                               frequency band, the band power is computed for each channel across every time samples. 
+                               Time dimension is in units of seconds. 
+        sxx_power_z:           [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each 
+                               standardized (to calibration) frequency band, the band power is computed for each channel
+                               across every time point. Time dimension is in units of seconds.
+        sxx_states:            [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                               downsampled to match time resolution of the signal spectral power. Time dimension is in
+                               units of seconds.
+        power_trials_z:        [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
+                               spectral information for each trial. Time dimension is in units of seconds.
     saliency_class:            [string]; The class for whose channel importance scores will be computed.
     saliency_powerband:        [string (powerbandX)]; The powerband for whose channel importances will be computed.
     t_grasp_end_per_trial:     [float (units: s)]; Time of trial end relative to stimulus onset.
     t_grasp_start_per_trial:   [float (units: s)]; Time of trial start relative to stimulus onset.
     t_history:                 [float (unit: ms)]; Amount of feature time history.
-    
+
     NECESSARY FUNCTIONS:
     averaging_channel_importance_scores
     computing_channel_importance_per_sample
     
     OUTPUT VARIABLES:
-    ch_importance_scores: [array (1 x channels) > floats]; Mean importance score for each channel, averaged across all
+    ch_importance_scores: [array (channels, ) > floats]; Mean importance score for each channel, averaged across all
                           time samples from all validation folds.
     """
     # COMPUTATION:
@@ -624,8 +641,9 @@ def computing_channel_importance(aw_shifts, chs_include, grasp_bandpower_dict, s
 
 
 
-def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpower_dict, saliency_class, saliency_powerband,\
-                                            t_history, t_tr_end_rel_stim_on, t_tr_start_rel_stim_on):
+def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpower_dict, saliency_class,\
+                                            saliency_powerband, t_history, t_tr_end_rel_stim_on,\
+                                            t_tr_start_rel_stim_on):
     """ 
     DESCRIPTION:
     Computing the channel importance (saliency maps) to a specific class (attempted movement) in a specified frequency
@@ -636,24 +654,30 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
         N (where N is an int): [int]; AW shift for the Nth trial in units of samples.
     chs_include:               [list > strings]; The list of channels to be included in further analysis.
     grasp_bandpower_dict:      [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:             [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                               the band power is computed for each channel across every time point.
-        sxx_power_z:           [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                               calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:            [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                               to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:        [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
-                               information for each trial. Time dimension is in units of seconds.
+        sxx_power:             [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each
+                               frequency band, the band power is computed for each channel across every time samples. 
+                               Time dimension is in units of seconds. 
+        sxx_power_z:           [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each 
+                               standardized (to calibration) frequency band, the band power is computed for each channel
+                               across every time point. Time dimension is in units of seconds.
+        sxx_states:            [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                               downsampled to match time resolution of the signal spectral power. Time dimension is in
+                               units of seconds.
+        power_trials_z:        [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
+                               spectral information for each trial. Time dimension is in units of seconds.
     saliency_class:            [string]; Class whose saliency maps will be computed.
     saliency_powerband:        [string ('powerbandX')]; ID of the powerband whose saliency map will be computed.
     t_history:                 [float (unit: ms)]; Amount of feature time history.
-    t_grasp_end_per_trial:     [float (units: s)]; Time of trial end relative to stimulus onset.
-    t_grasp_start_per_trial:   [float (units: s)]; Time of trial start relative to stimulus onset.
+    t_tr_end_rel_stim_on:      [float (units: s)]; Time of trial end relative to stimulus onset.
+    t_tr_start_rel_stim_on:    [float (units: s)]; Time of trial start relative to stimulus onset.
+    
+    NECESSARY FUNCTIONS:
+    extracting_saliencymap_powerband
     
     OUTPUT VARIABLES:
-    ch_importance_per_sample: [dictionary (key: string (fold); Value: array (time samples x channels))]; For each validation fold,
-                              the importance score for each channel is computed for each sample of the experimenter-specified
-                              saliency class.
+    ch_importance_per_sample: [dictionary (key: string (fold); Value: array (time samples, channels))]; For each 
+                              validation fold, the importance score for each channel is computed for each sample of the
+                              experimenter-specified saliency class.
     """
     
     # COMPUTATION:
@@ -669,12 +693,14 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
     grasp_bandpower_dict_saliencymap = extracting_saliencymap_powerband(grasp_bandpower_dict, saliency_powerband)
 
     # Assigning per-sample labels.
-    labels_dict = creating_labels(aw_shifts, grasp_bandpower_dict_saliencymap, t_tr_end_rel_stim_on, t_tr_start_rel_stim_on)
+    labels_dict = creating_labels(aw_shifts, grasp_bandpower_dict_saliencymap, t_tr_end_rel_stim_on,\
+                                  t_tr_start_rel_stim_on)
 
     # Creating feature array with concatentated power bands and historical time shifts.
     features_dict = creating_features(grasp_bandpower_dict_saliencymap, t_history)
 
-    # Adjusting the features and labels time dimensions to account for zero-padded features due to the historical features array. 
+    # Adjusting the features and labels time dimensions to account for zero-padded features due to the historical
+    # features array. 
     features_dict, labels_dict = time_history_sample_adjustment(features_dict, labels_dict, t_history)
 
     # Downsampling the labels and corresponding features of the overrepresented class.
@@ -687,7 +713,8 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
     training_data_folds,\
     training_labels_folds,\
     validation_data_folds,\
-    validation_labels_folds = training_validation_split(features_dict, labels_dict, training_folds_tasks, validation_folds_tasks)
+    validation_labels_folds = training_validation_split(features_dict, labels_dict, training_folds_tasks,\
+                                                        validation_folds_tasks)
 
     # Computing the means of the training folds.
     training_data_fold_means = mean_compute_all_folds(training_data_folds)
@@ -704,7 +731,8 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
     validation_data_folds = rearranging_features_all_folds(validation_data_folds)
 
     # Creating a model for each validation fold.
-    fold_models = training_fold_models(training_data_folds, training_labels_folds, validation_data_folds, validation_labels_folds)
+    fold_models = training_fold_models(training_data_folds, training_labels_folds, validation_data_folds,\
+                                       validation_labels_folds)
 
     # Iterating across all the folds.
     for this_fold in fold_models.keys():
@@ -712,7 +740,9 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
         # Initializing baseline parameters for attribution mask..
         name_baseline_tensors = {
                                  "Baseline Image: Black": tf.zeros(shape=(n_history, n_channels)),
-                                 "Baseline Image: Random": tf.random.uniform( shape=(n_history, n_channels), minval=0.0, maxval=1.0),
+                                 "Baseline Image: Random": tf.random.uniform(shape=(n_history, n_channels),\
+                                                                             minval=0.0,\
+                                                                             maxval=1.0),
                                  "Baseline Image: White": tf.ones(shape=(n_history, n_channels)),
                                 }
 
@@ -742,7 +772,7 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
 
             # Creating the attribution mask for the current sample.
             this_sample_importance = saliency_mapping_suite.plot_img_attributions(
-                                                                                  model=this_fold_model,    # model_final[0] or model_final_real @ at 1:57 AM, just used model_final[0]
+                                                                                  model=this_fold_model,    
                                                                                   img=this_sample.astype('float32'),
                                                                                   baseline=name_baseline_tensors["Baseline Image: Black"],
                                                                                   target_class_idx=0,
@@ -764,6 +794,8 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
 
 
 
+
+
 def computing_eigenvectors(data):
     """
     DESCRIPTION:
@@ -775,25 +807,26 @@ def computing_eigenvectors(data):
     2) Only keep the first n_pc_thr eigenvectors.
         
     INPUT VARIABLES:
-    data: [array (features x samples) > floats (units: V^2/Hz)];
+    data: [array (features, samples) > floats (units: z-scores)];
     
     GLOBAL PARAMETERS:
-    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 'None' if
-                     percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the variance will be used
-                     (no PC transform).
-    percent_var_thr: [float]; The percent variance which the user wishes to capture with the principal components. Will compute the
-                     number of principal components which capture this explained variance as close as possible, but will not surpass
-                     it. Set to 'None' if n_pc_thr is not 'None', or set to 'None' along with n_pc_thr if all of the variance will be
-                     used (no PC transform).
+    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 
+                     'None' if percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the
+                     variance will be used (no PC transform).
+    percent_var_thr: [float (between 0 and 1)]; The percent variance which the user wishes to capture with the 
+                     principal components. Will compute the number of principal components which capture this explained 
+                     variance as close as possible, but will not surpass it. Set to 'None' if n_pc_thr is not 'None', or
+                     set to 'None' along with n_pc_thr if all of the variance will be used (no PC transform).
+                     
     OUTPUT VARIABLES:
-    eigenvectors: [array (features x pc features) > floats]; Array in which columns consist of eigenvectors which explain the
-                  variance of the data in descending order. 
+    eigenvectors: [array (features, pc features) > floats]; Array in which columns consist of eigenvectors which explain
+                  the variance of the data in descending order. 
     """
     
     # COMPUTATION:
     
-    # Computing the PCs of the training data if the experimenter has entered a value for the expected percentage variance explained
-    # or for the number of PCs to be computed.
+    # Computing the PCs of the training data if the experimenter has entered a value for the expected percentage 
+    # variance explained or for the number of PCs to be computed.
     if (percent_var_thr != 'None') or  (n_pc_thr != 'None'):
         
         # Computing the number of samples in the data.
@@ -805,10 +838,11 @@ def computing_eigenvectors(data):
         # Computing the eigenvectors and eigenvalues of the covariance matrix. 
         [D,V] = np.linalg.eig(C)
         
-        # If there are more features than samples, curtail the the eigenvalues and eigenvectors to exclude the indices past 
-        # the number of samples. Due to Python's numerical approximation, when there are more features than samples, the 
-        # eigen-decomposition returns complex eigenvalues and eigenvectors. This shouldn't ever mathematically happen because
-        # the covariance matrix is symmetric, and therefore only has real eigenvalues and eigenvectors.
+        # If there are more features than samples, curtail the the eigenvalues and eigenvectors to exclude the indices
+        # past the number of samples. Due to Python's numerical approximation, when there are more features than 
+        # samples, the eigen-decomposition returns complex eigenvalues and eigenvectors. This should not ever 
+        # mathematically happen because the covariance matrix is symmetric, and therefore only has real eigenvalues and
+        # eigenvectors.
         D = D[:n_samples].real
         V = V[:,:n_samples].real
         
@@ -817,29 +851,31 @@ def computing_eigenvectors(data):
         eig_vals            = D[eig_values_dsc_inds]
         eig_vecs            = V[:,eig_values_dsc_inds]
         
-        # Calculating the percentage of variance explained from each eigenvector by cumulatively summing the eigenvalues.
+        # Calculating the percentage of variance explained from each eigenvector by cumulatively summing the 
+        # eigenvalues.
         percent_var = np.cumsum(eig_vals)/np.sum(eig_vals);
         
-        # Depending on the experimenter-input, the eigenvectors will be extracted based on the percent variance explained threshold
-        # or the number of principal components threshold. 
+        # Depending on the experimenter-input, the eigenvectors will be extracted based on the percent variance 
+        # explained threshold or the number of principal components threshold. 
         if percent_var_thr != 'None':
             eigenvectors = eig_vecs[:,percent_var <= percent_var_thr];
             
-            # If the size of the eigenvectors array is 0, this means that the first eigenvector explained more than the threshold
-            # percent variance, and so it wasn't captured. Manually setting the eigenvectors variable to only the first eigenvector.
+            # If the size of the eigenvectors array is 0, this means that the first eigenvector explained more than the
+            # threshold percent variance, and so it wasn't captured. Manually setting the eigenvectors variable to only
+            # the first eigenvector.
             if eigenvectors.size == 0:
                 eigenvectors = eig_vecs[:,0];
             
         if n_pc_thr != 'None':
             eigenvectors = eig_vecs[:,0:n_pc_thr];
-       
 
         # If there is only one eigenvector, the second dimension of the array must be expanded from nothing to 1.
         if len(list(eigenvectors.shape)) == 1:
             eigenvectors = np.expand_dims(eigenvectors[n],axis=1)   
             
-        # Enforcing the rule that the first element of each eigenvector should be positive, and if it is not, then the entire 
-        # eigenvector will be multiplied by a -1. This is to ensure eigenvector similarity across multiple data uploads.
+        # Enforcing the rule that the first element of each eigenvector should be positive, and if it is not, then the
+        # entire eigenvector will be multiplied by a -1. This is to ensure eigenvector similarity across multiple data
+        # uploads.
         n_eig = eigenvectors.shape[1]
         for n in range(n_eig):
             this_eigenvector  = eigenvectors[:,n]
@@ -880,17 +916,17 @@ def computing_eigenvectors(data):
 def computing_predicted_labels(fold_models, valid_data_folds, valid_labels_folds):
     """
     DESCRIPTION:
-    For each fold of validation data, the approrpirate fold model is used to determine the predicted label for each sample.
-    Predicted labels across all folds are then concatenated together in list. Corresponding true labels for each fold are
-    also concatenated together.
+    For each fold of validation data, the approrpirate fold model is used to determine the predicted label for each
+    sample. Predicted labels across all folds are then concatenated together in list. Corresponding true labels for each
+    fold are also concatenated together.
     
     INPUT VARIABLES:
     fold_models:        [dictionary (key: string (fold ID); Value: model)]; Models trained for each training fold.
-    valid_data_folds:   [dict (key: string (fold ID); Value: xarray (dimensions vary based on model type) > floats (units: V^2/Hz))];
-                        Data across all validation tasks per fold. Equal number of samples per class. PC features. Rearranged 
-                        according to the type of model that will be trained.
-    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; Labels across
-                        all validation tasks per fold. Equal number of labels per class.
+    valid_data_folds:   [dictionary (key: string (fold ID): Value xarray (dimensions vary based on model type) > 
+                        floats)]; Data across all validation tasks per fold. Equal number of samples per class. PC 
+                        features. Rearranged according to the type of model that will be trained.
+    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (time samples, ) > strings ('grasp'/'rest'))]; 
+                        Labels across all validation tasks per fold. Equal number of labels per class.
                     
     GLOBAL PARAMETERS:
     model_classes:  [list > strings]; List of all the classes to be used in the classifier.
@@ -927,8 +963,8 @@ def computing_predicted_labels(fold_models, valid_data_folds, valid_labels_folds
     # Iterating across all folds.
     for this_fold in valid_data_folds.keys():
         
-        # Extracting the validation data and labels from the current fold. Transforming data back into an array because tensorflow
-        # models produce warnings when given xarrays.
+        # Extracting the validation data and labels from the current fold. Transforming data back into an array because
+        # tensorflow models produce warnings when given xarrays.
         this_fold_validation_data   = np.asarray(valid_data_folds[this_fold])
         this_fold_validation_labels = valid_labels_folds[this_fold]
         
@@ -967,17 +1003,19 @@ def concatenating_all_data_and_labels(features_dict, labels_dict):
     Concatenating features and labels across all tasks in the sample dimension.
     
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features. 
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                   task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                   modulation as well as the per-trial shift from the AW model. 
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time samples) > floats 
+                   (units: z-scores)]; Array of historical time features. Time samples reduced such that there are an
+                   equal number of features per class.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample
+                   in each task, there exists a rest or grasp label depending on the experimenter-specified onset and 
+                   offset of modulation as well as the per-trial shift from the AW model. Time samples reduced such that
+                   there are an equal number of features per class.
                    
     OUTPUT VARIABLES:
-    training_data:   [xarray (dimensions vary based on model type) > floats (units: V^2/Hz)]; For each task, feature xarrays are 
-                     concatenated in the sample dimension.
-    training_labels: [xarray (1 x time samples) > strings ('grasp'/'rest')]; For each task, label xarrays are concatenated in the
-                     sample dimension.
+    training_data:   [xarray (time history, features, time samples) > floats (units: z-scores)]; For each task, feature
+                     xarrays are concatenated in the sample dimension.
+    training_labels: [xarray (time samples, ) > strings ('grasp'/'rest')]; For each task, label xarrays are concatenated
+                     in the sample dimension.
     """
     
     # COMPUTATION:
@@ -1019,10 +1057,10 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
     """
     DESCRIPTION:
     Based on the experimenter-specified time history (t_history) and the time resolution (global variable sxx_shift),
-    the number of historical time points are calculated (t_history/sxx_shift). An xarray with dimensions (history, features, time)
-    is created, where each coordinate in the history dimension represents how much the features were shifted in time. For 
-    example, consider one coordinate in the feature array, and suppose a time length of 10 samples and a total time history 
-    of 3 samples. For this feature, the resulting xarray would look like:
+    the number of historical time points are calculated (t_history/sxx_shift). An xarray with dimensions 
+    (history, features, time) is created, where each coordinate in the history dimension represents how much the 
+    features were shifted in time. For example, consider one coordinate in the feature array, and suppose a time length
+    of 10 samples and a total time history of 3 samples. For this feature, the resulting xarray would look like:
 
     historical time shifts
          n=2 shifts      [[0.000, 0.000, 0.234, 0.523. 0.435, 0.982, 0.175, 0.759, 0.341, 0.101],
@@ -1033,16 +1071,16 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
     and the resulting dimensions of this array are (history=3, features=1, time=10).
     
     INPUT VARIABLES:
-    sxx_power_z_all_bands: [dictionary (Key: string (task ID); Value: xarray (features (chs x bands) x time samples) > floats (units: V^2/Hz))]; 
-                           Concatenated band power features across all power bands. 
+    sxx_power_z_all_bands: [dictionary (Key: string (task ID); Value: xarray (features (chs*bands) x time samples) > 
+                           floats (units: z-scores))]; Concatenated band power features across all power bands. 
     t_history:             [float (unit: s)]; Amount of time history used as features.
                            
     GLOBAL PARAMETERS: 
     sxx_shift: [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the time domain.
     
     OUTPUT VARIABLES:
-    sxx_power_z_all_history: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats (units: V^2/Hz))]; 
-                             Array of historical time features.
+    sxx_power_z_all_history: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > 
+                             floats (units: z-scores))]; Array of historical time features.
     """
     
     # COMPUTATION:
@@ -1053,8 +1091,8 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
     # Computing the total number of historical time features.
     n_history = int(t_history/sxx_shift)
     
-    # Extracting the number of features over all powerbands. Computing from the first task, as the number of features should be the 
-    # same across all tasks.
+    # Extracting the number of features over all powerbands. Computing from the first task, as the number of features 
+    # should be the same across all tasks.
     n_features = sxx_power_z_all_bands['task0'].feature.shape[0]
 
     # Iterating across all tasks.
@@ -1070,7 +1108,8 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
         # Initializing a feature array which will contain all historical time features.
         this_task_power_all_history = np.zeros((n_history, n_features, n_samples))
                 
-        # Iterating across all historical time shifts. The index, n, is the number of samples back in time that will be shifted.
+        # Iterating across all historical time shifts. The index, n, is the number of samples back in time that will be
+        # shifted.
         for n in range(n_history):
             
             # If currently extracting historical time features (time shift > 0)
@@ -1079,7 +1118,8 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
                 # Extracting the historical time features for the current time shift.
                 these_features_history = this_task_sxx_power_z[:,:-n]
                 
-                # Creating a zero-padded array to make up for the time curtailed from the beginning of the features array.
+                # Creating a zero-padded array to make up for the time curtailed from the beginning of the features
+                # array.
                 zero_padding = np.zeros((n_features, n))
                 
                 # Concatenating the features at the current historical time point with a zero-padded array.
@@ -1094,7 +1134,9 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
         
         # Converting the historical power features for this task to xarray.
         this_task_power_all_history = xr.DataArray(this_task_power_all_history, 
-                                                   coords={'history': np.arange(n_history), 'feature': np.arange(n_features), 'time': t_seconds}, 
+                                                   coords={'history': np.arange(n_history),\
+                                                           'feature': np.arange(n_features),\
+                                                           'time': t_seconds}, 
                                                    dims=["history", "feature", "time"])
         
         # Adding the historical time features for the current task to the dictionary.
@@ -1109,24 +1151,27 @@ def concatenating_historical_features(sxx_power_z_all_bands, t_history):
 def concatenating_power_bands(grasp_bandpower_dict):
     """
     DESCRIPTION:
-    For each task, features across all powerbands are concatenated into one feature dimension. For example, if a feature array
-    from one task has dimensions (chs: 128, powerbands: 3, time samples: 4500), the powerband concatenation will result in an
-    array of size: (chs x pwrbands: 384, time samples: 4500).
+    For each task, features across all powerbands are concatenated into one feature dimension. For example, if a feature
+    array from one task has dimensions (chs: 128, powerbands: 3, time samples: 4500), the powerband concatenation will
+    result in an array of size: (chs*pwrbands: 384, time samples: 4500).
     
     INPUT VARIABLES:
     grasp_bandpower_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:        [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                          the band power is computed for each channel across every time point.
-        sxx_power_z:      [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                          calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:       [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                          to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:   [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
+        sxx_power:        [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each frequency
+                          band, the band power is computed for each channel across every time samples. Time dimension is
+                          in units of seconds. 
+        sxx_power_z:      [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each standardized
+                          (to calibration) frequency band, the band power is computed for each channel across every time
+                          point. Time dimension is in units of seconds.
+        sxx_states:       [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                          downsampled to match time resolution of the signal spectral power. Time dimension is in units
+                          of seconds.
+        power_trials_z:   [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral 
                           information for each trial. Time dimension is in units of seconds.
                         
     OUTPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (features (chs x bands), time samples) > floats (units: V^2/Hz)]; 
-                   Concatenated band power features over all power bands. 
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (features (chs*bands), time samples) > 
+                   floats (units: z-scores)]; Concatenated band power features over all power bands. 
     """
     
     # COMPUTATION:
@@ -1150,7 +1195,8 @@ def concatenating_power_bands(grasp_bandpower_dict):
         
         # Converting the concatenated band features back into an xarray.
         this_task_power_all_bands = xr.DataArray(this_task_power_all_bands, 
-                                                 coords={'feature': np.arange(n_channels*n_bands), 'time': np.arange(n_samples)}, 
+                                                 coords={'feature': np.arange(n_channels*n_bands), 
+                                                         'time': np.arange(n_samples)}, 
                                                  dims=["feature", "time"])
         
         # Adding the array with concatenated power bands to the dictionary.
@@ -1168,7 +1214,7 @@ def confusion_matrix_display(cm, suppress_figs='No'):
     Given the experimenter-input confusion matrix array and corresponding labels, the confusion matrix is displayed.
 
     INPUT VARIABLES:
-    cm: [array > float]; Confusion matrix which contains the accuracy of the true (vertical axis) and predicted
+    cm: [array > ints]; Confusion matrix which contains the accuracy of the true (vertical axis) and predicted
         (horizontal axis) labels.
     
     GLOBAL PARAMETERS
@@ -1220,31 +1266,35 @@ def confusion_matrix_display(cm, suppress_figs='No'):
 def creating_labels(aw_shifts, grasp_bandpower_dict, t_grasp_end_per_trial, t_grasp_start_per_trial):
     """
     DESCRIPTION:
-    For each task, each time sample is labeled as grasp or rest according to the experimenter-specified trial onset and offset 
-    and the per-trial shift.
+    For each task, each time sample is labeled as grasp or rest according to the experimenter-specified trial onset and
+    offset and the per-trial shift. The onset and offset are determined from the trial-averaged activity relative to the 
+    Go cue. These onset and offset are then applied to all trials relative to their respective cues.
     
     INPUT VARIABLES:
-    aw_shifts:               [dictionary (Key: string (Task ID); Value: dictionary (Key/Value pairs below)];
-        N (where N is an int): [int]; AW shift for the Nth trial in units of samples.
-    grasp_bandpower_dict:    [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:           [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                             the band power is computed for each channel across every time point.
-        sxx_power_z:         [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                             calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:          [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                             to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:      [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
-                             information for each trial. Time dimension is in units of seconds.
-    t_grasp_end_per_trial:   [float (units: s)]; Time of trial end relative to stimulus onset.
-    t_grasp_start_per_trial: [float (units: s)]; Time of trial start relative to stimulus onset.
+    aw_shifts:                 [dictionary (Key: string (Task ID); Value: dictionary (Key/Value pairs below)];
+    N (where N is an int):     [int]; AW shift for the Nth trial in units of samples.
+    grasp_bandpower_dict:      [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
+        sxx_power:             [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each 
+                               frequency band, the band power is computed for each channel across every time samples. 
+                               Time dimension is in units of seconds. 
+        sxx_power_z:           [xarray (channel, powerband, time samples] > floats (units:z-scores)]; For each 
+                               standardized (to calibration) frequency band, the band power is computed for each channel
+                               across every time point. Time dimension is in units of seconds.
+        sxx_states:            [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                               downsampled to match time resolution of the signal spectral power. Time dimension is in 
+                               units of seconds.
+        power_trials_z:        [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
+                               spectral information for each trial. Time dimension is in units of seconds.
+    t_grasp_end_per_trial:     [float (units: s)]; Time of trial end relative to stimulus onset.
+    t_grasp_start_per_trial:   [float (units: s)]; Time of trial start relative to stimulus onset.
     
     GLOBAL PARAMETERS:
     model_classes:  [list > strings]; List of all the classes to be used in the classifier.
     
     OUTPUT VARIABLES:
-    labels_dict: [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                 task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                 modulation as well as the per-trial shift from the AW model.
+    labels_dict: [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in
+                 each task, there exists a rest or grasp label depending on the experimenter-specified onset and offset
+                 of modulation as well as the per-trial shift from the AW model.
     """
     
     # COMPUTATION:
@@ -1309,14 +1359,9 @@ def creating_labels(aw_shifts, grasp_bandpower_dict, t_grasp_end_per_trial, t_gr
             
             # Labeling the time between grasp onset and offset with grasp.
             this_task_labels[grasp_onset_ind:grasp_offset_ind] = [grasp_class]*n_diff_onset_offset
-            
-        # In case the labels for the current task end up surpassing the total number of time samples due to the affine
-        # warp shifting, curtail the task labels to this sample size.
-        # this_task_labels = this_task_labels[:n_samples] # This should never happen due to the two previous IF statements.
         
-        
-        # Where the state_ON and state_OFF labels remain, replace with the default class, rest. We are ignoring any possible
-        # neutral labels as those won't be used for training.
+        # Where the state_ON and state_OFF labels remain, replace with the default class, rest. We are ignoring any
+        # possible  neutral labels as those won't be used for training.
         remaining_state_on_inds  = np.squeeze(np.argwhere(this_task_labels.values == 'state_ON'))
         remaining_state_off_inds = np.squeeze(np.argwhere(this_task_labels.values == 'state_OFF'))        
         this_task_labels[remaining_state_on_inds]  = rest_class
@@ -1343,21 +1388,24 @@ def creating_power_trial_rasters(grasp_bandpower_dict):
     
     INPUT VARIABLES:
     grasp_bandpower_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:        [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                          the band power is computed for each channel across every time point.
-        sxx_power_z:      [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                          calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:       [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                          to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:   [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
+        sxx_power:        [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each frequency 
+                          band, the band power is computed for each channel across every time samples. Time dimension is
+                          in units of seconds. 
+        sxx_power_z:      [xarray (channel, powerband, time samples] > floats (units:z-scores)]; For each standardized
+                          (to calibration) frequency band, the band power is computed for each channel across every time
+                          point. Time dimension is in units of seconds.
+        sxx_states:       [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                          downsampled to match time resolution of the signal spectral power. Time dimension is in units
+                          of seconds.
+        power_trials_z:   [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral 
                           information for each trial. Time dimension is in units of seconds.
-    
+
     NECESSARY FUNCTIONS:
-    index_advancer
-    
+    index_advancers
+
     OUTPUT VARIABLES:
-    ptr_all_trials: [xarray (trials x channels x powerbands x time samples) > floats (units: V^2/Hz)]; The spectral information
-                    for each trial (across all tasks). Time dimension is in units of seconds.
+    ptr_all_trials: [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral
+                    information for each trial (across all tasks). Time dimension is in units of seconds.
     """
 
     # COMPUTATION:
@@ -1386,7 +1434,10 @@ def creating_power_trial_rasters(grasp_bandpower_dict):
         
     # Initializing the xarray of spectrograms per-trial.
     ptr_all_trials = xr.DataArray(np.zeros((n_trials_all, n_chs, n_bands, n_samples_per_trial)), 
-                                  coords={'trial': np.arange(n_trials_all),'channel': channels, 'powerband': powerbands, 'time': t_sxx_per_trial}, 
+                                  coords={'trial': np.arange(n_trials_all),\
+                                          'channel': channels,\
+                                          'powerband': powerbands,\
+                                          'time': t_sxx_per_trial}, 
                                   dims=["trial", "channel", "powerband", "time"])
     
     # Initializing the trial indices.    
@@ -1416,15 +1467,15 @@ def creating_power_trial_rasters(grasp_bandpower_dict):
 def creating_features(grasp_bandpower_dict, t_history):
     """
     DESCRIPTION:
-    Power features across all powerbands are concatenated in one feature dimension. For example, if a feature array has
-    dimensions (chs: 128, powerbands: 3, time samples: 4500), the powerband concatenation will result in an array of size:
-    (chs x pwrbands: 384, time samples: 4500).
+    Power features across all powerbands are concatenated in one feature dimension. For example, if a feature array
+    has dimensions (chs: 128, powerbands: 3, time samples: 4500), the powerband concatenation will result in an array 
+    of size: (chs*powrrbands: 384, time samples: 4500).
 
-    Then, based on the experimenter-specified time history (t_history) and the time resolution (global variable sxx_shift),
-    the number of historical time points are calculated (t_history/sxx_shift). An xarray with dimensions (history, features, time)
-    is created, where each coordinate in the history dimension represents how much the features were shifted in time. For 
-    example, consider one coordinate in the feature array, and suppose a time length of 10 samples and a total time history 
-    of 3 samples. For this feature, the resulting xarray would look like:
+    Then, based on the experimenter-specified time history (t_history) and the time resolution (global variable 
+    sxx_shift), the number of historical time points are calculated (t_history/sxx_shift). An xarray with dimensions  
+    (history, features, time) is created, where each coordinate in the history dimension represents how much the 
+    features were shifted in time. For example, consider one coordinate in the feature array, and suppose a time length
+    of 10 samples and a total time history of 3 samples. For this feature, the resulting xarray would look like:
 
     historical time shifts
          n=2 shifts      [[0.000, 0.000, 0.234, 0.523. 0.435, 0.982, 0.175, 0.759, 0.341, 0.101],
@@ -1436,13 +1487,16 @@ def creating_features(grasp_bandpower_dict, t_history):
     
     INPUT VARIABLES:
     grasp_bandpower_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:        [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                          the band power is computed for each channel across every time point.
-        sxx_power_z:      [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                          calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:       [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                          to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:   [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
+        sxx_power:        [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each frequency
+                          band, the band power is computed for each channel across every time samples. Time dimension is
+                          in units of seconds. 
+        sxx_power_z:      [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each standardized
+                          (to calibration) frequency band, the band power is computed for each channel across every time
+                          point. Time dimension is in units of seconds.
+        sxx_states:       [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                          downsampled to match time resolution of the signal spectral power. Time dimension is in units
+                          of seconds.
+        power_trials_z:   [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral 
                           information for each trial. Time dimension is in units of seconds.
     t_history:            [float (unit: ms)]; Amount of feature time history.
     
@@ -1451,8 +1505,8 @@ def creating_features(grasp_bandpower_dict, t_history):
     concatenating_power_bands
     
     OUTPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                   (units: z-scores)]; Array of historical time features.
     """
     # COMPUTATION:
     
@@ -1471,13 +1525,13 @@ def creating_features(grasp_bandpower_dict, t_history):
 def data_upload(chs_include, data_info_dict, eeglabels, state_info_dict):
     """
     DESCRIPTION:
-    For each grasp-based or calibration block, the signals and states at the resolution of the continuous
-    sampling rate are uploaded into data dictionaries.
+    For each grasp-based or calibration block, the signals and states at the resolution of the continuous sampling rate
+    are uploaded into data dictionaries.
     
     INPUT VARIABLES:
     chs_include:     [list > strings]; The list of channels to be included in further analysis.
-    data_info_dict:  [dictionary (Key: string (date in YYYY_MM_DD format); Values: list > string (task names);
-                     Values and keys correspond to grasp/calibration tasks and dates on which those tasks were run.
+    data_info_dict:  [dictionary (Key: string (date in YYYY_MM_DD format); Values: list > string (task names))]; Values
+                     and keys correspond to grasp/calibration tasks and dates on which those tasks were run.
     eeglabels:       [list > strings (eeg channel names)]: EEG channels extracted from the .hdf5 or .mat file.
     state_info_dict: [dictionary (Key: string (date in YYYY_MM_DD format); Values: list > string (state names))];
                      Values and keys correspond to the relevant states for each grasp/calibraion task.
@@ -1489,10 +1543,10 @@ def data_upload(chs_include, data_info_dict, eeglabels, state_info_dict):
     
     OUTPUT VARIABLES:    
     data_cont_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        signals:    [xarray (channels x time samples (units: s) > floats (units: microvolts)]; Array of continuous 
-                    voltage signals. Time dimension is in units of seconds.
-        states:     [xarray (1 x time samples) > ints (0 or 1)]; Array of states at each time sample. Time dimension
-                    is in units of seconds.
+        signals:    [xarray (channels, time samples) > floats (units: microvolts)]; Array of continuous voltage signals.
+                    Time dimension is in units of seconds.
+        states:     [xarray (time samples,) > ints (0 or 1)]; Array of states at each time sample. Time dimension is in
+                    units of seconds.
     """
     
     # COMPUTATION:
@@ -1514,7 +1568,8 @@ def data_upload(chs_include, data_info_dict, eeglabels, state_info_dict):
         for this_state, this_task in zip(this_date_state_names, this_date_data_tasks):
 
             # Creating the file pathway from where to upload the data.
-            this_path = '/mnt/shared/ecog/' + patient_id + '/' + file_extension + '/' + this_date + '/' + this_task + '.' + file_extension
+            this_path = '/mnt/shared/ecog/' + patient_id + '/' + file_extension + '/' + this_date + '/' + this_task +\
+                        '.' + file_extension
 
             # Uploading the eeg signals and states, depending on whether they come from a .hdf5 or .mat file.
             if file_extension == 'hdf5':
@@ -1544,7 +1599,7 @@ def data_upload(chs_include, data_info_dict, eeglabels, state_info_dict):
             n_samples  = eeg_signals.shape[0]
             n_channels = len(chs_include)
 
-            # Creating the time array. Note that the first time sample is not 0, as the first recorded signal sample
+            # Creating the time array. Note that the first time sample is not 0, as the first recorded signal sample 
             # does not correspond to a 0th time.
             t_seconds = (np.arange(n_samples) + 1)/sampling_rate    
 
@@ -1552,7 +1607,6 @@ def data_upload(chs_include, data_info_dict, eeglabels, state_info_dict):
             states = xr.DataArray(states,
                                   coords={'time': t_seconds},
                                   dims=["time"])
-
 
             # Initializing an xarray for the signals.
             signals = xr.DataArray(np.zeros((n_channels, n_samples)), 
@@ -1562,8 +1616,8 @@ def data_upload(chs_include, data_info_dict, eeglabels, state_info_dict):
             # Populating the signals xarray with the eeg signals.
             for ch_name in chs_include:
 
-                # Extracting the appropriate channel index from the original eeglabels list and populating the
-                # signals xarray with the channel's activity.
+                # Extracting the appropriate channel index from the original eeglabels list and populating the signals
+                # xarray with the channel's activity.
                 eeg_ind              = eeglabels.index(ch_name)            
                 signals.loc[ch_name] = eeg_signals[:,eeg_ind]
 
@@ -1609,35 +1663,35 @@ def equalizing_samples_per_class(features_dict, labels_dict):
     """
     DESCRIPTION:
     According to the label array, it is unlikely that there are an equal number of samples per class. For whichever
-    class there are more samples, the indices of this class will be extracted to create a smaller subset of 
-    indices in number equal to that of the underrepresented class. For example, consider the following labels array:
+    class there are more samples, the indices of this class will be extracted to create a smaller subset of indices in
+    number equal to that of the underrepresented class. For example, consider the following labels array:
 
     labels:  ['rest', 'rest', 'rest', 'rest', 'rest, 'grasp', 'grasp', 'grasp', 'rest', 'rest', 'rest', 'rest']
     indices:    0       1       2       3       4       5        6        7       8       9       10      11
 
     In the example, there are 3 samples with grasp labels, while there are 9 samples with rest labels. The indices
-    corresponding to the rest labels are: [0, 1, 2, 3, 4, 8, 9, 10, 11]. These indices will be randomly subsampled
-    such that they are equal in number to the grasp class. For example: [0, 1, 2] or [1, 4, 10] or [3, 9, 11]. As
-    such the downsampled labels (and corresponding features) will use the indices:
+    corresponding to the rest labels are: [0, 1, 2, 3, 4, 8, 9, 10, 11]. These indices will be randomly subsampled such
+    that they are equal in number to the grasp class. For example: [0, 1, 2] or [1, 4, 10] or [3, 9, 11]. As such, the 
+    downsampled labels (and corresponding features) will use the indices:
 
     labels downsampled:  ['rest', 'grasp', 'grasp', 'grasp', 'rest', 'rest']
     indices downsampled:    3        5        6        7       9       11
 
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features.
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                   task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                   modulation as well as the per-trial shift from the AW model.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                   (units: z-scores)]; Array of historical time features.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample
+                   in each task, there exists a rest or grasp label depending on the experimenter-specified onset and
+                   offset of modulation as well as the per-trial shift from the AW model.
 
     OUTPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features. Time samples reduced such that there are an equal number of features per
-                   class.
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                   task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                   modulation as well as the per-trial shift from the AW model. Time samples reduced such that there are an equal
-                   number of features per class.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                   (units: z-scores)]; Array of historical time features. Time samples reduced such that there are an
+                   equal number of features per class.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample
+                   in each task, there exists a rest or grasp label depending on the experimenter-specified onset and 
+                   offset of modulation as well as the per-trial shift from the AW model. Time samples reduced such that
+                   there are an equal number of features per class.
     """
     
     # COMPUTATION
@@ -1661,17 +1715,18 @@ def equalizing_samples_per_class(features_dict, labels_dict):
             # Counting the number of samples for the current label and appropriately updating the dictionary.
             samples_per_label[this_label] = sum(this_task_labels == this_label)
             
-        # Check if the neutral labels exists at all. If so, delete this dictionary key because these labels will not be used for
-        # training a model.
+        # Check if the neutral labels exists at all. If so, delete this dictionary key because these labels will not be
+        # used for training a model.
         if 'neutral' in samples_per_label:
             del samples_per_label['neutral']
                 
-        # Determining which class has the higher and lower number of samples (probably going to be rest and grasp, respectively).
+        # Determining which class has the higher and lower number of samples (probably going to be rest and grasp, 
+        # respectively).
         class_low_samples  = min(samples_per_label, key=samples_per_label.get)
         class_high_samples = max(samples_per_label, key=samples_per_label.get)
                 
-        # Extracting the number of samples of the underrespresented class. This will be used to determine how many samples 
-        # of the overrepresented class to randomly extract.
+        # Extracting the number of samples of the underrespresented class. This will be used to determine how many 
+        # samples of the overrepresented class to randomly extract.
         n_samples_class_under = samples_per_label[class_low_samples] 
         
         # Extracting the sample indices of the under and overrepresented class.
@@ -1689,18 +1744,22 @@ def equalizing_samples_per_class(features_dict, labels_dict):
         features_class_under = this_task_features[:,:,inds_class_under]
         labels_class_under   = this_task_labels[inds_class_under]
         
-        # Concatenating the downsampled overrepresented class features and labels with those from the underrepresented class.
+        # Concatenating the downsampled overrepresented class features and labels with those from the underrepresented 
+        # class.
         this_task_features_downsampled = np.concatenate((features_class_over_downsampled, features_class_under), axis=2)
         this_task_labels_downsampled   = np.concatenate((labels_class_over_downsampled, labels_class_under), axis=0)
         
-        # Extracting the number of historical time points, features, and samples from the resulting downsampled feature array.
+        # Extracting the number of historical time points, features, and samples from the resulting downsampled feature 
+        # array.
         n_history  = this_task_features_downsampled.shape[0]
         n_features = this_task_features_downsampled.shape[1]
         n_samples  = this_task_features_downsampled.shape[2]
         
         # Converting the features and labels arrays into xarrays.
         this_task_features_downsampled = xr.DataArray(this_task_features_downsampled, 
-                                                      coords={'history': np.arange(n_history), 'feature': np.arange(n_features), 'sample': np.arange(n_samples)}, 
+                                                      coords={'history': np.arange(n_history),\
+                                                              'feature': np.arange(n_features),\
+                                                              'sample': np.arange(n_samples)}, 
                                                       dims=["history", "feature", "sample"])
         
         this_task_labels_downsampled = xr.DataArray(this_task_labels_downsampled, 
@@ -1725,11 +1784,11 @@ def evaluating_model_accuracy(fold_models, valid_data_folds, valid_labels_folds)
     
     INPUT VARIABLES:
     fold_models:        [dictionary (key: string (fold ID); Value: model)]; Models trained for each training fold.
-    valid_data_folds:   [dict (key: string (fold ID); Value: xarray (dimensions vary based on model type) > floats (units: V^2/Hz))];
-                        Data across all validation tasks per fold. Equal number of samples per class. PC features. Rearranged 
-                        according to the type of model that will be trained.
-    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; Labels across
-                        all validation tasks per fold. Equal number of labels per class.
+    valid_data_folds:   [dictionary (key: string (fold ID): Value xarray (dimensions vary based on model type) > 
+                        floats)]; Data across all validation tasks per fold. Equal number of samples per class. PC 
+                        features. Rearranged according to the type of model that will be trained.
+    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (time samples, ) > strings ('grasp'/'rest'))]; 
+                        Labels across all validation tasks per fold. Equal number of labels per class.
                         
     GLOBAL PARAMETERS:
     model_classes:  [list > strings]; List of all the classes to be used in the classifier.
@@ -1751,47 +1810,6 @@ def evaluating_model_accuracy(fold_models, valid_data_folds, valid_labels_folds)
     confusion_matrix_display(this_confusion_matrix)
 
 
-    
-    
-    
-def extract_data_pathways(data_info_dict):
-    """
-    DESCRIPTION:
-    Using the dictionary (grasp_info_dict or calib_info_dict) of dates and tasks, the appropriate data file pathways are 
-    extracted and stored in a list.
-    
-    INPUT VARIABLES:
-    data_info_dict: [dictionary (Key: string (date in YYYY_MM_DD format); Values: list > string (task names); Values and
-                    keys correspond to grasp/calibration tasks and dates on which those tasks were run.
-    
-    GLOBAL PARAMETERS:
-    file_extension: [string (hdf5/mat)]; The data file extension of the data.
-    patient_id:     [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-    
-    OUTPUT VARIABLES:
-    path_list: [list > strings (pathways)]; The list of file pathways from which the dataset(s) will be extracted.
-    """
-    
-    # COMPUTATION:
-
-    # Initializing a list of pathways in which the data from the data_info_dict is found.
-    path_list = []
-
-    # Iterating across all dictionary items to extract the date and task.
-    for date, tasks in data_info_dict.items():
-
-        # Iterating across each task in the task list for the particular date.
-        for this_task in tasks:
-
-            # Creating the path for the current date/task pair. Modify this variable as needed.
-            path = '/mnt/shared/ecog/' + patient_id + '/' + file_extension + '/' + date + '/' + this_task + '.' + file_extension
-
-            # Appending the datafile path list with the current datafile path.
-            path_list.append(path)
-    
-    return path_list
-
-
 
 
 
@@ -1802,19 +1820,22 @@ def extracting_saliencymap_powerband(grasp_bandpower_dict, saliency_powerband):
     
     INPUT VARIABLES:
     grasp_bandpower_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:        [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                          the band power is computed for each channel across every time point.
-        sxx_power_z:      [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                          calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:       [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                          to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        power_trials_z:   [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
+        sxx_power:        [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each frequency 
+                          band, the band power is computed for each channel across every time samples. Time dimension is
+                          in units of seconds. 
+        sxx_power_z:      [xarray (channel, powerband, time samples] > floats (units:z-scores)]; For each standardized 
+                          (to calibration) frequency band, the band power is computed for each channel across every time
+                          point. Time dimension is in units of seconds.
+        sxx_states:       [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                          downsampled to match time resolution of the signal spectral power. Time dimension is in units
+                          of seconds.
+        power_trials_z:   [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral 
                           information for each trial. Time dimension is in units of seconds.
     saliency_powerband:   [string ('powerbandX', where X is an int)]; Powerband ID for saliency map plotting.
     
     OUTPUT VARIABLES:
-    grasp_bandpower_dict_saliencymap: Same as grasp_bandpower_dict with the only difference being that only the powerband for
-                                      saliency mapping is included.
+    grasp_bandpower_dict_saliencymap: Same as grasp_bandpower_dict with the only difference being that only the
+                                      powerband for saliency mapping is included.
     """
     
     # COMPUTATION:
@@ -1844,15 +1865,17 @@ def extracting_saliencymap_powerband(grasp_bandpower_dict, saliency_powerband):
 def import_electrode_information(data_info_dict):
     """
     DESCRIPTION:
-    The eeglabels and auxlabels lists will be populated with eeg channel names and auxilliary channel names respectively.
-    These lists are created differently based on whether the data is extracted from a .hdf5 file or a .mat file.
+    The eeglabels and auxlabels lists will be populated with eeg channel names and auxilliary channel names 
+    respectively. These lists are created differently based on whether the data is extracted from a .hdf5 file or a .mat
+    file.
 
     INPUT VARIABLES:
     data_info_dict: [dictionary (Key: string (date in YYYY_MM_DD format); Values: list > string (task names); Values and
-                    keys correspond to grasp/calibration tasks and dates on which those tasks were run.
+                    keys correspond to grasp/calibration tasks and dates on which tasks were run.
     
     GLOBAL PARAMETERS:
     file_extension: [string (hdf5/mat)]; The data file extension of the data.
+    patient_id:      [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
 
     OUTPUT VARIABLES:
     auxlabels: [array > strings (aux channel names)]: Auxilliary channels extracted from the .hdf5 or .mat file.
@@ -1861,12 +1884,9 @@ def import_electrode_information(data_info_dict):
     
     # COMPUTATION:
     
-    # Defining the ecog object.
-    ecog = ECoGConfig()
-    
     # Extracting the data file pathway for the first task. We don't need information from any other files because the
-    # eeglabels and auxlabels hould be the same across multiple dates as they are related to the same participant with
-    # the hardware setup.
+    # eeglabels and auxlabels should be the same across multiple dates as they are related to the same participant with
+    # the same hardware setup.
     date = list(data_info_dict.keys())[0]
     task = data_info_dict[list(data_info_dict.keys())[0]][0]
     path = '/mnt/shared/ecog/' + patient_id + '/' + file_extension + '/' + date + '/' + task + '.' + file_extension
@@ -1935,14 +1955,14 @@ def mean_centering(data, data_mean):
     Mean-centering all features at all historical time points by subtracting the data mean, averaged across time.
         
     INPUT VARIABLES:
-    data:      [xarray (history x features x time samples) > floats (units: V^2/Hz)]; Historical power features across time
-               samples. Time samples are in units of seconds.
-    data_mean: [xarray (history x features) > floats (units: V^2/Hz)]; Mean power of each feature of only the 0th time shift.
-               This array is repeated for each historical time point.
+    data:      [xarray (time history, features, time samples) > floats (units: z-scores)]; Historical power features 
+               across time samples.
+    data_mean: [xarray (history, features) > floats (units: z-scores)]; Mean power of each feature of only the 0th time
+               shift. This array is repeated for each historical time point.
     
     OUTPUT VARIABLES:
-    data_centered: [xarray (history x features x time samples) > floats (units: V^2/Hz)]; Mean-centered historical power features
-                   across time samples. Time samples are in units of seconds.
+    data_centered: [xarray (time history, features, time samples) > floats (units: z-scores)]; Mean-centered historical
+                   power features across time samples. Time samples are in units of seconds.
     """
     
     # COMPUTATION:
@@ -1959,7 +1979,9 @@ def mean_centering(data, data_mean):
     
     # Converting the data mean array back into an xarray
     data_mean = xr.DataArray(data_mean, 
-                             coords={'history': np.arange(n_history), 'feature': np.arange(n_features), 'sample': np.arange(n_samples)}, 
+                             coords={'history': np.arange(n_history),\
+                                     'feature': np.arange(n_features),\
+                                     'sample': np.arange(n_samples)}, 
                              dims=["history", "feature", "sample"])
     
     # Computing the mean-centered data.
@@ -1977,17 +1999,19 @@ def mean_centering_all_folds(data_folds, data_fold_means):
     Using the data mean to mean center the data at each fold.
 
     INPUT VARIABLES:
-    data_folds:      [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                     For each fold, feature xarrays are concatenated in the sample dimension.
-    data_fold_means: [dict (Key: string (fold ID); Value: xarray (time history x features) > floats (units: V^2/Hz))]; The mean,
-                     averaged across samples, for each fold. 
+    data_folds:      dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                     floats (units: z-scores))]; For each fold, feature xarrays are concatenated in the sample
+                     dimension.
+    data_fold_means: [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                     floats (units: z-scores))]; The mean, averaged across samples, for each fold. 
                      
     NECESSARY FUNCTIONS:
     mean_centering
 
     OUTPUT VARIABLES:
-    data_folds_centered: [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                         For each fold, the features are mean-centered according to means from the respective folds.
+    data_folds_centered: [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                         floats (units: z-scores))]; For each fold, the features are mean-centered according to means 
+                         from the respective folds.
     """
     
     # COMPUTATION:
@@ -2014,32 +2038,34 @@ def mean_centering_all_folds(data_folds, data_fold_means):
 def mean_compute(data):
     """
     DESCRIPTION:
-    Computing the mean across all time samples for each feature. Note that though the data array has a history dimension, 
-    only the first time history coordinate (time shift = 0) is used. As the mean is computed for potential PC reduction,
-    the PCs will only be based off of the non-shifted features.
+    Computing the mean across all time samples for each feature. Note that though the data array has a history
+    dimension, only the first time history coordinate (time shift = 0) is used. As the mean is computed for potential PC
+    reduction, the PCs will only be based off of the non-shifted features.
     
     INPUT VARIABLES:
-    data: [xarray (history x features x samples) > floats (units: V^2/Hz)]; Historical power features across time samples.
+    data: [xarray (time history, features, time samples) > floats (units: z-scores)]; Historical power features across
+          time samples.
     
     OUTPUT VARIABLES:
-    data_mean_history: [xarray (history x features) > floats (units: V^2/Hz)]; Mean power of each feature of only the 
+    data_mean_history: [xarray (history, features) > floats (units: z-scores)]; Mean power of each feature of only the 
                        0th time shift. This array is repeated for each historical time point.
     """
     # COMPUTATION:
     
-    # Extracting the number of historical time points and features from task0. These number are the same across all tasks.
+    # Extracting the number of historical time points and features from task0. These number are the same across all 
+    # tasks.
     n_features = data.feature.shape[0]
     n_history  = data.history.shape[0]
     
-    # Extracting only the first historical time feature (no time shift). Eventually, in PC reduction, only this slice will 
-    # be used to compute the eigenvectors.
+    # Extracting only the first historical time feature (no time shift). Eventually, in PC reduction, only this slice
+    # will be used to compute the eigenvectors.
     data = data.loc[0,:,:]
     
     # Computing the mean of the data across the time samples dimension.
     data_mean = np.asarray(data.mean(dim='sample'))
     
-    # Creating an array of concatenated rows where each row is the data mean for each feature. There are as many rows as there
-    # are historical time points. 
+    # Creating an array of concatenated rows where each row is the data mean for each feature. There are as many rows as
+    # there are historical time points. 
     data_mean_history = np.tile(data_mean, (n_history,1))
 
     # Converting the concatenated array into an xarray.
@@ -2057,20 +2083,20 @@ def mean_compute(data):
 def mean_compute_all_folds(data_folds):
     """
     DESCRIPTION:
-    Computing the mean across all dimensions of each fold. Note that only the mean of the first historical time point is computed
-    with the intent of only computing the PCs from those features. This mean will be repeated in an array for as many historical
-    time features that there are.
+    Computing the mean across all dimensions of each fold. Note that only the mean of the first historical time point is
+    computed with the intent of only computing the PCs from those features. This mean will be repeated in an array for 
+    as many historical time features that there are.
 
     INPUT VARIABLES:
-    data_folds: [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                For each fold, feature xarrays are concatenated in the sample dimension.
+    data_folds: [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                floats (units: z-scores))]]; For each fold, feature xarrays are concatenated in the sample dimension.
                 
     NECESSARY FUNCTIONS:
     mean_compute
 
     OUTPUT VARIABLES:
-    data_fold_means: [dict (Key: string (fold ID); Value xarray (time history x features) > floats (units: V^2/Hz))]; The mean,
-                     averaged across samples, for each fold. 
+    data_fold_means: [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                     floats (units: z-scores))]; The mean, averaged across samples, for each fold. 
     """
     
     # COMPUTATION:
@@ -2078,9 +2104,9 @@ def mean_compute_all_folds(data_folds):
     # Initializing a dictionary of time-averaged data for each fold.
     data_fold_means = {}
     
-    # Extracting the number of historical time points and features from task0. These numbers are the same across all tasks.
-    n_features = data_folds['fold0'].feature.shape[0]
-    n_history  = data_folds['fold0'].history.shape[0]
+    # Extracting the number of historical time points and features from task0. These numbers are the same across all 
+    # tasks.
+    # n_features = data_folds['fold0'].feature.shape[0]
     
     # Iterating across each fold.
     for this_fold in data_folds.keys():
@@ -2088,8 +2114,8 @@ def mean_compute_all_folds(data_folds):
         # Extracting the data from the current fold.
         this_data = data_folds[this_fold]
                 
-        # Computing the mean of the current fold's data. The resulting array has concatenated rows where each row is the data mean
-        # for each feature. There are as many rows as there are historical time points.
+        # Computing the mean of the current fold's data. The resulting array has concatenated rows where each row is the
+        # data mean for each feature. There are as many rows as there are historical time points.
         this_data_mean_history = mean_compute(this_data)
         
         # Computing the mean of the data across the time dimension.
@@ -2108,9 +2134,9 @@ def model_training_lstm(training_data, training_labels, validation_data, validat
     
     INPUT VARIABLES:
     training_data:     [xarray (history, features, training time samples] > floats (units: V^2/Hz)]; 
-    training_labels:   [xarray (1 x training samples) > strings ('grasp'/'rest')]
+    training_labels:   [xarray (training samples, ) > strings ('grasp'/'rest')]
     validation_data:   [xarray (history, features, validation time samples] > floats (units: V^2/Hz)]; 
-    validation_labels: [xarray (1 x validation samples) > strings ('grasp'/'rest')]
+    validation_labels: [xarray (validation samples, ) > strings ('grasp'/'rest')]
     
     GLOBAL PARAMETERS:
     model_classes: [list > strings]; List of all the classes to be used in the classifier.
@@ -2151,21 +2177,26 @@ def model_training_lstm(training_data, training_labels, validation_data, validat
     model       = Sequential()
     
     # Creating the model architecture
-    model.add(LSTM(n_hidden_lstm, input_shape = (n_time_history, n_features), activation = 'tanh', recurrent_activation = 'sigmoid',\
-                   kernel_initializer = initializer, dropout = dropout_rate, recurrent_dropout = dropout_rate, return_sequences = True,\
+    model.add(LSTM(n_hidden_lstm,\
+                   input_shape = (n_time_history, n_features),\
+                   activation = 'tanh',\
+                   recurrent_activation = 'sigmoid',\
+                   kernel_initializer = initializer,\
+                   dropout = dropout_rate,\
+                   recurrent_dropout = dropout_rate,\
+                   return_sequences = True,\
                    unroll = True))
     model.add(Flatten())
     model.add(Dense(10, activation = 'elu', kernel_initializer = initializer))
     model.add(Dropout(dropout_rate))
     model.add(Dense(n_model_classes, activation = 'softmax', kernel_initializer = initializer))
 
-    # Categorical cross-entropy for computing the error between true and predicted labels of each batch and updating the weights using
-    # adaptive moment optimization (Adam optimizer)
+    # Categorical cross-entropy for computing the error between true and predicted labels of each batch and updating the
+    # weights using adaptive moment optimization (Adam optimizer)
     opt     = Adam(learning_rate = alpha)
     loss_fn = 'categorical_crossentropy' 
     model.compile(loss = loss_fn, optimizer = opt, metrics = ['accuracy'])
     print(model.summary())
-        
     
     # Extracting the number of training and validation samples in this fold.
     n_training_samples   = training_labels.shape[0]
@@ -2229,16 +2260,17 @@ def model_training_lstm(training_data, training_labels, validation_data, validat
 def pc_transform(data, eigenvectors):
     """
     DESCRIPTION:
-    Transforming the data into PC space by multiplying the features at each historical time point by the same eigenvectors.
+    Transforming the data into PC space by multiplying the features at each historical time point by the same 
+    PC eigenvectors.
     
     INPUT VARIABLES:
-    data:         [xarray (features x time samples) > floats (units: V^2/Hz)];
-    eigenvectors: [array (features x pc features) > floats]; Array in which columns consist eigenvectors which explain the
-                  variance in features in descending order. Time samples are in units of seconds.
+    data:         [xarray (features, time samples) > floats (units: z-scores)];
+    eigenvectors: [array (features, pc features) > floats]; Array in which columns consist eigenvectors which explain
+                  the  variance in features in descending order. Time samples are in units of seconds.
     
     OUTPUT VARIABLES:
-    data_pc: [xarray (pc features x time samples) > floats (units: PC units)]; Reduced-dimensionality data. Time dimension is
-             in units of seconds.
+    data_pc: [xarray (pc features, time samples) > floats (units: PC units)]; Reduced-dimensionality data. Time
+             dimension is in units of seconds.
     """
     
     # COMPUTATION:
@@ -2252,7 +2284,9 @@ def pc_transform(data, eigenvectors):
     
     # Initializing an xarray of PC data.
     data_pc = xr.DataArray((np.zeros((n_history, n_features_pc, n_samples))),
-                            coords={'history': np.arange(n_history), 'feature': np.arange(n_features_pc), 'sample': np.arange(n_samples)},
+                            coords={'history': np.arange(n_history),\
+                                    'feature': np.arange(n_features_pc),\
+                                    'sample': np.arange(n_samples)},
                             dims=["history", "feature", "sample"])
     
     # Iterating across all historical time shifts and multiplying the data at each historical time shift by the same
@@ -2274,45 +2308,47 @@ def pc_transform(data, eigenvectors):
 def pc_transform_all_folds(train_data_folds, valid_data_folds):
     """
     DESCRIPTION: 
-    Transforming the training and validation data into PC space for each fold. The eigenvectors for the PC transformation
-    are computed from the 0th point in time history. For example consider an array of dimensions (h x f x t) where h, f
-    and t correspond to the historical time sequence, number of features and number of time samples, respectively. 
-    Using a historical time features of the last 1 second with 100 ms shifts, this means that h can be any integer from
-    0 to 9. The PCs are computed from the 0th time history coordinate of the data array: (0 x f x t). This can be 
-    dimensionally reduced to an array of dimensions (f x t). The resulting PCs of dimensions (p x t) where p <= f are
-    applied to the (f x t) array at each historical time point. 
-    
+    Transforming the training and validation data into PC space for each fold. The eigenvectors for the PC 
+    transformation are computed from the 0th point in time history. For example consider an array of dimensions 
+    (h, f, t) where h, f and t correspond to the historical time sequence, number of features and number of time 
+    samples, respectively. Using a historical time features of the last 1 second with 100 ms shifts, this means that h
+    can be any integer from 0 to 9. The PCs are computed from the 0th time history coordinate of the data array: 
+    (0, f, t). This can be dimensionally reduced to an array of dimensions (f, t). The resulting PCs of dimensions 
+    (p, t) where p <= f are applied to the (f, t) array at each historical time point. 
+
     The number of eigenvectors are selected based on one of two experimenter-specified criteria:
-    
+
     1) Only keep the first eiggenvectors that that in total explain less than or equal variance to percent_var_thr
-       ... or ... 
+    ... or ... 
     2) Only keep the first n_pc_thr eigenvectors.
-    
+
 
     INPUT VARIABLES:                        
-    train_data_folds: [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                      The training data across all training tasks for each fold. 
-    valid_data_folds: [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                      The validation data across all training tasks for each fold. 
-    
+    train_data_folds: [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                      floats (units: z-scores))]; For each training fold, feature xarrays are centered according to the 
+                      corresponding training fold mean.
+    valid_data_folds: [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                      floats (units: z-scores))]; For each validation fold, feature xarrays are centered according to 
+                      the corresponding training fold mean.
+
     GLOBAL PARAMETERS:
-    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 'None' if
-                     percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the variance will be used
-                     (no PC transform).
-    percent_var_thr: [float]; The percent variance which the user wishes to capture with the principal components. Will compute the
-                     number of principal components which capture this explained variance as close as possible, but will not surpass
-                     it. Set to 'None' if n_pc_thr is not 'None', or set to 'None' along with n_pc_thr if all of the variance will be
-                     used (no PC transform).
-    
+    n_pc_thr:        [int]; The number of principal components to which the user wishes to reduce the data set. Set to 
+                     'None' if percent_var_thr is not 'None', or set to 'None' along with percent_var_thr if all of the
+                     variance will be used (no PC transform).
+    percent_var_thr: [float (between 0 and 1)]; The percent variance which the user wishes to capture with the principal
+                     components. Will compute the number of principal components which capture this explained variance
+                     as close as possible, but will not surpass it. Set to 'None' if n_pc_thr is not 'None', or set to
+                     'None' along with n_pc_thr if all of the variance will be used (no PC transform).
+
     NECESSARY FUNCTIONS:
     computing_eigenvectors
     pc_transform
 
     OUTPUT VARIABLES: 
-    train_data_folds  [dict (Key: string (fold ID); Value: xarray (history x pc features x time samples) > floats (units: PC units)];
-                      Reduced dimensionality version of the training data arrays.
-    valid_data_folds: [dict (Key: string (fold ID); Value: xarray (history x pc features x time samples) > floats (units: PC units)];
-                      Reduced dimensionality version of the validation data arrays.
+    train_data_folds  [dict (Key: string (fold ID); Value: xarray (history, pc features, time samples) >
+                      floats (units: PC units)]; Reduced dimensionality version of the training data arrays.
+    valid_data_folds: [dict (Key: string (fold ID); Value: xarray (history, pc features, time samples) >
+                      floats (units: PC units)]; Reduced dimensionality version of the validation data arrays.
     """
     
     # COMPUTATION:
@@ -2327,7 +2363,8 @@ def pc_transform_all_folds(train_data_folds, valid_data_folds):
         # Extracting only the training data from this fold corresponding to the 0th historical time shift.
         train_data_history0 = np.asarray(this_fold_train_data.loc[0,:,:])
         
-        # Computing the eigenvectors for the current fold, using only the historical features corresponding to the 0th shift.
+        # Computing the eigenvectors for the current fold, using only the historical features corresponding to the 0th
+        # shift.
         this_fold_eigenvectors = computing_eigenvectors(train_data_history0)
         
         # Replacing the training and validation data with the PC transformed for the current fold.
@@ -2343,9 +2380,9 @@ def pc_transform_all_folds(train_data_folds, valid_data_folds):
 def plotting_channel_contributions(ch_importance_scores, chs_exclude, chs_include, marker_color):
     """
     DESCRIPTION:
-    Mapping the channel importance scores at the coordinates of each electrode on an image of the research participant's.
-    brain. Size and opaqueness of the markers on the image are proportional to that channel's importance in the neural
-    network for classifying the experimenter-specified class. Channel importance scores are normalized between 0 and 1.
+    Mapping the channel importance scores at the coordinates of each electrode on an image of the participant's brain.
+    Size and opaqueness of the markers on the image are proportional to that channel's importance in the neural network
+    for classifying the experimenter-specified class. Channel importance scores are normalized between 0 and 1.
     
     INPUT VARIABLES:
     ch_importance_scores: [array (1 x channels) > floats]; Mean importance score for each channel, averaged across all
@@ -2396,7 +2433,8 @@ def plotting_channel_contributions(ch_importance_scores, chs_exclude, chs_includ
     # Initializing a dictionary containing all the normalized channel contributions.
     ch_importance_scores_norm = {}
         
-    # Computing the normalized channel importance scores based on the only the maximum importance score from all channels.
+    # Computing the normalized channel importance scores based on the only the maximum importance score from all
+    # channels.
     for this_channel in chs_include:
         
         # Extracting the channel index from chs_include list for pulling out the corresponding importance score from
@@ -2492,16 +2530,16 @@ def plotting_states(calib_cont_dict, grasp_cont_dict, task_id):
     
     INPUT VARIABLES:
     calib_cont_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        signals:     [xarray (channels x time samples (units: s) > floats (units: microvolts)]; Array of continuous
-                     voltage signals from the calibration tasks. Time dimension is in units of seconds.
-        states:      [xarray (1 x time samples) > ints (0 or 1)]; Array of states at each time sample for the calibration
-                     tasks. Time dimension is in units of seconds.
+        signals:     [xarray (channels, time samples) > floats (units: microvolts)]; Array of continuous voltage signals 
+                    from the calibration tasks. Time dimension is in units of seconds.
+        states:      [xarray (time samples,) > ints (0 or 1)]; Array of states at each time sample for the calibration
+                    tasks. Time dimension is in units of seconds.
     grasp_cont_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        signals:     [xarray (channels x time samples (units: s) > floats (units: microvolts)]; Array of continuous
-                     voltage signals from grasp-based tasks. Time dimension is in units of seconds.
-        states:      [xarray (1 x time samples) > ints (0 or 1)]; Array of states at each time sample for the grasp-based
-                     tasks. Time dimension is in units of seconds.
-    task_id:         [string (task ID)]; Task ID corresponding to the states that the experimenter wishes to see plotted.
+        signals:     [xarray (channels, time samples) > floats (units: microvolts)]; Array of continuous voltage signals 
+                    from grasp-based tasks. Time dimension is in units of seconds.
+        states:      [xarray (time samples,) > ints (0 or 1)]; Array of states at each time sample for the grasp-based
+                    tasks. Time dimension is in units of seconds.
+    task_id:         [string (task ID)]; Task ID corresponding to the states that will be plotted.
     """
     
     # COMPUTATION:
@@ -2538,44 +2576,44 @@ def plotting_states(calib_cont_dict, grasp_cont_dict, task_id):
 def post_state_neutral_labeling(grasp_cont_dict, t_neutral_interval):
     """
     DESCRIPTION:
-    This function allows the experimenter to assign 'neutral' labels to any time period after a state (cue or click) occurs. Note that this
-    function was written specifically for training decoders from real-time use (control clicks with speller), where two clicks may have 
-    occurred one immediately after the other. In this situation, the data from the second click should not be used to train a click model 
-    because of increased neural activity that may have not fallen to baseline since the first click occurred. In this situation, 'neutral' 
-    labels would overwrite all time points from the first click to some time period past the second click. For example, consider the
-    following:
-      
-    state:               0         0         1         1         0         1         1         0         0         0         1        1        0
-    time sample:         0         1         2         3         4         5         6         7         8         9         10       11       12
-    original labels: state_OFF state_OFF state_ON  state_ON  state_OFF state_ON  state_ON  state_OFF state_OFF state_OFF state_ON state_ON state_OFF
-    modified labels: state_OFF state_OFF state_ON  state_ON  neutral   neutral   neutral   neutral   state_OFF state_OFF state_ON state_ON neutral
-    
-    In the above example (sampling resolution not to scale), the first click occurred at samples 2 and 3, while the second click occurred
-    at samples 5 and 6. The second click occurred to soon after the first click. Therefore, after the end of the first click, the 'neutral'
-    label is applied for some samples, which wipes away the 'state_ON' labels from the second click. Therefore, those 'state_ON' labels will
-    not be used to train the model. The third click, occurring at samples 10 and 11, occurs after a longer period of time after the second
-    click, but the 'neutral' labels are still applied at the end of the third click.
-    
-    The number of samples which will be replaced by 'neutral' corresponds to the experimenter-determined time, t_neutral_interval, which 
-    is in units of seconds.
+    This function allows the experimenter to assign 'neutral' labels to any time period after a state (cue or click) 
+    occurs. Note that this function was written specifically for training decoders from real-time use (control clicks 
+    with speller), where a clicks may have occurred one immediately after another. In this situation, the data from the
+    second click should not be used to train a click model because of increased neural activity that may have not fallen
+    to baseline since the previous click occurred. In this situation, 'neutral' labels would overwrite all time points
+    from the first click to some time period past the second click. For example, consider the following:
+
+    state:                     0    0    1    1     0        1        1        0      0    0    1    1     0
+    time sample:               0    1    2    3     4        5        6        7      8    9    10   11    12
+    original labels (states): OFF  OFF  ON   ON    OFF      ON       ON       OFF    OFF  OFF   ON   ON    OFF
+    modified labels (states): OFF  OFF  ON   ON  neutral  neutral  neutral  neutral  OFF  OFF   ON   ON  neutral
+
+    In the above example (sampling resolution not to scale), the first click occurred at time samples 2 and 3, while the
+    second click occurred at samples 5 and 6. The second click occurred to soon after the first click. However, after 
+    the end of the first click, the 'neutral' label is applied for some time samples after the offset of the click, 
+    which wipes away the 'ON' labels from the second click. Therefore, those 'ON' labels will not be used to train the 
+    model. The third click, occurring at samples 10 and 11, occurs after a longer period of time after the second click,
+    but the 'neutral' labels are still applied at the end of the third click.
+
+    The number of samples which will be replaced by 'neutral' corresponds to the experimenter-determined time, 
+    t_neutral_interval, which is in units of seconds.
     
     INPUT VARIABLES:
     grasp_cont_dict:    [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        signals         [xarray (channels x time samples (units: s) > floats (units: microvolts)]; Array of continuous
-                        voltage signals from grasp-based tasks. Time dimension is in units of seconds.
-        states:         [xarray (1 x time samples) > strings ('state_ON'/'state_OFF')]; Array of states at each time sample for the
-                        grasp-based tasks. Time dimension is in units of seconds.
-    t_neutral_interval: [float (units: s)]; Amount of time after state offset that will be labeled as neutral.             
+        signals:        [xarray (channels, time samples) > floats (units: microvolts)]; Array of continuous voltage
+                        signals from grasp-based tasks. Time dimension is in units of seconds.
+        states:         [xarray (time samples,) > strings ('state_ON'/'state_OFF')]; Array of states at each time sample
+                        for the grasp-based tasks. Time dimension is in units of seconds.
+    t_neutral_interval: [float (units: s)]; Amount of time after state ON offset that will be labeled as neutral.             
     
     NECESSARY FUNCTIONS:
     unique_value_index_finder
     
     OUTPUT VARIABLES:
     grasp_cont_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        signals:     [xarray (channels x time samples (units: s) > floats (units: microvolts)]; Array of continuous
-                     voltage signals from grasp-based tasks. Time dimension is in units of seconds.
-        states:      [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Array of states at each time sample for the
-                     grasp-based tasks. Time dimension is in units of seconds.
+        signals:     Same as input.
+        states:      [xarray (time samples,) > strings ('state_ON'/'state_OFF'/'neutral')]; Array of states at each time 
+                     sample for the grasp-based tasks. Time dimension is in units of seconds.
     """
     
     # COMPUTATION:
@@ -2609,15 +2647,12 @@ def post_state_neutral_labeling(grasp_cont_dict, t_neutral_interval):
             # Computing the total number of state on periods.
             n_state_on = len(state_on_inds)
             
-            # Initializing the offset time of the previous ON state which preceeded a neutral interval. See IF statements in the FOR loop.
+            # Initializing the offset time of the previous ON state which preceeded a neutral interval. See IF 
+            # statements in the FOR loop.
             t_state_ON_offset_old = 0
             
             # Iterating across all state_ON indices, except for the last.    
             for n in range(n_state_on-1):
-                
-                # Extracting the 
-                # onset_idx  = state_on_inds[n][0]
-                
                 
                 # Extracting the onset and offset index of the current ON period.
                 state_on_onset_idx  = state_on_inds[n][0]
@@ -2626,42 +2661,38 @@ def post_state_neutral_labeling(grasp_cont_dict, t_neutral_interval):
                 # Extracting the onset index of the next ON state
                 state_on_onset_idx_next = state_on_inds[n+1][0]
                 
-                
                 # Extracting the onset and offset time of the current ON period.
                 t_state_ON_onset  = this_task_times[state_on_onset_idx]
                 t_state_ON_offset = this_task_times[state_on_offset_idx] 
                 
-                
                 # Extracting the onset time of the next ON period.
                 t_state_ON_onset_next = this_task_times[state_on_onset_idx_next]
                                 
-                    
-                
-                # at least after the neutral stimulus duration following the last stimulus offset time.                
-                # if t_stim_ON_offset > t_stim_ON_offset_old + t_neutral_post_stim:
-                
-                
-                # If the onset of the current ON period has occurred after the previous neutral time period. For example, in the description, the ON
-                # state at time sample 10 occurs after the previous neutral period from time samples 4-7 (initiated from the ON period from samples 2
-                # and 3). The neutral labels override the ON labels during samples 5 and 6.
+
+                # IF the onset of the current ON period has occurred after the previous neutral time period. For 
+                # example, in the description, the ON state at time sample 10 occurs after the previous neutral period
+                # from time samples 4-7 (initiated from the ON period from samples 2 and 3). The neutral labels override
+                # the ON labels during samples 5 and 6.
                 if t_state_ON_onset > t_state_ON_offset_old + t_neutral_interval:
                     
-                    # Apply the neutral interval only if the difference in time between the offset of the current ON period and the onset of the next 
-                    # time period is less than the neutral period. For example, in the description, the onset of the ON state at time sample 5 occurs 
-                    # too soon after the offset of the previous ON state at time sample 3. The difference between these two samples is 2, which is less
+                    # Apply the neutral interval only if the difference in time between the offset of the current ON 
+                    # period and the onset of the next time period is less than the neutral period. For example, in the
+                    # description, the onset of the ON state at time sample 5 occurs too soon after the offset of the 
+                    # previous ON state at time sample 3. The difference between these two samples is 2, which is less
                     # than the neutral period of 4 samples (only in the example in the description).
                     if t_state_ON_onset_next - t_state_ON_offset < t_neutral_interval:
                     
-                        # Computing the onset and offset indices of the neutral labeled period starting immediately after the current ON state offset
-                        # (specifically, the first time sample after the ON state). 
+                        # Computing the onset and offset indices of the neutral labeled period starting immediately 
+                        # after the current ON state offset (specifically, the first time sample after the ON state). 
                         onset_idx_neutral  = state_on_offset_idx + 1
                         offset_idx_neutral = onset_idx_neutral + n_samples_neutral
                         
-                        # Only apply the neutral period if the end of the neutral period happens before the final time sample of the current task.
+                        # Only apply the neutral period if the end of the neutral period happens before the final time 
+                        # sample of the current task.
                         if offset_idx_neutral < n_samples_this_task:
 
                             # Updating the state array for the current task with the neutral period.
-                            this_task_state_array[onset_idx_neutral:offset_idx_neutral] = ['neutral'] * n_samples_neutral 
+                            this_task_state_array[onset_idx_neutral:offset_idx_neutral] = ['neutral']*n_samples_neutral 
 
                         # Updating offset time of the previous ON state which preceeded a neutral interval.
                         t_state_ON_offset_old = t_state_ON_offset
@@ -2684,30 +2715,33 @@ def post_state_neutral_labeling(grasp_cont_dict, t_neutral_interval):
 def power_generator(grasp_sxx_dict):
     """
     DESCRIPTION:
-    Given the experimenter-specified minimum and maximum frequencies, the band power from the unstandardized and calibration-
-    standardized spectrograms are computed.
-    
+    Given the experimenter-specified minimum and maximum frequencies, the band power from the unstandardized and 
+    calibration-standardized spectrograms are computed.
+
     INPUT VARIABLES:
     grasp_sxx_dict:    [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_signals:   [xarray (channels x frequency bins x time samples) > floats (units: V^2/Hz)]; Spectral power of the
+        sxx_signals:   [xarray (channels, frequency bins, time samples) > floats (units: V^2/Hz)]; Spectral power of the
                        continuous voltage signals from the grasp-based task. Time dimension is in units of seconds.
-        sxx_signals_z: [xarray (channels x frequency bins x time samples) > floats (units: V^2/Hz)]; Standardized Spectral
-                       power of the continuous voltage signals from grasp-based task.
-        sxx_states:    [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; States array downsampled
+        sxx_signals_z: [xarray (channels, frequency bins, time samples) > floats (units: z-scores)]; Standardized 
+                       spectral power of the continuous voltage signals from grasp-based task.
+        sxx_states:    [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array downsampled
                        to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-                       
-    GLOBAL PARAMETERS:
+                    
+    GLOBAL PARAMETERS (in functions_model_training.py):
     f_power_max: [list > int (units: Hz)]; For each frequency band, maximum power band frequency.
     f_power_min: [list > int (units: Hz)]; For each frequency band, minimum power band frequency.
         
     OUTPUT VARIABLES:
     grasp_bandpower_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:        [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                          the band power is computed for each channel across every time point.
-        sxx_power_z:      [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                          calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:       [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                          to match time resolution of the signal spectral power. Time dimension is in units of seconds.
+        sxx_power:        [xarray (channel, powerband, time samples) > floats (units: z-scores)]; For each frequency 
+                          band, the band power is computed for each channel across every time samples. Time dimension is
+                          in units of seconds. 
+        sxx_power_z:      [xarray (channel, powerband, time samples) > floats (units:z-scores)]; For each standardized 
+                          (to calibration) frequency band, the band power is computed for each channel across every time
+                          point. Time dimension is in units of seconds.
+        sxx_states:       [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                          downsampled to match time resolution of the signal spectral power. Time dimension is in units
+                          of seconds.
     """
     
     # COMPUTATION:
@@ -2752,7 +2786,7 @@ def power_generator(grasp_sxx_dict):
             # Extracting the frequency range for the experimenter-input power band.
             f_range = np.logical_and(f_sxx > this_freqband_power_min, f_sxx < this_freqband_power_max) 
                     
-            # Computing the power from the unstandardized and calibration-standardized spectrograms.
+            # Computing the power from the non-standardized and calibration-standardized spectrograms.
             this_freqband_power   = np.sum(sxx_signals[:,f_range,:], axis=1)
             this_freqband_power_z = np.sum(sxx_signals_z[:,f_range,:], axis=1)
             
@@ -2783,25 +2817,30 @@ def power_info_per_trial(grasp_bandpower_dict, t_post_on_state, t_pre_on_state):
     
     INPUT VARIABLES:
     grasp_bandpower_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:        [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each frequency band,
-                          the band power is computed for each channel across every time point.
-        sxx_power_z:      [xarray (channel x powerband x time samples] > floats (units: V^2/Hz)]; For each standardized (to
-                          calibration) frequency band, the band power is computed for each channel across every time point.
-        sxx_states:       [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; Stimulus array downsampled
-                          to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-    t_post_on_state:      [float (units: s)]; The amount of time after the cue for visualizing the trial-averaged information.
-    t_pre_on_state:       [float (units: s)]; The amount of time before the cue for visualizing the trial-averaged information.
+        sxx_power:        [xarray (channel, powerband, time samples] > floats (units: z-scores)]; For each frequency 
+                          band, the band power is computed for each channel across every time samples. Time dimension is
+                          in units of seconds. 
+        sxx_power_z:      [xarray (channel, powerband, time samples] > floats (units:z-scores)]; For each standardized 
+                          (to calibration) frequency band, the band power is computed for each channel across every time
+                          point. Time dimension is in units of seconds.
+        sxx_states:       [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array 
+                          downsampled to match time resolution of the signal spectral power. Time dimension is in units
+                          of seconds.
+    t_post_on_state:      [float (units: s)]; The amount of time after the cue for visualizing the trial-averaged 
+                          information.
+    t_pre_on_state:       [float (units: s)]; The amount of time before the cue for visualizing the trial-averaged 
+                          information.
     
     GLOBAL PARAMETERS:
     sxx_shift: [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the time domain.
 
     OUTPUT VARIABLES:
-    grasp_bandpower_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_power:      Same as input.
-        sxx_power_z:    Same as input.
-        sxx_states:     Same as input.        
-        power_trials_z: [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
-                        information for each trial. Time dimension is in units of seconds.
+    grasp_bandpower_dict:  [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
+        sxx_power:         Same as input.
+        sxx_power_z:       Same as input.
+        sxx_states:        Same as input.        
+        power_trials_z:    [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
+                           spectral information for each trial. Time dimension is in units of seconds.
     """
     
     # COMPUTATION:
@@ -2839,7 +2878,10 @@ def power_info_per_trial(grasp_bandpower_dict, t_post_on_state, t_pre_on_state):
         
         # Initialize the x-array containing the per-trial band power.
         power_trials_z = xr.DataArray(np.zeros((n_trials_this_task, n_chs, n_bands, n_samples_per_trial)), 
-                                      coords={'trial': np.arange(n_trials_this_task),'channel': channels, 'powerband': powerbands, 'time': t_sxx_per_trial}, 
+                                      coords={'trial': np.arange(n_trials_this_task),\
+                                              'channel': channels,\
+                                              'powerband': powerbands,\
+                                              'time': t_sxx_per_trial}, 
                                       dims=["trial", "channel", "powerband", "time"])
         
         # Iterating across each state onset/offset index pair of the current task.
@@ -2861,13 +2903,13 @@ def power_info_per_trial(grasp_bandpower_dict, t_post_on_state, t_pre_on_state):
                 # Computing the difference between the total number of samples in the signal, and the end sample.
                 n_samples_rem = sample_end - n_samples_this_task 
 
-                # Extract the incomplete power information of this trial and creating an array of zeros for zero-padding
-                # this incomplete trial.
+                # Extract the incomplete power information of this trial and creating an array of zeros for zero-
+                # padding  this incomplete trial.
                 this_trial_power_incomplete = this_task_power[:,:,sample_start:n_samples_this_task].values
                 this_trial_zero_padding     = np.zeros((n_chs, n_bands, n_samples_rem))
                 
                 # Zero-padding this trial's incomplete power information with 0s to achieve a full trial length.
-                this_trial_power_padded = np.concatenate((this_trial_power_incomplete, this_trial_zero_padding), axis=2)
+                this_trial_power = np.concatenate((this_trial_power_incomplete, this_trial_zero_padding), axis=2)
                 
             # If the ending sample falls within the total number of samples in the current task.
             else:
@@ -2887,7 +2929,8 @@ def power_info_per_trial(grasp_bandpower_dict, t_post_on_state, t_pre_on_state):
 
     
     
-def power_trial_raster_plotting(chs_exclude, fig_height, fig_width, powerband_id, ptr_all_trials, upperlimb_or_speech, v_max, v_min):
+def power_trial_raster_plotting(chs_exclude, fig_height, fig_width, powerband_id, ptr_all_trials, upperlimb_or_speech,\
+                                v_max, v_min):
     """
     DESCRIPTION:
     Plotting the power trial rasters across all tasks.
@@ -2897,10 +2940,12 @@ def power_trial_raster_plotting(chs_exclude, fig_height, fig_width, powerband_id
                          information will not be shown.
     fig_height:          [int]; The height of the subplot figure showing the trial averaged spectrograms.
     fig_width:           [int]; The width of the subplot figure showing the trial averaged spectrograms.
-    powerband_id:        [string (powerband#)]; The index of the powerband.              
-    ptr_all_trials:      [xarray (trials x channels x powerbands x time samples) > floats (units: V^2/Hz)]; The spectral
+    powerband_id:        [string ('powerbandX')]; Name of the powerband that will be used for visualizing the power trial 
+                         rasters. X is an integer (0, 1, 2,...).         
+    ptr_all_trials:      [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral
                          information for each trial (across all tasks). Time dimension is in units of seconds.
-    upperlimb_or_speech: [string ('upperlimb'/'speech')]; Whether to plot the spectrograms of the upper-limb or speech grid. 
+    upperlimb_or_speech: [string ('upperlimb'/'speech')]; Whether to plot the spectrograms of the upper-limb or speech
+                         grid. 
     v_max:               [int]; Maximum value for colorplot.
     v_min:               [int]; Minimum value for colorplot.
     """
@@ -2908,7 +2953,7 @@ def power_trial_raster_plotting(chs_exclude, fig_height, fig_width, powerband_id
     # COMPUTATION:
     
     # Uploading the electrode grid configuration.
-    grid_config = params_model_training.grid_config_dict[patient_id][upperlimb_or_speech]
+    grid_config = params_model_training.grid_config[patient_id][upperlimb_or_speech]
     grid_config = np.array(grid_config)
     
     # Flattening the grid of channels (nested list) and eliminated excluded channels from being displayed.
@@ -2966,7 +3011,7 @@ def rearranging_features(data):
     Rearranging the data dimensions as necessary to fit the experimenter-determined model.
     
     INPUT VARIABLES:
-    data: [xarray (time history x features x time samples) > floats]; Array of historical time features.
+    data: [xarray (time history, features, time samples) > floats]; Array of historical time features.
     
     GLOBAL PARAMETERS:
     model_type: [string ('SVM','LSTM')]; The model type that will be used to fit the data.
@@ -2984,7 +3029,7 @@ def rearranging_features(data):
     # If the model type is a SVM.
     if model_type == 'SVM':
         
-        # NOTE: This script doesn't have a SVM model structure for training. Feel free to write one. The data is rearranged
+        # This script doesn't have a SVM model structure for training. Feel free to write one. The data is rearranged
         # for it.
 
         # Concatenating all the historical time features into one dimension.
@@ -2993,7 +3038,8 @@ def rearranging_features(data):
 
         # Converting the rearranged features back into an xarray.
         data_rearranged = xr.DataArray(data_rearranged, 
-                                       coords={'sample': np.arange(n_samples), 'feature': np.arange(n_history*n_features)}, 
+                                       coords={'sample': np.arange(n_samples),\
+                                               'feature': np.arange(n_history*n_features)}, 
                                        dims=["sample", "feature"])
 
     # If the model type is an LSTM.
@@ -3015,9 +3061,9 @@ def rearranging_features_all_folds(features_dict):
     dimensions required for model.fit() 
     
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (fold ID); Value: xarray (time history x features x time samples) > floats)]
-                   Array of historical time features. Time samples reduced such that there are an equal number of features
-                   per class.
+    features_dict: [dictionary (Key: string (fold ID); Value: xarray (time history, features, time samples) > floats)]
+                   Array of historical time features. Time samples reduced such that there are an equal number of
+                   features per class.
                    
     NECESSARY FUNCTIONS:
     rearranging_features
@@ -3060,6 +3106,8 @@ def save_info(dictionary, directory, filename):
     
     # Iterating across each item in the dictionary.
     for pair in dictionary.items():
+        
+        print(pair)
         
         # Extracting the key and value of the current item. 
         key   = pair[0]
@@ -3108,10 +3156,10 @@ def spectrogram_generator(data_cont_dict, sxx_tag):
     
     INPUT VARIABLES:
     data_cont_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        signals:    [xarray (channels x time samples (units: s) > floats (units: microvolts)]; Array of continuous 
-                    voltage signals. Time dimension is in units of seconds.
-        states:     [xarray (1 x time samples) > ints (0 or 1)]; Array of states at each time sample. Time dimension
-                    is in units of seconds.
+        signals:    [xarray (channels, time samples) > floats (units: microvolts)]; Array of continuous voltage signals.
+                    Time dimension is in units of seconds.
+        states:     [xarray (time samples,) > ints (0 or 1)]; Array of states at each time sample. Time dimension is in 
+                    units of seconds.
     sxx_tag:        [string]; Marker to show experimter which type of data is in the pipeline.
     
     GLOBAL PARAMETERS:
@@ -3120,10 +3168,10 @@ def spectrogram_generator(data_cont_dict, sxx_tag):
     
     OUTPUT VARIABLES:
     sxx_data_dict:   [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_signals: [xarray (channels x frequency bins x time samples) > floats (units: V^2/Hz)]; Spectral power of
-                     the continuous voltage signals.
-        sxx_states:  [xarray (1 x time samples) > ints (0 or 1)]; States array downsampled to match time resolution
-                     of the signal spectral power.
+        sxx_signals: [xarray (channels, frequency bins, time samples) > floats (units: V^2/Hz)]; Spectral power of the 
+                     continuous voltage signals.
+        sxx_states:  [xarray (time samples,) > ints (0 or 1)]; States array downsampled to match time resolution of the
+                     signal spectral power.
     """
     
     # COMPUTATION:
@@ -3166,9 +3214,9 @@ def spectrogram_generator(data_cont_dict, sxx_tag):
         sxx[np.isneginf(sxx)] = 0
         sxx[np.isnan(sxx)]    = 0
         
-        # Transforming the time array of the spectral signals such that the signals are causal. This means that rather than
-        # the first spectral sample being associated with 128 ms in the t_sxx array (if sxx_window = 256), it will rather be
-        # 256 ms.
+        # Transforming the time array of the spectral signals such that the signals are causal. This means that rather
+        # than the first spectral sample being associated with 128 ms in the t_sxx array (if sxx_window = 256), it will
+        # be associated with 256 ms.
         t_sxx = t_sxx + (sxx_window/2)/1000
 
         # Converting the spectral array into an xarray.
@@ -3193,30 +3241,35 @@ def spectrogram_generator(data_cont_dict, sxx_tag):
 def spectrogram_info_per_trial(grasp_sxx_dict, t_post_on_state, t_pre_on_state):
     """
     DESCRIPTION:
-    Computing the per-trial spectrograms aligned to the experimenter-defined state onset. Bounded by the experimenter-
-    input pre- and post-state onset times.
+    Computing the per-trial spectrograms aligned to the cue onset. Bounded by the experimenter-specified pre- and post-
+    cue times.
     
     INPUT VARIABLES:
     grasp_sxx_dict:    [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_signals:   [xarray (channels x frequency bins x time samples) > floats (units: V^2/Hz)]; Spectral power of the
+        sxx_signals:   [xarray (channels, frequency bins, time samples) > floats (units: V^2/Hz)]; Spectral power of the
                        continuous voltage signals from the grasp-based task. Time dimension is in units of seconds.
-        sxx_signals_z: [xarray (channels x frequency bins x time samples) > floats (units: V^2/Hz)]; Standardized Spectral
-                       power of the continuous voltage signals from grasp-based task.
-        sxx_states:    [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; States array downsampled
+        sxx_signals_z: [xarray (channels, frequency bins, time samples) > floats (units: z-scores)]; Standardized 
+                       spectral power of the continuous voltage signals from grasp-based task.
+        sxx_states:    [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array downsampled
                        to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-    t_post_on_state:   [float (units: s)]; The amount of time after the cue for visualizing the trial-averaged information.
-    t_pre_on_state:    [float (units: s)]; The amount of time before the cue for visualizing the trial-averaged information.
+    t_post_on_state:   [float (units: s)]; The amount of time after the cue for visualizing the trial-averaged 
+                       information.
+    t_pre_on_state:    [float (units: s)]; The amount of time before the cue for visualizing the trial-averaged 
+                       information.
     
     GLOBAL PARAMETERS:
     sxx_shift: [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the time domain.
+    
+    NECESSARY FUNCTIONS:
+    unique_value_index_finder
 
     OUTPUT VARIABLES:
     grasp_sxx_dict:    [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
         sxx_signals:   Same as input.
         sxx_signals_z: Same as input.
         sxx_states:    Same as input.        
-        sxx_trials_z:  [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
-                       information for each trial. Time dimension is in units of seconds.
+        sxx_trials_z:  [xarray (trials, channels, frequency bins, time samples) > floats (units: z-scores)]; The 
+                       spectral information for each trial. Time dimension is in units of seconds.
     """
     
     # COMPUTATION:
@@ -3229,13 +3282,15 @@ def spectrogram_info_per_trial(grasp_sxx_dict, t_post_on_state, t_pre_on_state):
     n_chs   = channels.shape[0]
     n_freqs = freqs.shape[0]
     
-    # Creating the time array and corresponding number of samples which spans one trial.
+    # Creating the time array and corresponding number of samples which span one trial.
     t_stepsize          = sxx_shift/1000 # ms / (ms/s) = ms * s/ms = s
     t_sxx_per_trial     = np.arange(t_pre_on_state, t_post_on_state, t_stepsize)
     n_samples_per_trial = t_sxx_per_trial.shape[0]
 
     # Iterating across each task.
     for this_task in grasp_sxx_dict.keys():
+        
+        print('This task: ', this_task)
             
         # Extracting the standardized spectrograms of the current task.
         this_task_sxx = grasp_sxx_dict[this_task]['sxx_signals_z']
@@ -3252,9 +3307,12 @@ def spectrogram_info_per_trial(grasp_sxx_dict, t_post_on_state, t_pre_on_state):
         # Computing the total number of trials by finding the total number of ON states.
         n_trials_this_task = len(this_task_start_end_inds['state_ON'])
         
-        # Initialize the x-array containing the per-trial spectrograms.
+        # Initialize the xarray containing the per-trial spectrograms.
         sxx_trials_z = xr.DataArray(np.zeros((n_trials_this_task, n_chs, n_freqs, n_samples_per_trial)), 
-                                    coords={'trial': np.arange(n_trials_this_task),'channel': channels, 'frequency': freqs, 'time': t_sxx_per_trial}, 
+                                    coords={'trial': np.arange(n_trials_this_task),\
+                                            'channel': channels,\
+                                            'frequency': freqs,\
+                                            'time': t_sxx_per_trial}, 
                                     dims=["trial", "channel", "frequency", "time"])
         
         # Iterating across each state onset/offset index pair of the current task.
@@ -3276,13 +3334,13 @@ def spectrogram_info_per_trial(grasp_sxx_dict, t_post_on_state, t_pre_on_state):
                 # Computing the difference between the total number of samples in the signal, and the end sample.
                 n_samples_rem = sample_end - n_samples_this_task 
 
-                # Extract the incomplete spectral information of this trial and creating an array of zeros for zero-padding
-                # this incomplete trial.
+                # Extract the incomplete spectral information of this trial and creating an array of zeros for zero-
+                # padding this incomplete trial.
                 this_trial_sxx_incomplete = this_task_sxx[:,:,sample_start:n_samples_this_task].values
                 this_trial_zero_padding   = np.zeros((n_chs, n_freqs, n_samples_rem))
                 
                 # Zero-padding this trial's incomplete spectral information with 0s to achieve a full trial length
-                this_trial_sxx_padded = np.concatenate((this_trial_sxx_incomplete, this_trial_zero_padding), axis=2)
+                this_trial_sxx = np.concatenate((this_trial_sxx_incomplete, this_trial_zero_padding), axis=2)
                 
             # If the ending sample falls within the total number of samples in the current task.
             else:
@@ -3302,7 +3360,8 @@ def spectrogram_info_per_trial(grasp_sxx_dict, t_post_on_state, t_pre_on_state):
 
 
 
-def spectrogram_plotting(chs_exclude, f_max, f_min, fig_height, fig_width, sxx_trial_mean, upperlimb_or_speech, v_max, v_min):
+def spectrogram_plotting(chs_exclude, f_max, f_min, fig_height, fig_width, sxx_trial_mean, upperlimb_or_speech, v_max, \
+                         v_min):
     """
     DESCRIPTION:
     The experimenter may input the channel type (upperlimb or speech) such as to display the trial-averaged spectrograms
@@ -3318,9 +3377,10 @@ def spectrogram_plotting(chs_exclude, f_max, f_min, fig_height, fig_width, sxx_t
                          minimum frequency.
     fig_height:          [int]; The height of the subplot figure showing the trial averaged spectrograms.
     fig_width:           [int]; The width of the subplot figure showing the trial averaged spectrograms.
-    sxx_trial_mean:      [xarray (channels x frequency x time samples) > floats]; Trial-averaged standardized segmented
-                         spectral power.
-    upperlimb_or_speech: [string ('upperlimb'/'speech')]; Whether to plot the spectrograms of the upper-limb or speech grid.    
+    sxx_trial_mean:      [xarray (channels, frequency, time samples) > floats (units: z-scores)]; Trial-averaged 
+                         standardized segmented spectral power.
+    upperlimb_or_speech: [string ('upperlimb'/'speech')]; Whether to plot the spectrograms of the upper-limb or speech
+                         grid.    
     v_max:               [int]; Maximum value for colorplot.
     v_min:               [int]; Minimum value for colorplot.
     """
@@ -3328,7 +3388,7 @@ def spectrogram_plotting(chs_exclude, f_max, f_min, fig_height, fig_width, sxx_t
     # COMPUTATION:
     
     # Uploading the electrode grid configuration.
-    grid_config = params_model_training.grid_config_dict[patient_id][upperlimb_or_speech]
+    grid_config = params_model_training.grid_config[patient_id][upperlimb_or_speech]
     grid_config = np.array(grid_config)
     
     # Flattening the grid of channels (nested list) and eliminated excluded channels from being displayed.
@@ -3372,19 +3432,22 @@ def spectrogram_plotting(chs_exclude, f_max, f_min, fig_height, fig_width, sxx_t
 
         # If the electrode grid has only one row.
         if grid_rows == 1:
-            im = axs[col].pcolormesh(t_sxx, f_sxx_fbounds, sxx_fbounds.loc[ch], cmap = 'bwr', vmin = v_min, vmax = v_max);
+            im = axs[col].pcolormesh(t_sxx, f_sxx_fbounds, sxx_fbounds.loc[ch], cmap = 'bwr', vmin = v_min,\
+                                     vmax = v_max);
             axs[col].set_title(ch)
             axs[col].axvline(x=0, color = 'k')
 
         # If the electrode grid has only one column. 
         elif grid_cols == 1:
-            im = axs[row].pcolormesh(t_sxx, f_sxx_fbounds, sxx_fbounds.loc[ch], cmap = 'bwr', vmin = v_min, vmax = v_max);
+            im = axs[row].pcolormesh(t_sxx, f_sxx_fbounds, sxx_fbounds.loc[ch], cmap = 'bwr', vmin = v_min,\
+                                     vmax = v_max);
             axs[row].set_title(ch)
             axs[row].axvline(x=0, color = 'k')
 
         # If there are multiple rows and columns in the grid.
         else:
-            im = axs[row,col].pcolormesh(t_sxx, f_sxx_fbounds, sxx_fbounds.loc[ch], cmap = 'bwr', vmin=v_min, vmax=v_max);
+            im = axs[row,col].pcolormesh(t_sxx, f_sxx_fbounds, sxx_fbounds.loc[ch], cmap = 'bwr', vmin=v_min,\
+                                         vmax=v_max);
             axs[row,col].set_title(ch)
             axs[row,col].axvline(x=0, color = 'k')
 
@@ -3399,21 +3462,21 @@ def spectrogram_trial_averaging(grasp_sxx_dict):
     
     INPUT VARIABLES:
     grasp_sxx_dict:    [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_signals:   [xarray (channels x frequency bins x time samples) > floats (units: V^2/Hz)]; Spectral power of the
-                       continuous voltage signals from the grasp-based task. Time dimension is in units of seconds.
-        sxx_signals_z: [xarray (channels x frequency bins x time samples) > floats (units: V^2/Hz)]; Standardized Spectral
-                       power of the continuous voltage signals from grasp-based task.
-        sxx_states:    [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; States array downsampled
-                       to match time resolution of the signal spectral power. Time dimension is in units of seconds.
-        sxx_trials_z:  [xarray (trials x channels x frequency bins x time samples) > floats (units: V^2/Hz)]; The spectral
-                       information for each trial. Time dimension is in units of seconds.
-    
+        sxx_signals:   [xarray (channels, frequency bins, time samples) > floats (units: V^2/Hz)]; Spectral power of the
+                       voltage signals from the grasp-based task. Time dimension is in units of seconds.
+        sxx_signals_z: [xarray (channels, frequency bins, time samples) > floats (units: z-scores)]; Standardized 
+                       spectral of the continuous voltage signals from grasp-based task.
+        sxx_states:    [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array downsampled
+                       to time resolution of the signal spectral power. Time dimension is in units of seconds.
+        sxx_trials_z:  [xarray (trials, channels, frequency bins, time samples) > floats (units: z-scores)]; The
+                       spectral information for each trial. Time dimension is in units of seconds.
+
     NECESSARY FUNCTIONS:
     index_advancer
-    
+
     OUTPUT VARIABLES:
-    sxx_trial_mean: [xarray (channels x frequency x time samples) > floats]; Trial-averaged standardized segmented spectral 
-                    power.
+    sxx_trial_mean: [xarray (channels, frequency, time samples) > floats (units: z-scores)]; Trial-averaged standardized 
+                    segmented spectral power.
     """
     # COMPUTATION:
     
@@ -3441,7 +3504,10 @@ def spectrogram_trial_averaging(grasp_sxx_dict):
         
     # Initializing the xarray of spectrograms per-trial.
     sxx_all_trials = xr.DataArray(np.zeros((n_trials_all, n_chs, n_freqs, n_samples_per_trial)), 
-                                  coords={'trial': np.arange(n_trials_all),'channel': channels, 'frequency': freqs, 'time': t_sxx_per_trial}, 
+                                  coords={'trial': np.arange(n_trials_all),\
+                                          'channel': channels,\
+                                          'frequency': freqs,\
+                                          'time': t_sxx_per_trial}, 
                                   dims=["trial", "channel", "frequency", "time"])
         
     # Initializing the trial indices.    
@@ -3477,22 +3543,22 @@ def standardize_to_calibration(calib_sxx_dict, grasp_sxx_dict):
     For each channel at each frequency, standardizing the spectral power to the statistics of the calibration period. 
     
     INPUT VARIABLES:
-    calib_sxx_dict:  [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_signals: [xarray (channels x frequency bins x time samples) > floats (units: V^2/Hz)]; Spectral power of the
-                     continuous voltage signals from calibration. Time dimension is in units of seconds.
-        sxx_states:  [xarray (1 x time samples) > ints (0 or 1)]; States array downsampled to match time resolution of 
-                     the signal spectral power. Time dimension is in units of seconds.
+   calib_sxx_dict:  [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
+        sxx_signals: [xarray (channels, frequency bins, time samples) > floats (units: V^2/Hz)]; Spectral power of the
+                    continuous voltage signals from calibration. Time dimension is in units of seconds.
+        sxx_states:  [xarray (time samples, ) > ints (0 or 1)]; States array downsampled to match time resolution of the 
+                    signal spectral power. Time dimension is in units of seconds.
     grasp_sxx_dict:  [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        sxx_signals: [xarray (channels x frequency bins x time samples) > floats (units: V^2/Hz)]; Spectral power of the
-                     continuous voltage signals from the grasp-based task. Time dimension is in units of seconds.
-        sxx_states:  [xarray (1 x time samples) > strings ('state_ON'/'state_OFF'/'neutral')]; States array downsampled
-                     to match time resolution of the signal spectral power. Time dimension is in units of seconds.
+        sxx_signals: [xarray (channels, frequency bins, time samples) > floats (units: V^2/Hz)]; Spectral power of the
+                    continuous voltage signals from the grasp-based task. Time dimension is in units of seconds.
+        sxx_states:  [xarray (time samples, ) > strings ('state_ON'/'state_OFF'/'neutral')]; States array downsampled to 
+                    match time resolution of the signal spectral power. Time dimension is in units of seconds.
         
     OUTPUT VARIABLES:
     grasp_sxx_dict:    [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
         sxx_signals:   Same as input.
-        sxx_signals_z: [xarray (channels x frequency bins x time samples) > floats (units: V^2/Hz)]; Standardized Spectral
-                       power of the continuous voltage signals from grasp-based task.
+        sxx_signals_z: [xarray (channels x frequency bins x time samples) > floats (units: z-scores)]; Standardized 
+                       spectral power of the continuous voltage signals from grasp-based task.
         sxx_states:    Same as input.
     """
 
@@ -3554,19 +3620,19 @@ def string_state_maker(grasp_cont_dict, state_int2str):
     Converting the state values from integers to strings, as the string values are more descriptive.
     
     INPUT VARIABLES:
-    grasp_cont_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        signals:     [xarray (channels x time samples (units: s) > floats (units: microvolts)]; Array of continuous
-                     voltage signals from grasp-based tasks. Time dimension is in units of seconds.
-        states:      [xarray (1 x time samples) > ints (0 or 1)]; Array of states at each time sample for the grasp-based
-                     tasks. Time dimension is in units of seconds.
-    state_int2str:   [dictionary (Key: int (state on/off value); Value: string (state_ON/state_OFF, respectively)]; Mapping
-                     from the numerical values to the string values.
+   grasp_cont_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
+        signals:    [xarray (channels, time samples) > floats (units: microvolts)]; Array of continuous voltage 
+                    signals from grasp-based tasks. Time dimension is in units of seconds.
+        states:     [xarray (time samples,) > ints (0 or 1)]; Array of states at each time sample for the grasp-based
+                    tasks. Time dimension is in units of seconds.
+    state_int2str:  [dictionary (Key: int (state on/off value); Value: string (state_ON/state_OFF, respectively)]; 
+                    Mapping from the numerical values to the string values.
     
     OUTPUT VARIABLES:
     grasp_cont_dict: [dictionary (Key: string (task ID); Value: dictionary (Key/Value pairs below)];
-        signals: Same as input.
-        states:  [xarray (1 x time samples) > strings ('state_ON'/'state_OFF')]; Array of states at each time sample for the
-                 grasp-based tasks. Time dimension is in units of seconds.
+        signals:     Same as input.
+        states:      [xarray (time samples,) > strings ('state_ON'/'state_OFF')]; Array of states at each time sample 
+                     for the grasp-based tasks. Time dimension is in units of seconds.
     """
     
     # COMPUTATION:
@@ -3610,9 +3676,9 @@ def string_state_maker(grasp_cont_dict, state_int2str):
 def time_history_sample_adjustment(features_dict, labels_dict, t_history):
     """
     DESCRIPTION:
-    Adjusting the time dimension of the labels and features. Due to the time history, the time-shifted rows of the features
-    arrays are zero padded. As such, all columns with leading zeros should be removed. If there are N time shfited columns,
-    this means that N-1 columns should be removed. For example, consider N = 3:
+    Adjusting the time dimension of the labels and features. Due to the time history, the time-shifted rows of the
+    features arrays are zero padded. As such, all columns with leading zeros should be removed. If there are N time 
+    shfited columns, this means that N-1 columns should be removed. For example, consider N = 3:
 
     Features array:
 
@@ -3638,24 +3704,24 @@ def time_history_sample_adjustment(features_dict, labels_dict, t_history):
 
 
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats (units: V^2/Hz))]
-                   Array of historical time features.
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                   task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                   modulation as well as the per-trial shift from the AW model.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                   (units: z-scores)]; Array of historical time features.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample
+                   in each task, there exists a rest or grasp label depending on the experimenter-specified onset and 
+                   offset of  modulation as well as the per-trial shift from the AW model.
     t_history:     [float (unit: s)]; Amount of feature time history.
 
     GLOBAL PARAMETERS: 
     sxx_shift: [int (units: ms)]; Length of time by which sliding window (sxx_window) shifts along the time domain.
     
     OUTPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features. Number of time samples corresponding to time history are curtailed at the
-                   beginning of the time array.
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in a task,
-                   there exists a rest or grasp label depending on the experimenter-specified onset and offset of grasp modulation
-                   as well as the per-trial shift from the AW model. Number of time samples corresponding to time history are
-                   curtailed at the beginning of the time array.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                   (units: z-scores)]; Array of historical time features. Number of time samples equal to time history
+                   are curtailed at the beginning of the time array.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample
+                   in each task, there exists a rest or grasp label depending on the experimenter-specified onset and 
+                   offset of modulation as well as the per-trial shift from the AW model. Number of time samples equal
+                   to time history are curtailed at the beginning of the time array.
     """
     
     # COMPUTATION:
@@ -3690,13 +3756,13 @@ def training_final_model(features_dict, labels_dict):
     Concatenating the data and labels from all tasks and training the final model on these concatenated arrays.
     
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features. Time samples reduced such that there are an equal number of features per
-                   class.
-    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                   task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                   modulation as well as the per-trial shift from the AW model. Time samples reduced such that there are an equal
-                   number of features per class.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time samples) > floats 
+                   (units: z-scores)]; Array of historical time features. Time samples reduced such that there are an
+                   equal number of features per class.
+    labels_dict:   [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample
+                   in each task, there exists a rest or grasp label depending on the experimenter-specified onset and
+                   offset of modulation as well as the per-trial shift from the AW model. Time samples reduced such that
+                   there are an equal number of features per class.
                    
     NECESSARY FUNCTIONS:
     computing_eigenvectors
@@ -3708,11 +3774,11 @@ def training_final_model(features_dict, labels_dict):
     rearranging_features
     
     OUTPUT VARIABLES:
-    eigenvectors_final: [array (features x pc features) > floats]; Array in which columns consist of eigenvectors which explain
-                        the variance of the data in descending order. 
+    eigenvectors_final: [array (features, pc features) > floats]; Array in which columns consist of eigenvectors which
+                        explain the variance of the data in descending order. 
     final_model:        [classification model]; Model trained with data from all tasks.
-    training_data_mean: [xarray (history x features) > floats (units: V^2/Hz)]; Mean power of each feature of only the 0th time 
-                        shift.  This array is repeated for each historical time point.
+    training_data_mean: [xarray (history, features) > floats (units: z-scores)]; Mean power of each feature of only the
+                        0th time shift. This array is repeated for each historical time point.
     """
     
     # COMPUTATION:
@@ -3760,16 +3826,16 @@ def training_fold_models(train_data_folds, train_labels_folds, valid_data_folds,
     the data.
 
     INPUT VARIABLES:
-    train_data_folds:   [dict (key: string (fold ID); Value: xarray (dimensions vary based on model type) > floats (units: V^2/Hz))];
-                        Data across all training tasks per fold. Equal number of samples per class. PC features. Rearranged 
-                        according to the type of model that will be trained.
-    train_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; Labels across
-                        all training tasks per fold. Equal number of labels per class.
-    valid_data_folds:   [dict (key: string (fold ID); Value: xarray (dimensions vary based on model type) > floats (units: V^2/Hz))];
-                        Data across all validation tasks per fold. Equal number of samples per class. PC features. Rearranged 
-                        according to the type of model that will be trained.
-    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; Labels across
-                        all validation tasks per fold. Equal number of labels per class.
+    train_data_folds:   [dictionary (key: string (fold ID): Value xarray (dimensions vary based on model type) >
+                        floats)];  Data across all training tasks per fold. Equal number of samples per class. PC 
+                        features. Rearranged according to the type of model that will be trained.
+    train_labels_folds: [dict (key: string (fold ID); Value: xarray (time samples, ) > strings ('grasp'/'rest'))]; 
+                        Labels across all training tasks per fold. Equal number of labels per class.
+    valid_data_folds:   [dictionary (key: string (fold ID): Value xarray (dimensions vary based on model type) > 
+                        floats)]; Data across all validation tasks per fold. Equal number of samples per class. PC 
+                        features. Rearranged according to the type of model that will be trained.
+    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (time samples, ) > strings ('grasp'/'rest'))];
+                        Labels across all validation tasks per fold. Equal number of labels per class.
                         
     GLOBAL PARAMETERS:
     model_type: [string ('SVM','LSTM')]; The model type that will be used to fit the data.
@@ -3795,8 +3861,8 @@ def training_fold_models(train_data_folds, train_labels_folds, valid_data_folds,
         this_fold_valid_data   = valid_data_folds[this_fold]
         this_fold_valid_labels = valid_labels_folds[this_fold]
         
-        # If the model type is na SVM. Currently code for training SVM does not exist. Feel free to write a model_training_svm
-        # function.
+        # If the model type is na SVM. Currently code for training SVM does not exist. Feel free to write a 
+        # model_training_svm function.
         if model_type == 'SVM':
             pass
         
@@ -3816,34 +3882,158 @@ def training_fold_models(train_data_folds, train_labels_folds, valid_data_folds,
 
 
 
+# def training_validation_split(features_dict, labels_dict, train_folds_tasks, valid_folds_tasks):
+#     """
+#     DESCRIPTION:
+#     Splitting the data into training and validation blocks for building the fold-models. The validation folds will be tested
+#     on the models built on the corresponding training folds to confirm that the decoder is generalizable to unseen data. 
+
+#     INPUT VARIABLES:
+#     features_dict:     [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
+#                        Array of historical time features. Time samples reduced such that there are an equal number of features per
+#                        class.
+#     labels_dict:       [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
+#                        task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
+#                        modulation as well as the per-trial shift from the AW model. Time samples reduced such that there are an equal
+#                        number of features per class.
+#     train_folds_tasks  [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the training tasks
+#                        for each training fold.
+#     valid_folds_tasks: [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the validation tasks
+#                        for each validation fold.
+
+#     OUTPUT VARIABLES:
+#     train_data_folds:   [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
+#                         For each training fold, feature xarrays are concatenated in the sample dimension.
+#     train_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; For each training
+#                         fold, label xarrays are concatenated in the sample dimension.
+#     valid_data_folds:   [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
+#                         For each validation fold, feature xarrays are concatenated in the sample dimension.
+#     valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; For each validation
+#                         fold, label xarrays are concatenated in the sample dimension.
+#     """
+    
+#     # COMPUTATION:
+    
+#     # Initializing dictionaries of training and validation data and labels.
+#     train_data_folds   = {}
+#     train_labels_folds = {}
+#     valid_data_folds   = {}
+#     valid_labels_folds = {}
+
+#     # Extracting the fold list.
+#     fold_list = list(train_folds_tasks.keys())
+
+#     # Iterating across all folds.
+#     for fold_id in fold_list:
+
+#         # Extracting the training and validation task lists for the current fold.
+#         this_fold_training_tasks   = train_folds_tasks[fold_id]
+#         this_fold_validation_tasks = valid_folds_tasks[fold_id]
+
+#         # Initialize the training and validation task flags, which will help with initializing the arrays of 
+#         # training and validation data and labels for the current fold.
+#         training_task0_flag   = True
+#         validation_task0_flag = True
+        
+#         # Iterating across all training tasks for the current fold.
+#         for this_task in this_fold_training_tasks:
+
+#             # Extracting the training data and labels of the current task.
+#             this_task_data   = features_dict[this_task]
+#             this_task_labels = labels_dict[this_task]
+
+#             # If the training task flag is True, intiailize the training data and labels xarrays. If not, concatenate
+#             # them with data and labels from another task.
+#             if training_task0_flag:
+#                 these_training_data   = this_task_data
+#                 these_training_labels = this_task_labels
+
+#                 # Setting the flag to False to never enter this IF statement again.
+#                 training_task0_flag = False
+
+#             else:
+#                 these_training_data   = xr.concat([these_training_data, this_task_data], dim="sample")
+#                 these_training_labels = xr.concat([these_training_labels, this_task_labels], dim='sample')
+        
+#         # Iterating across all validatoin tasks for the current fold.
+#         for this_task in this_fold_validation_tasks:
+
+#             # Extracting the training data and labels of the current task.
+#             this_task_data   = features_dict[this_task]
+#             this_task_labels = labels_dict[this_task]
+
+#             # If the validation task flag is True, intiailize the validation data and labels xarrays. If not, concatenate
+#             # them with data and labels from another task.
+#             if validation_task0_flag:
+#                 these_validation_data   = this_task_data
+#                 these_validation_labels = this_task_labels
+
+#                 # Setting the flag to False to never enter this IF statement again.
+#                 validation_task0_flag = False
+
+#             else:
+#                 these_validation_data   = xr.concat([these_validation_data, this_task_data], dim="sample")
+#                 these_validation_labels = xr.concat([these_validation_labels, this_task_labels], dim='sample')
+                
+                
+#         # if this_fold_training_tasks:
+        
+#         # Reassigning the sample coordinates to the training data and labels xarrays.
+#         these_training_data     = these_training_data.assign_coords(sample=np.arange(these_training_data.sample.shape[0]))
+#         these_training_labels   = these_training_labels.assign_coords(sample=np.arange(these_training_labels.sample.shape[0]))
+
+#         # Updating the training data and labels dictionaries with the appropriate training information.
+#         train_data_folds[fold_id]   = these_training_data
+#         train_labels_folds[fold_id] = these_training_labels
+
+      
+#         # if this_fold_validation_tasks:
+            
+#         # Reassigning the sample coordinates to the validation data and labels xarrays.
+#         these_validation_data   = these_validation_data.assign_coords(sample=np.arange(these_validation_data.sample.shape[0]))
+#         these_validation_labels = these_validation_labels.assign_coords(sample=np.arange(these_validation_labels.sample.shape[0]))
+
+#         # Updating the validation data and labels dictionaries with the appropriate validation information.
+#         valid_data_folds[fold_id]   = these_validation_data
+#         valid_labels_folds[fold_id] = these_validation_labels
+        
+#     return train_data_folds, train_labels_folds, valid_data_folds, valid_labels_folds
+
+
+
+
+
 def training_validation_split(features_dict, labels_dict, train_folds_tasks, valid_folds_tasks):
     """
     DESCRIPTION:
-    Splitting the data into training and validation blocks for building the fold-models. The validation folds will be tested
-    on the models built on the corresponding training folds to confirm that the decoder is generalizable to unseen data. 
+    Splitting the data into training and validation blocks for building the fold-models. The validation folds will be 
+    tested on the models built on the corresponding training folds to confirm that the decoder is generalizable to 
+    unseen data. 
 
     INPUT VARIABLES:
-    features_dict:     [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                       Array of historical time features. Time samples reduced such that there are an equal number of features per
-                       class.
-    labels_dict:       [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time sample in each
-                       task, there exists a rest or grasp label depending on the experimenter-specified onset and offset of
-                       modulation as well as the per-trial shift from the AW model. Time samples reduced such that there are an equal
-                       number of features per class.
+    features_dict:     [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                       (units: z-scores)]; Array of historical time features. Time samples reduced such that there are
+                       an equal number of features per class.
+    labels_dict:       [dictionary (Key: string (task ID); Value: xarray > strings ('grasp'/'rest'))]; For each time 
+                       sample in each task, there exists a rest or grasp label depending on the experimenter-specified
+                       onset and offset of modulation as well as the per-trial shift from the AW model. Time samples 
+                       reduced such that there are an equal number of features per class.
     train_folds_tasks  [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the training tasks
                        for each training fold.
-    valid_folds_tasks: [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the validation tasks
-                       for each validation fold.
+    valid_folds_tasks: [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the validation 
+                       tasks for each validation fold.
 
     OUTPUT VARIABLES:
-    train_data_folds:   [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                        For each training fold, feature xarrays are concatenated in the sample dimension.
-    train_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; For each training
-                        fold, label xarrays are concatenated in the sample dimension.
-    valid_data_folds:   [dict (key: string (fold ID); Value: xarray (time history x features x time samples) > floats (units: V^2/Hz))];
-                        For each validation fold, feature xarrays are concatenated in the sample dimension.
-    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (1 x time samples) > strings ('grasp'/'rest'))]; For each validation
-                        fold, label xarrays are concatenated in the sample dimension.
+    train_data_folds:   [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                        floats (units: z-scores))]; For each training fold, feature xarrays are concatenated in the 
+                        sample dimension.
+    train_labels_folds: [dict (key: string (fold ID); Value: xarray (time samples, ) > strings ('grasp'/'rest'))]; For 
+                        each training fold, label xarrays are concatenated in the sample dimension.
+    valid_data_folds:   [dict (key: string (fold ID); Value: xarray (time history, features, time samples) > 
+                        floats (units: z-scores))]; For each validation fold, feature xarrays are concatenated in the
+                        sample dimension.
+    valid_labels_folds: [dict (key: string (fold ID); Value: xarray (time samples, ) > strings ('grasp'/'rest'))]; For
+                        each validation fold, label xarrays are concatenated in the sample dimension.
     """
     
     # COMPUTATION:
@@ -3856,84 +4046,106 @@ def training_validation_split(features_dict, labels_dict, train_folds_tasks, val
 
     # Extracting the fold list.
     fold_list = list(train_folds_tasks.keys())
-
+        
     # Iterating across all folds.
     for fold_id in fold_list:
-
+        
         # Extracting the training and validation task lists for the current fold.
-        this_fold_training_tasks   = train_folds_tasks[fold_id]
-        this_fold_validation_tasks = valid_folds_tasks[fold_id]
+        this_fold_train_tasks   = train_folds_tasks[fold_id]
+        this_fold_valid_tasks = valid_folds_tasks[fold_id]
+        
+        # Computing the number of training samples in the current fold.
+        n_samples_this_train_fold = 0
+        for this_task in this_fold_train_tasks:
+            n_samples_this_train_task = labels_dict[this_task].sample.shape[0]
+            n_samples_this_train_fold += n_samples_this_train_task
+            
+        # Computing the number of validation samples in the current fold.
+        n_samples_this_valid_fold = 0
+        for this_task in this_fold_valid_tasks:
+            n_samples_this_valid_task = labels_dict[this_task].sample.shape[0]
+            n_samples_this_valid_fold += n_samples_this_valid_task
 
-        # Initialize the training and validation task flags, which will help with initializing the arrays of 
-        # training and validation data and labels for the current fold.
-        training_task0_flag   = True
-        validation_task0_flag = True
+        # Extracting the time history and number of features from task0.
+        n_history  = features_dict['task0'].values.shape[0]
+        n_features = features_dict['task0'].values.shape[1]
+        
+        # Initializing the xarray of training data and labels for the current fold.
+        this_fold_train_data = xr.DataArray(np.zeros((n_history, n_features, n_samples_this_train_fold)), 
+                                            coords={'history': np.arange(n_history),\
+                                                    'feature': np.arange(n_features),\
+                                                     'sample': np.arange(n_samples_this_train_fold)}, 
+                                            dims=["history", "feature", "sample"])
+        
+        this_fold_train_labels = xr.DataArray([None] * n_samples_this_train_fold, 
+                                              coords={'sample': np.arange(n_samples_this_train_fold)}, 
+                                              dims=["sample"])
+        
+        # Initializing the xarray of validation data and labels for the current fold.
+        this_fold_valid_data = xr.DataArray(np.zeros((n_history, n_features, n_samples_this_valid_fold)), 
+                                            coords={'history': np.arange(n_history),\
+                                                    'feature': np.arange(n_features),\
+                                                    'sample': np.arange(n_samples_this_valid_fold)}, 
+                                                 dims=["history", "feature", "sample"])
+        
+        this_fold_valid_labels = xr.DataArray([None] * n_samples_this_valid_fold, 
+                                              coords={'sample': np.arange(n_samples_this_valid_fold)}, 
+                                              dims=["sample"])
+        
+        # Initializing the training and validation indices.
+        train_inds   = np.zeros((2,))
+        valid_inds = np.zeros((2,))
         
         # Iterating across all training tasks for the current fold.
-        for this_task in this_fold_training_tasks:
-
-            # Extracting the training data and labels of the current task.
-            this_task_data   = features_dict[this_task]
-            this_task_labels = labels_dict[this_task]
-
-            # If the training task flag is True, intiailize the training data and labels xarrays. If not, concatenate
-            # them with data and labels from another task.
-            if training_task0_flag:
-                these_training_data   = this_task_data
-                these_training_labels = this_task_labels
-
-                # Setting the flag to False to never enter this IF statement again.
-                training_task0_flag = False
-
-            else:
-                these_training_data   = xr.concat([these_training_data, this_task_data], dim="sample")
-                these_training_labels = xr.concat([these_training_labels, this_task_labels], dim='sample')
-        
-        # Iterating across all validatoin tasks for the current fold.
-        for this_task in this_fold_validation_tasks:
-
-            # Extracting the training data and labels of the current task.
-            this_task_data   = features_dict[this_task]
-            this_task_labels = labels_dict[this_task]
-
-            # If the validation task flag is True, intiailize the validation data and labels xarrays. If not, concatenate
-            # them with data and labels from another task.
-            if validation_task0_flag:
-                these_validation_data   = this_task_data
-                these_validation_labels = this_task_labels
-
-                # Setting the flag to False to never enter this IF statement again.
-                validation_task0_flag = False
-
-            else:
-                these_validation_data   = xr.concat([these_validation_data, this_task_data], dim="sample")
-                these_validation_labels = xr.concat([these_validation_labels, this_task_labels], dim='sample')
-                
-                
-        # if this_fold_training_tasks:
-        
-        # Reassigning the sample coordinates to the training data and labels xarrays.
-        these_training_data     = these_training_data.assign_coords(sample=np.arange(these_training_data.sample.shape[0]))
-        these_training_labels   = these_training_labels.assign_coords(sample=np.arange(these_training_labels.sample.shape[0]))
-
-        # Updating the training data and labels dictionaries with the appropriate training information.
-        train_data_folds[fold_id]   = these_training_data
-        train_labels_folds[fold_id] = these_training_labels
-
-      
-        # if this_fold_validation_tasks:
+        for this_task in this_fold_train_tasks:
             
-        # Reassigning the sample coordinates to the validation data and labels xarrays.
-        these_validation_data   = these_validation_data.assign_coords(sample=np.arange(these_validation_data.sample.shape[0]))
-        these_validation_labels = these_validation_labels.assign_coords(sample=np.arange(these_validation_labels.sample.shape[0]))
-
-        # Updating the validation data and labels dictionaries with the appropriate validation information.
-        valid_data_folds[fold_id]   = these_validation_data
-        valid_labels_folds[fold_id] = these_validation_labels
+            # Extracting the training data and labels of the current task.
+            this_task_data   = features_dict[this_task].values
+            this_task_labels = labels_dict[this_task].values
+               
+            # Computing the number of samples in the current task.
+            n_samples_this_task = this_task_labels.shape[0]  
+            
+            # Updating the training indices for the current task.
+            train_inds = index_advancer(train_inds, n_samples_this_task)
+            
+            # Updating the training data and labels xarrays with the current task.
+            this_fold_train_data.loc[:,:,train_inds[0]:train_inds[1]-1] = this_task_data
+            this_fold_train_labels.loc[train_inds[0]:train_inds[1]-1]   = this_task_labels
         
-    return train_data_folds, train_labels_folds, valid_data_folds, valid_labels_folds
+        
+        # Iterating across all validation tasks for the current fold.
+        for this_task in this_fold_valid_tasks:
 
+            # Extracting the validation data and labels of the current task.
+            this_task_data   = features_dict[this_task].values
+            this_task_labels = labels_dict[this_task].values
+                
+            # Computing the number of samples in the current task.
+            n_samples_this_task = this_task_labels.shape[0]  
+            
+            # Updating the validation indices for the current task.
+            valid_inds = index_advancer(valid_inds, n_samples_this_task)
+                        
+            # Updating the validation data and labels xarrays with the current task.
+            this_fold_valid_data.loc[:,:,valid_inds[0]:valid_inds[1]-1] = this_task_data
+            this_fold_valid_labels.loc[valid_inds[0]:valid_inds[1]-1]   = this_task_labels
+      
+        # Reassigning the sample coordinates to the training and validation data and labels xarrays.
+        this_fold_train_data   = this_fold_train_data.assign_coords(sample=np.arange(n_samples_this_train_fold))
+        this_fold_train_labels = this_fold_train_labels.assign_coords(sample=np.arange(n_samples_this_train_fold))
+        this_fold_valid_data   = this_fold_valid_data.assign_coords(sample=np.arange(n_samples_this_valid_fold))
+        this_fold_valid_labels = this_fold_valid_labels.assign_coords(sample=np.arange(n_samples_this_valid_fold))
 
+        # Updating the training and validation data and labels dictionaries with the appropriate training information.
+        train_data_folds[fold_id]   = this_fold_train_data
+        train_labels_folds[fold_id] = this_fold_train_labels
+        valid_data_folds[fold_id]   = this_fold_valid_data
+        valid_labels_folds[fold_id] = this_fold_valid_labels
+        
+    return train_data_folds, train_labels_folds, valid_data_folds, valid_labels_folds  
+    
+    
     
     
     
@@ -3943,15 +4155,15 @@ def training_validation_split_tasks(features_dict):
     Creating dictionaries of training and validation folds where the tasks are split up per-fold.
 
     INPUT VARIABLES:
-    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history x features x time) > floats (units: V^2/Hz))]
-                   Array of historical time features. Time samples reduced such that there are an equal number of features per
-                   class.
+    features_dict: [dictionary (Key: string (task ID); Value: xarray (time history, features, time) > floats 
+                   (units: z-scores)]; Array of historical time features. Time samples reduced such that there are an
+                   equal number of features per class.
 
     OUTPUT VARIABLES:
-    training_folds_tasks    [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the training tasks
-                            for each training fold.
-    validation_folds_tasks: [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the validation tasks
-                            for each validation fold.
+    train_folds_tasks  [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the training tasks
+                       for each training fold.
+    valid_folds_tasks: [dict (key: string (fold ID); Value: list > strings (task IDs))]; List of all the validation 
+                       tasks for each validation fold.
     """
     
     # COMPUTATION:
@@ -4004,18 +4216,19 @@ def unique_value_index_finder(stepwise_sequence):
     OUTPUT VARIABLES:
     unique_vals:     [list > (ints/strings)] Individual values (at different "heights") of all the steps in the vector. 
                      For example, the unique_vals of 
-                     ex_stepwise_sequence = ['a','a','a','a','b','b','b','b','a','a','a','a','c','c','c','c','a','a','a','a'] 
+                     ex_stepwise_sequence = ['a','a','a','a','b','b','b','b','a','a','a','a','c','c','c','c','a','a'] 
                      would be [a,b,c]
     n_steps_per_val: [dictionary (Key: ints/strings (step names); Value: ints (number of occurrence per step name)]; The 
-                     number of steps for each unique value. For example n_steps_per_val of ex_stepwise_sequence would be:
+                     number of steps for each unique value. For example n_steps_per_val of ex_stepwise_sequence would be
                      {a: 3, b: 1, c: 1} because the "a" step occurs 3 times, whereas "b" and "c" steps occur only once.
-    unique_val_inds: [dictionary (Key: ints/strings (step names); Value: list > ints (array indices))]; All the indices within 
-                     the stepwise_sequence list of where a specific step occurs. For example, the unique_vals_inds of 
-                     ex_stepwise_sequence would be {a: [0,1,2,3,8,9,10,11,16,17,18,19], b: [4,5,6,7], c: [12,13,14,15]}.
-
-    start_end_inds:  [dictionary (Key: ints/strings (step names); Value: list > list > ints (array indices))]; The indices 
-                     within the stepwise_sequence list where individual steps start and end. For exaple, the start_end_inds of
-                     ex_stepwise_sequence would be {a: [[0,3],[8,11],[16,19]], b: [[4,7]], c: [[12,15]]}.
+    unique_val_inds: [dictionary (Key: ints/strings (step names); Value: list > ints (array indices))]; All the indices
+                     within the stepwise_sequence list of where a specific step occurs. For example, the 
+                     unique_vals_inds of ex_stepwise_sequence would be:
+                     {a: [0,1,2,3,8,9,10,11,16,17], b: [4,5,6,7], c: [12,13,14,15]}.
+    start_end_inds:  [dictionary (Key: ints/strings (step names); Value: list > list > ints (array indices))]; The
+                     indices  within the stepwise_sequence list where individual steps start and end. For exaple, the
+                     start_end_inds of ex_stepwise_sequence would be:
+                     {a: [[0,3],[8,11],[16,17]], b: [[4,7]], c: [[12,15]]}.
     """
         
     # COMPUTATION:
@@ -4062,22 +4275,28 @@ def unique_value_index_finder(stepwise_sequence):
 
 
 
-def visualizing_affinewarp_adjustment(powerband_id, ptr_all_trials, ptr_aligned_all_trials, t_corr_end, t_corr_start, view_channel):
+def visualizing_affinewarp_adjustment(powerband_id, ptr_all_trials, ptr_aligned_all_trials, t_corr_end, t_corr_start,\
+                                      view_channel):
     """
     DESCRIPTION:
-    After affine-warping the power trial rasters, the inter-trial correlations are compared to the power-trial rasters from
-    before alignment.
+    After affine-warping the power trial rasters, the inter-trial correlations are compared to the power-trial rasters
+    from before alignment.
     
     INPUT VARIABLES:
-    powerband_id:           [string]; The powerband whose power trial rasters the experimenter wishes to compare.
-    ptr_all_trials:         [xarray (trials x channels x powerbands x time samples) > floats (units: V^2/Hz)]; The spectral
-                            information for each trial (across all tasks). Time dimension is in units of seconds.
-    ptr_aligned_all_trials: [xarray (trials x channels x powerbands x time samples) > floats (units: V^2/Hz)]; The spectral
-                            information for each aligned trial (across all tasks). Time dimension is in units of seconds.
-    t_corr_end:             [float]; The ending time bound of the trials between which to take the pair-wise correlations.
-    t_corr_start:           [float]; The starting time bound of the trials between which to take the pair-wise correlations.
+    powerband_id:           [string ('powerbandX')]; Name of the powerband that will be used for visualizing the power 
+                            trial rasters. X is an integer (0, 1, 2,...).   
+    ptr_all_trials:         [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
+                            spectral information for each trial (across all tasks). Time dimension is in units of 
+                            seconds.
+    ptr_aligned_all_trials: [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
+                            spectral information for each aligned trial (across all tasks). Time dimension is in units
+                            of seconds.
+    t_corr_end:             [float (units: s)]; The ending time bound of the trials between which to take the pair-wise 
+                            correlations.
+    t_corr_start:           [float (units: s)]; The starting time bound of the trials between which to take the pair-
+                            wise correlations.
     view_channel:           [string]; The experimenter-specified channel whose aligned and unaligned trials will be 
-                            vizualized.
+                            visualized.
     """
     
     # COMPUTATION:
@@ -4086,8 +4305,8 @@ def visualizing_affinewarp_adjustment(powerband_id, ptr_all_trials, ptr_aligned_
     ptr_unaligned = ptr_all_trials.loc[:,:,powerband_id,:]
     ptr_aligned   = ptr_aligned_all_trials.loc[:,:,powerband_id,:]
 
-    # Extracting the time array for the trial segment. The time array will be the same for both aligned and unaligned power
-    # trial rasters.
+    # Extracting the time array for the trial segment. The time array will be the same for both aligned and unaligned 
+    # power trial rasters.
     t_segment_ptr = ptr_unaligned.time
 
     # Extracting the power trial rasters for the experimenter-specified visualization channel.
@@ -4177,11 +4396,13 @@ def visualizing_warping_channels_traces(chs_alignment, powerband_id, ptr_aligned
     The average aligned high gamma activity (across trials) is plotted for each of the channels used for affine warping. 
 
     INPUT VARIABLES:
-    chs_alignment:          [list > strings]; The list of channels which will be used for affine warp. Leave as [] if
-                            all channels will be used.
-    powerband_id:           [string]; The powerband whose average trials traces will be plotted.
-    ptr_aligned_all_trials: [xarray (trials x channels x powerbands x time samples) > floats (units: V^2/Hz)]; The spectral
-                            information for each aligned trial (across all tasks). Time dimension is in units of seconds.
+    chs_alignment:          [list > strings]; The list of channels which were used for affine warp. Left as [] if all
+                            channels were be used.
+    powerband_id:           [string ('powerbandX')]; Name of the powerband that will be used for visualizing the power
+                            trial rasters. X is an integer (0, 1, 2,...).      
+    ptr_aligned_all_trials: [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
+                            spectral information for each aligned trial (across all tasks). Time dimension is in units
+                            of seconds.
     """
     
     # COMPUTATION:

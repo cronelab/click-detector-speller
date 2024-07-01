@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pickle
-import shutil
 import xarray as xr
 
 from pprint import pprint
@@ -48,16 +47,16 @@ def computing_fp(movement, movement_onsetsoffsets, t_after_movement_limit, t_cli
     # Iterating across all command onset times.
     for this_click_onset in t_click_onsets:
         
-        # Computing the time limit in which a click onset could be produced such that it counts as due to the current movement onset.
+        # Computing the earliest possible time of a movement onset such that the current click could be associated with
+        # that possible movement and not be marked as a FP.
         t_movement_limit = this_click_onset - t_after_movement_limit
-        
-        # print(t_movement_limit, this_click_onset)
-        
-        # Extracting the time(s) which falls within the period between the movement onset period and time command limit.
+                
+        # Extracting all possible movement times to see if any of them occur within the movement time limit. 
         bool_movements   = np.logical_and(movement_onsets >= t_movement_limit, movement_onsets <= this_click_onset)
         t_bool_movements = movement_onsets[bool_movements]
         
-        # If there were no accompanying movements associated with the command change, then that is a false positive.
+        # If there were possible movements associated with the current click, then the current click is a false 
+        # positive.
         if not t_bool_movements.any():
             print(round(this_click_onset, 2))
             n_fp += 1
@@ -68,7 +67,7 @@ def computing_fp(movement, movement_onsetsoffsets, t_after_movement_limit, t_cli
 
 
 
-def computing_latency_and_tp(movement, movement_onsetsoffsets, patient_id, t_after_movement_limit, t_click_onsets):
+def computing_latency_and_tp(movement, movement_onsetsoffsets, t_after_movement_limit, t_click_onsets):
     """
     DESCRIPTION:
     Computing the latency from movement onset to click and the resulting sensitivity. The sensitivity is defined as the
@@ -79,7 +78,6 @@ def computing_latency_and_tp(movement, movement_onsetsoffsets, patient_id, t_aft
     movement:               [string]; The movement from which the onsets and offsets will be extracted.
     movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats)]; The 
                             dictionary containing all movement onset and offset times for each movement type.
-    patient_id:             [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
     t_after_movement_limit: [float (unit: s)]; Amount of time from movement onset that can pass for a click to occur and
                             be associated with the movement onset.
     t_click_onsets:         [array > floats (units: s)]; The times the click changes from 0 to 1.
@@ -194,7 +192,7 @@ def extracting_click_onset_offset_times(click_trace):
     click_index       = unique_vals.index('click')    
     onset_offset_inds = start_end_inds[click_index]
         
-    # Computing the number of command changes (whether its BCI2000 state changes or NAVI clicks).
+    # Computing the number of detected clicks.
     n_click_changes = len(onset_offset_inds)
     
     # Initializing an array of click onset/offset times for each click period.
@@ -230,7 +228,7 @@ def extracting_relevant_trajectories(hand_trajectories_ref, relevant_hand_landma
                            type.
     
     OUTPUT VARIABLES:
-    hand_trajectories_rel: [dictionary (Key: string (movement type); Value: xarray (relevant landmarks x time samples)
+    hand_trajectories_rel: [dictionary (Key: string (movement type); Value: xarray (relevant landmarks, time samples)
                            > floats]; For each movement type, only the relevant hand trajectories are stored. The time
                            dimension of each xarray is in units of s.
     """
@@ -258,28 +256,24 @@ def extracting_relevant_trajectories(hand_trajectories_ref, relevant_hand_landma
 
 
 
-def load_click_information(block_id, date, dir_intermediates, n_votes, n_votes_thr, patient_id, task):
+def load_click_information(block_id, date, dir_simulatedclicks, n_votes, n_votes_thr):
     """
     DESCRIPTION:
     Loading the simulated click trace. Note that the simulation does not make a distinction between whether a row click, 
     column click, or backspace click occurred, because there does not exist a corresponding video from which this 
     distinction could be make.
 
-    Feel free to modify the pathway in which this simulated click information is stored and modify the necessary 
-    experimenter inputs appropriately.
-
     INPUT VARIABLES:
-    block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
-    date:              [string (YYYY_MM_DD)]; Date on which the block was run.
-    dir_intermediates: [string]; Intermediates directory where relevant information is stored.
-    n_votes:           [int]; Number of most recent classifications to consider when voting on whether a click should or 
-                       should not be issued in real-time decoding simulation. For N number of votes, the voting window 
-                       corresponds to N*packet size (unitless * ms) worth of data. For example, 7 votes with a packet
-                       size of 100 ms corresponds to 700 ms of worth of data being considered in the voting window.
-    n_votes_thr:       [int]; Number of grasp votes which must accumulate within the most recent n_votes classifications
-                       to issue a click command.
-    patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-    task:              [string]; Type of task that was run.
+    block_id:            [String (BlockX, where X is an int))]; Block ID of the task that was run.
+    date:                [string (YYYY_MM_DD)]; Date on which the block was run.
+    dir_simulatedclicks: [string]; Directory where the simulated clicks are stored.
+    n_votes:             [int]; Number of most recent classifications to consider when voting on whether a click should
+                         or should not be issued in real-time decoding simulation. For N number of votes, the voting 
+                         window corresponds to N*packet size (unitless * ms) worth of data. For example, 7 votes with a
+                         packet size of 100 ms corresponds to 700 ms of worth of data being considered in the voting 
+                         window.
+    n_votes_thr:         [int]; Number of grasp votes which must accumulate within the most recent n_votes
+                         classifications to issue a click command.
     
     OUTPUT VARIABLES:
     click_trace: [xarray (time samples,)> strings]; At the video resolution, there exists a click or no-click entry. 
@@ -289,8 +283,8 @@ def load_click_information(block_id, date, dir_intermediates, n_votes, n_votes_t
     # COMPUTATION:
     
     # Creating the pathway for extracting the hand traces.
-    this_directory   = dir_intermediates + patient_id + '/' + task + '/ClickDetections/Simulated/' + date + '/' +\
-                       block_id + '/' + str(n_votes) +'_vote_window_' + str(n_votes_thr) + '_vote_thr' + '/'
+    this_directory   = dir_simulatedclicks + date + '/' + block_id + '/' + str(n_votes) +'_vote_window_' + \
+                       str(n_votes_thr) + '_vote_thr' + '/'
     this_filename    = date + '_' + block_id + '_click_highlights_video.nc'
     path_click_trace = this_directory + this_filename
     
@@ -308,18 +302,16 @@ def load_click_information(block_id, date, dir_intermediates, n_votes, n_votes_t
 
 
 
-def load_hand_trajectories(block_id, date, dir_intermediates, patient_id, task):
+def load_hand_trajectories(block_id, date, dir_handtrajectories):
     """
     DESCRIPTION:
     Importing the xarray of hand trajectories. Note that these hand trajectories are curtailed between the 
     block start and stop times.
     
     INPUT VARIABLES:
-    block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
-    date:              [string (YYYY_MM_DD)]; Date on which the block was run.
-    dir_intermediates: [string]; [string]; Intermediates directory where relevant information is stored.
-    patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-    task:              [string]; Type of task that was run.
+    block_id:             [String (BlockX, where X is an int))]; Block ID of the task that was run.
+    date:                 [string (YYYY_MM_DD)]; Date on which the block was run.
+    dir_handtrajectories: [string]; Directory where the hand trajectories are stored.
     
     OUTPUT VARIABLES:
     hand_trajectories: [xarray (landmarks, time samples) > floats]; The time traces of the x- and y-coordinates for each 
@@ -328,13 +320,11 @@ def load_hand_trajectories(block_id, date, dir_intermediates, patient_id, task):
     
     # COMPUTATION:
     
-    # Creating the directory and filename for the hand trajectories.
-    dir_handtrajectories      = dir_intermediates + patient_id + '/' + task + '/HandTrajectories/'  + date +\
-                                '/Curtailed/'
+    # Creating the filename for the hand trajectories.
     filename_handtrajectories = date + '_' + block_id + '_hand_trajectories.nc'
     
     # Pathway for uploading the hand trajectories.
-    path_handtrajectories = dir_handtrajectories + filename_handtrajectories
+    path_handtrajectories = dir_handtrajectories  + date + '/Curtailed/' + filename_handtrajectories
     
     # Loading the xarray with the hand trajectories.
     hand_trajectories = xr.open_dataarray(path_handtrajectories)
@@ -369,9 +359,9 @@ def referencing_hand_trajectories(hand_trajectories, ref1_x, ref2_x, refa_y, ref
     refb_y:            [string]; Second vertical reference landmark
     
     OUTPUT VARIABLES:
-    hand_trajectories_ref: [xarray (landmarks, time samples) > floats]; The trajectories of the x- and y- coordinates
-                           for each landmark. These are referenced in the x- and y-dimensions according to the reference 
-                           landmarks. The time domain is in units of seconds. 
+    hand_trajectories_ref: [xarray (landmarks, time samples) > floats]; The trajectories of the x- and y-coordinates for
+                           each landmark. These are referenced in the x- and y-dimensions according to the reference 
+                           landmarks. The time dimension is in units of seconds. 
     """
     
     # COMPUTATION:
@@ -482,20 +472,16 @@ def saving_click_latencies(block_id, date, dir_intermediates, movement, patient_
 
 
 
-def upload_movement_onsetsoffsets(block_id, date, dir_intermediates, patient_id, task):
+def upload_movement_onsetsoffsets(block_id, date, dir_onsetsoffsets):
     """
     DESCRIPTION:
     The dictionary containing the movement onset and offset times for each movement type will be uploaded if it exists. 
-    This dictionary would contain the previously saved movement onset/offset times for each movement. If there were no
-    previously saved onset/offset times for a particular movement (or all movements) a dictionary will be initiated and
-    saved for current and future inputting of onset/offset times.
+    This dictionary would contain the previously saved movement onset/offset times for each movement.
     
     INPUT VARIABLES:
     block_id:          [String (BlockX, where X is an int))]; Block ID of the task that was run.
     date:              [string (YYYY_MM_DD)]; Date on which the block was run.
-    dir_intermediates: [string]; Intermediates directory where relevant information is stored.
-    patient_id:        [string]; Patient ID PYyyNnn or CCxx format, where y, n, and x are integers.
-    task:              [string]; Type of task that was run.
+    dir_onsetsoffsets: [string]; Directory where the movement onsets and offsets are stored.
 
     OUTPUT VARIABLES:
     movement_onsetsoffsets: [dictionary (key: string (movement); Value: list > list [t_onset, t_offset] > floats)]; The 
@@ -504,12 +490,11 @@ def upload_movement_onsetsoffsets(block_id, date, dir_intermediates, patient_id,
     
     # COMPUTATION:
     
-    # Creating the directory and filename to the movement onsets/offsets dictionary.
-    dir_onsetsoffsets      = dir_intermediates + patient_id + '/' + task + '/MovementOnsetsAndOffsets/' + date + '/'
+    # Creating the filename to the movement onsets/offsets dictionary.
     filename_onsetsoffsets = 'dict_OnsetOffset_' + block_id
     
     # Creating the pathway to the movement onset/offset dictionary.
-    path_onsetsoffsets_dict = dir_onsetsoffsets + filename_onsetsoffsets
+    path_onsetsoffsets_dict = dir_onsetsoffsets + date + '/' + filename_onsetsoffsets
     
     # Checking to make sure the pathway exists.
     pathway_exists = os.path.exists(path_onsetsoffsets_dict)

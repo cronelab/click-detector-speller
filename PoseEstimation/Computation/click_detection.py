@@ -1,21 +1,20 @@
 
 # IMPORTING LIBRARIES
-import collections 
+import collections # DELETE IF NECESSARY
 import copy
 import cv2
 import itertools
 import mediapipe as mp
 import numpy as np
-import pickle
+import pickle # DELETE IF NECESSARY
 import os
 import time
-import xarray as xr 
+import xarray as xr # DELETE IF NECESSARY
 
 from tqdm import trange
 
-
-
-
+# README:
+# This must be run from Roach (in VidRecog2 environment). Uploaded to Zappa only as a backup.
 
 def detect_backspace(fps, mask_lower_red, mask_upper_red, mask_lower_yellow, mask_upper_yellow, n_frames, path_vid_backspace, t_backspace_dwell):
     """
@@ -130,9 +129,6 @@ def detect_backspace(fps, mask_lower_red, mask_upper_red, mask_lower_yellow, mas
     return click_highlights
 
 
-
-
-
 def detect_keyboard(mask_lower, mask_upper, n_frames, path_vid_keyboard, percent_pixels_thr):
     """
     DESCRIPTION:
@@ -196,9 +192,6 @@ def detect_keyboard(mask_lower, mask_upper, n_frames, path_vid_keyboard, percent
     return click_highlights
 
 
-
-
-
 def detect_stimcolumn(mask_lower, mask_upper, n_frames, path_vid_stimcolumn):
     """
     DESCRIPTION:
@@ -252,9 +245,6 @@ def detect_stimcolumn(mask_lower, mask_upper, n_frames, path_vid_stimcolumn):
     return click_highlights
 
 
-
-
-
 def count_frames(path_vid):
     """
     DESCRIPTION:
@@ -296,9 +286,6 @@ def count_frames(path_vid):
     return total
 
 
-
-
-
 if __name__ == '__main__':
 
     """
@@ -322,9 +309,9 @@ if __name__ == '__main__':
 
     # EXPERIMENTER INPUTS
     block_start        = 1
-    block_end          = 3
-    date               = '2022_11_18'
-    dir_base           = '/path/to/directory'
+    block_end          = 2
+    date               = '2022_11_08'
+    dir_base           = 'D:/Hopkins/CroneLab2/Projects/CortiComm/Code/VideoInformation/Speller/'
     fps                = 30
     percent_pixels_thr = 0.0005 
     t_backspace_dwell  = 500 
@@ -378,6 +365,9 @@ if __name__ == '__main__':
         click_highlights_backspace  = detect_backspace(fps, mask_lower_red, mask_upper_red, mask_lower_yellow, mask_upper_yellow, n_frames, path_vid_backspace, t_backspace_dwell)
         click_highlights_keyboard   = detect_keyboard(mask_lower_teal, mask_upper_teal, n_frames, path_vid_keyboard, percent_pixels_thr)
         click_highlights_stimcolumn = detect_stimcolumn(mask_lower_yellow, mask_upper_yellow, n_frames, path_vid_stimcolumn)
+
+        ############################################################################################
+        # DELETE IF NECESSARY
         
         # Computing the array of seconds.
         time_seconds = np.round(np.arange(n_frames)/fps, 3)   # frames x sec/frame = sec
@@ -403,9 +393,18 @@ if __name__ == '__main__':
         click_highlights['keyboard']['plotcolor']   = 'green'
         click_highlights['stimcolumn']['plotcolor'] = 'red'
 
+        ############################################################################################
+
+
+
+
+
+
+
 
         # Saving the click highlights for each detection.
-        dir_click_detections = dir_base + 'click_detections/' + date +'/Xarrays/' 
+        # dir_click_detections = dir_base + 'click_detections/' + date +'/Block' + str(block) + '/' 
+        dir_click_detections = dir_base + 'click_detections/' + date +'/Xarrays/' # DELETE IF NECESSARY
 
         # Checking whether or not the directory for click detections exists. If it does not exist,  it is created here.
         dir_click_detections_exists = os.path.exists(dir_click_detections)
@@ -422,5 +421,13 @@ if __name__ == '__main__':
         path_click_highlights_keyboard   = dir_click_detections + file_click_highlights_keyboard
         path_click_highlights_stimcolumn = dir_click_detections + file_click_highlights_stimcolumn
 
+        # Saving the click detection arrays.
+        # np.save(path_click_highlights_backspace, click_highlights_backspace, allow_pickle = True)
+        # np.save(path_click_highlights_keyboard, click_highlights_keyboard, allow_pickle = True)
+        # np.save(path_click_highlights_stimcolumn, click_highlights_stimcolumn, allow_pickle = True)
+
+
+
+        # DELETE IF NECESSARY
         path_click_highlights = dir_click_detections + date + '_Block' + str(block) + '_click_highlights'
         with open(path_click_highlights, "wb") as fp: pickle.dump(click_highlights, fp)
