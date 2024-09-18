@@ -66,23 +66,12 @@ sxx_window:      [int (units: ms)]; Time length of the window that computes the 
 
 
 
-###################### INCLUDED CHANNELS ####################
-
-# All channels
-chs_include = ['chan'+str(n+1) for n in range(128)]
-
-# # Only top grid.
-# chs_include = ['chan'+str(n+1) for n in range(65,128)]
-
-# Only top grid, and excluding channels 114, 121, 122.
-# chs_include = ['chan'+str(n+1) for n in range(65,128)]; chs_include.remove('chan114'); chs_include.remove('chan121'); chs_include.remove('chan122'); 
-
 ############################# EXCLUDED CHANNELS #############################
 
 # Initializing the dictionary for channels to be eliminated from future analysis. These are in addition to previously
 # recorded bad channels. 
 elim_channels = {}
-elim_channels['CC01'] = ['ainp1','ainp2','ainp3']
+elim_channels['CC01'] = ['ainp1','ainp2','ainp3','chan19','chan38','chan48','chan52']
 # elim_channels['CC01'] = ['ainp1','ainp2','ainp3'] + ['chan' + str(n) for n in range(1,65)]
 
 """

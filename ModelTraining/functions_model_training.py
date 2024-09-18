@@ -131,6 +131,80 @@ uploading_global_parameters()
 # FUNCTIONS
 
 
+def aligning_power_trial_rasters(aw_model, ptr_all_trials):
+    """
+    DESCRIPTION:
+    Aligning the power trial rasters (across all channels and powerbands) according to the affine warp model.
+    
+    INPUT VARIABLES:
+    aw_model:       [Affinewarp model]; Created using all trials.
+    ptr_all_trials: [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral
+                    information for each trial (across all tasks). Time dimension is in units of seconds.
+           
+    GLOBAL PARAMETERS:
+    aw_model_type: [string ('shift'/'piecewise')]; The type of affine warp transformation the experimenter wishes to 
+                   perform. Leave empty [] if no AW-alignment will occur.
+    
+    OUTPUT VARIABLES:
+    ptr_aligned_all_trials: [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
+                            spectral  information for each aligned trial (across all tasks). Time dimension is in units
+                            of seconds.
+    """
+    
+    # COMPUTATION:
+    
+    # Extracting the trials, channels, powerbands, and time samples from the power trial rasters array.
+    trials          = ptr_all_trials.trial.values
+    channels        = ptr_all_trials.channel.values
+    powerbands      = ptr_all_trials.powerband.values
+    t_sxx_per_trial = ptr_all_trials.time.values
+            
+    # Extracting the number of trials, channels, powerbands, and time samples from the power trial rasters array.
+    n_trials_all        = trials.shape[0]
+    n_chs               = channels.shape[0]
+    n_bands             = powerbands.shape[0]
+    n_samples_per_trial = t_sxx_per_trial.shape[0]
+        
+    # Initializing an array of aligned power trial rasters.
+    ptr_aligned_all_trials = xr.DataArray(np.zeros((n_trials_all, n_chs, n_bands, n_samples_per_trial)), 
+                                          coords={'trial': np.arange(n_trials_all),\
+                                                  'channel': channels,\
+                                                  'powerband': powerbands,\
+                                                  'time': t_sxx_per_trial},\
+                                          dims=["trial", "channel", "powerband", "time"])
+    
+    # Iterating over all powerbands.
+    for powerband_id in powerbands:
+        
+        # Extracting the unaligned power trial rasters for the current power band.
+        this_pwrband_ptr = ptr_all_trials.loc[:,:,powerband_id,:].values
+        
+        # Flipping the channels and time dimensions for the AW model. Dimensions: (trials, time samples, channels)
+        this_pwrband_ptr = np.moveaxis(this_pwrband_ptr, -2, -1)  
+                
+        # If an affine warp model was used, align the power trial rasters of the current power band appropriately.
+        if aw_model_type:
+        
+            # Aligning the power trial rasters of the current band according to the AW model.
+            this_pwrband_ptr_aligned = aw_model.transform(this_pwrband_ptr)
+                    
+        # If no affine warp model was used, keep the aligned power trial rasters the same as the unaligned power trial
+        # rasters.
+        else:
+            this_pwrband_ptr_aligned = this_pwrband_ptr
+                    
+        # Flipping the channels and time dimension back again for the aligned power trial rasters xarray.  
+        # Dimensions: (trials, time samples, channels)
+        this_pwrband_ptr_aligned = np.moveaxis(this_pwrband_ptr_aligned, -2 ,-1) 
+        
+        # Assigning the aligned power trial rasters array according to the appropriate powerband ID.
+        ptr_aligned_all_trials.loc[:,:,powerband_id,:] = this_pwrband_ptr_aligned
+
+    return ptr_aligned_all_trials
+
+
+
+
 
 def averaging_channel_importance_scores(ch_importance_per_sample):
     """
@@ -303,81 +377,6 @@ def aw_model_building(aw_powerband, chs_alignment, grasp_bandpower_dict, ptr_all
         aw_shifts = None
             
     return aw_model, aw_shifts
-
-
-
-
-
-def aligning_power_trial_rasters(aw_model, ptr_all_trials):
-    """
-    DESCRIPTION:
-    Aligning the power trial rasters (across all channels and powerbands) according to the affine warp model.
-    
-    INPUT VARIABLES:
-    aw_model:       [Affinewarp model]; Created using all trials.
-    ptr_all_trials: [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The spectral
-                    information for each trial (across all tasks). Time dimension is in units of seconds.
-           
-    GLOBAL PARAMETERS:
-    aw_model_type: [string ('shift'/'piecewise')]; The type of affine warp transformation the experimenter wishes to 
-                   perform. Leave empty [] if no AW-alignment will occur.
-    
-    OUTPUT VARIABLES:
-    ptr_aligned_all_trials: [xarray (trials, channels, powerbands, time samples) > floats (units: z-scores)]; The 
-                            spectral  information for each aligned trial (across all tasks). Time dimension is in units
-                            of seconds.
-    """
-    
-    # COMPUTATION:
-    
-    # Extracting the trials, channels, powerbands, and time samples from the power trial rasters array.
-    trials          = ptr_all_trials.trial.values
-    channels        = ptr_all_trials.channel.values
-    powerbands      = ptr_all_trials.powerband.values
-    t_sxx_per_trial = ptr_all_trials.time.values
-            
-    # Extracting the number of trials, channels, powerbands, and time samples from the power trial rasters array.
-    n_trials_all        = trials.shape[0]
-    n_chs               = channels.shape[0]
-    n_bands             = powerbands.shape[0]
-    n_samples_per_trial = t_sxx_per_trial.shape[0]
-        
-    # Initializing an array of aligned power trial rasters.
-    ptr_aligned_all_trials = xr.DataArray(np.zeros((n_trials_all, n_chs, n_bands, n_samples_per_trial)), 
-                                          coords={'trial': np.arange(n_trials_all),\
-                                                  'channel': channels,\
-                                                  'powerband': powerbands,\
-                                                  'time': t_sxx_per_trial},\
-                                          dims=["trial", "channel", "powerband", "time"])
-    
-    # Iterating over all powerbands.
-    for powerband_id in powerbands:
-        
-        # Extracting the unaligned power trial rasters for the current power band.
-        this_pwrband_ptr = ptr_all_trials.loc[:,:,powerband_id,:].values
-        
-        # Flipping the channels and time dimensions for the AW model. Dimensions: (trials, time samples, channels)
-        this_pwrband_ptr = np.moveaxis(this_pwrband_ptr, -2, -1)  
-                
-        # If an affine warp model was used, align the power trial rasters of the current power band appropriately.
-        if aw_model_type:
-        
-            # Aligning the power trial rasters of the current band according to the AW model.
-            this_pwrband_ptr_aligned = aw_model.transform(this_pwrband_ptr)
-                    
-        # If no affine warp model was used, keep the aligned power trial rasters the same as the unaligned power trial
-        # rasters.
-        else:
-            this_pwrband_ptr_aligned = this_pwrband_ptr
-                    
-        # Flipping the channels and time dimension back again for the aligned power trial rasters xarray.  
-        # Dimensions: (trials, time samples, channels)
-        this_pwrband_ptr_aligned = np.moveaxis(this_pwrband_ptr_aligned, -2 ,-1) 
-        
-        # Assigning the aligned power trial rasters array according to the appropriate powerband ID.
-        ptr_aligned_all_trials.loc[:,:,powerband_id,:] = this_pwrband_ptr_aligned
-
-    return ptr_aligned_all_trials
 
 
 
