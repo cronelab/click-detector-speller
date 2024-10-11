@@ -671,7 +671,17 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
     t_tr_start_rel_stim_on:    [float (units: s)]; Time of trial start relative to stimulus onset.
     
     NECESSARY FUNCTIONS:
+    creating_features
+    creating_labels
+    equalizing_samples_per_class
     extracting_saliencymap_powerband
+    mean_centering_all_folds
+    mean_compute_all_folds
+    pc_transform_all_folds
+    rearranging_features_all_folds
+    time_history_sample_adjustment
+    training_fold_models
+    training_validation_split_tasks
     
     OUTPUT VARIABLES:
     ch_importance_per_sample: [dictionary (key: string (fold); Value: array (time samples, channels))]; For each 
@@ -1328,7 +1338,7 @@ def creating_labels(aw_shifts, grasp_bandpower_dict, t_grasp_end_per_trial, t_gr
         # Iterating across each state onset/offset index pair of the current task.
         for tr, (state_onset_idx, _) in enumerate(this_task_start_end_inds['state_ON']):
             
-            # Computing the onset and offset times of the grasp labels for the current trial. This si done by adding the 
+            # Computing the onset and offset times of the grasp labels for the current trial. This is done by adding the 
             # experimenter-specified per-trial onset time (from average power-trial raster traces) to the onset time of
             # the ON state.
             t_grasp_label_onset  = t_seconds[state_onset_idx] + t_grasp_start_per_trial

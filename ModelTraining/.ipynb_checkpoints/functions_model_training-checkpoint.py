@@ -671,7 +671,17 @@ def computing_channel_importance_per_sample(aw_shifts, chs_include, grasp_bandpo
     t_tr_start_rel_stim_on:    [float (units: s)]; Time of trial start relative to stimulus onset.
     
     NECESSARY FUNCTIONS:
+    creating_features
+    creating_labels
+    equalizing_samples_per_class
     extracting_saliencymap_powerband
+    mean_centering_all_folds
+    mean_compute_all_folds
+    pc_transform_all_folds
+    rearranging_features_all_folds
+    time_history_sample_adjustment
+    training_fold_models
+    training_validation_split_tasks
     
     OUTPUT VARIABLES:
     ch_importance_per_sample: [dictionary (key: string (fold); Value: array (time samples, channels))]; For each 
