@@ -1,5 +1,10 @@
 # Click Detector Codebase
 
+This repository containsthe code for the following paper:
+**[A click-based electrocorticographic brain-computer interface enables long-term high-performance switch scan spelling](https://www.nature.com/articles/s43856-024-00635-3)** by Candrea et al. 
+
+
+
 ## Section 0: Conversion from .dat to .mat
 Use the convert-to-mat  file to convert the .dat file to a .mat file. The resulting .mat file is imported as a dictionary which has three keys: signal, states, and parameters. The signal key contains the time domain of all neural and analog channels, the states key contains the time domain of all state changes (cue presentations, clicks, etc.), and the parameters key contain all parameters from a block of data (sampling rate, number of channels, etc.).
 
